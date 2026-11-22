@@ -5,7 +5,10 @@ func _initialize() -> void:
 
 func capture() -> void:
 	var suite: RefCounted = load("res://tests/preview_suite.gd").new() as RefCounted
-	if "--m8" in OS.get_cmdline_user_args():
+	var args: PackedStringArray = OS.get_cmdline_user_args()
+	if "--m9" in args:
+		await suite.call("capture_m9", self)
+	elif "--m8" in args:
 		await suite.call("capture_m8", self)
 	else:
 		await suite.call("capture", self)

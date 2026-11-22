@@ -70,3 +70,39 @@ func capture_m8(scene_tree: SceneTree) -> void:
 	else:
 		print("CAPTURAS M8: level2.png y boss2.png")
 		tree.quit()
+
+func capture_m9(scene_tree: SceneTree) -> void:
+	tree = scene_tree
+	var state: Node = tree.root.get_node("GameState")
+	var manager: Node = tree.root.get_node("SaveManager")
+	manager.set("save_path", "res://validation/preview_m9_session.json")
+	state.set("data", manager.call("defaults"))
+	state.set("checkpoint", Vector2(819, 296))
+	var directory: String = ProjectSettings.globalize_path("res://../docs/capturas").simplify_path()
+	var stage: World3Level1 = preload("res://scenes/levels/World3Level1.tscn").instantiate() as World3Level1
+	tree.root.add_child(stage)
+	await tree.create_timer(1.72).timeout
+	var level_result: Error = await snap("level3", directory)
+	stage.queue_free()
+	await tree.process_frame
+
+	var boss: FirewallBoss = preload("res://scenes/bosses/FirewallBoss.tscn").instantiate() as FirewallBoss
+	tree.root.add_child(boss)
+	boss.set_physics_process(false)
+	boss.player.set_physics_process(false)
+	boss._physics_process(1.2)
+	boss._physics_process(1.61)
+	boss.core.take_damage(36.0, Vector2.ZERO)
+	boss._physics_process(2.4)
+	boss.player.position = Vector2(132, 249)
+	boss._physics_process(0.1)
+	boss._physics_process(0.8)
+	boss.player.position = Vector2(167, 296)
+	boss._physics_process(0.32)
+	var boss_result: Error = await snap("boss3", directory)
+	if level_result != OK or boss_result != OK:
+		push_error("Error al guardar las capturas M9 (%d, %d)" % [level_result, boss_result])
+		tree.quit(1)
+	else:
+		print("CAPTURAS M9: level3.png y boss3.png")
+		tree.quit()

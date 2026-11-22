@@ -59,3 +59,21 @@ Validación final: import, inicio, cinco pruebas y 300 frames: exit=0, sin error
 - **Jefe.** Al cruzar cada umbral se cancela el ataque en curso y se limpia el pool enemigo. La recuperación de Itinerancia sigue al teletransporte. El ping se desplaza lo necesario cerca de las paredes para conservar las cinco marcas separadas 32 px.
 - **Interferencia.** El reloj de 4 s es independiente de los proyectiles. El ping y la espiral se alternan al terminar las franjas activas. La espiral puede coincidir con el aviso del ciclo siguiente.
 - **Repetidores.** Los seis segundos de recarga empiezan al cerrarse la cúpula. La victoria devuelve al mapa tras mostrar la tarjeta de segmento restaurado durante 0,8 s.
+
+## Decisiones M9
+
+- **Altura de los carriles.** El centro de y = 184 está 72 px por encima del chip de y = 256.
+  El hueco mide 64 px y admite el cuerpo de Byte (10 × 14 px) a partir de un salto de 40 px
+  desde ese chip. La prueba mide el espacio que necesita todo el colisionador y cruza los tres
+  carriles con entradas reales.
+- **Puertos.** El puerto central está en y = 176 en F1 y F3. En F2, los puertos alto, medio y
+  bajo están en y = 184, 240 y 288. El láser toma la altura de Byte al iniciar el aviso y se
+  conecta al puerto abierto sin interrumpir el ciclo de puertos de 1,2 s.
+- **Tope de avance.** El muro descarta el avance que excede x = 160. Así, una bala a un ladrillo
+  todavía lo empuja 8 px desde ese tope. Si el láser está activo al cruzar un umbral de PV,
+  se termina el disparo antes de la pausa invulnerable de 2,4 s.
+- **Puzle.** La semilla 0 conserva el orden especificado. Las demás semillas reordenan el mismo
+  lote para mantener cuatro paquetes permitidos y seis bloqueados.
+- **Victoria y salida.** La compuerta de 3-1 coincide con el umbral de salida en x = 3040. La
+  prueba cruza desde el último terminal caminando con `move_right`. El núcleo del jefe se abona
+  al vencerlo y la tarjeta precede al regreso al mapa.
