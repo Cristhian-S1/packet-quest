@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/bot_ddos.gd" id="1"]
+
+[node name="BotDDoS" type="Area2D"]
+script = ExtResource("1")
+max_health = 2.0
+telegraph_time = 0.6
+cycle_time = 2.4
+bullet_speed = 90.0

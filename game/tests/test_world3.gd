@@ -22,8 +22,7 @@ func _test_world_progress() -> void:
 	check(GameState.WORLDS.has({
 		"level": "res://scenes/levels/World3Level1.tscn", "boss": "res://scenes/bosses/FirewallBoss.tscn"
 	}), "Mundo 3 registrado con el nivel y la arena")
-	saved["unlocked_worlds"].append(5)
-	check(not GameState.is_world_playable(saved, 5), "Centro de datos desbloqueado sigue sin escenas")
+	check(not GameState.is_world_playable(saved, 5), "Centro de datos sigue bloqueado")
 
 
 func _test_hazards(tree: SceneTree) -> void:

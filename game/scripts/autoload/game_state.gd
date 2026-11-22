@@ -5,9 +5,16 @@ const WORLDS: Array[Dictionary] = [
 	{"level": "res://scenes/levels/World2Level1.tscn", "boss": "res://scenes/bosses/WifiQueenBoss.tscn"},
 	{"level": "res://scenes/levels/World3Level1.tscn", "boss": "res://scenes/bosses/FirewallBoss.tscn"},
 	{"level": "res://scenes/levels/World4Level1.tscn", "boss": "res://scenes/bosses/TrojanBoss.tscn"},
+	{"level": "res://scenes/levels/World5Level1.tscn", "boss": "res://scenes/bosses/MalwarexBoss.tscn"},
 ]
 const MAP: String = "res://scenes/main/NetworkMap.tscn"
 const WORKSHOP: String = "res://scenes/ui/Workshop.tscn"
+const CREDITS: String = "res://scenes/ui/CreditsScreen.tscn"
+# Todos los núcleos de datos del juego (2 por nivel salvo el 1-1, más los que sueltan los jefes).
+# Los créditos cuentan cuántos se recogieron; `data_cores` es solo el saldo gastable del Taller.
+const ALL_CORE_IDS: Array[String] = ["w1_hidden_a", "w1_router", "w2_core_a", "w2_core_b",
+	"w3_core_a", "w3_core_b", "w3_firewall_boss", "w4_core_a", "w4_core_b", "w4_trojan_boss",
+	"w5_core_a", "w5_core_b"]
 var data: Dictionary = {}
 var checkpoint: Vector2 = Vector2(48, 296)
 var current_world: int = 1
@@ -37,7 +44,10 @@ static func is_world_unlocked(progress: Dictionary, world: int) -> bool:
 	return world in unlocked or float(world) in unlocked
 
 static func is_world_playable(progress: Dictionary, world: int) -> bool:
-	if world < 1 or world > WORLDS.size() or not is_world_unlocked(progress, world):
+	return is_world_unlocked(progress, world) and has_world_scenes(world)
+
+static func has_world_scenes(world: int) -> bool:
+	if world < 1 or world > WORLDS.size():
 		return false
 	var scenes: Dictionary = WORLDS[world - 1]
 	return ResourceLoader.exists(scenes["level"], "PackedScene") and ResourceLoader.exists(scenes["boss"], "PackedScene")
@@ -95,7 +105,9 @@ func win() -> void:
 	if boss_id not in completed:
 		completed.append(boss_id)
 	var next_world: int = current_world + 1
-	if not is_world_unlocked(data, next_world):
+	if current_world == WORLDS.size():
+		data["finished"] = true
+	elif not is_world_unlocked(data, next_world):
 		data["unlocked_worlds"].append(next_world)
 	save_error = SaveManager.save_game(data)
 
@@ -110,6 +122,20 @@ func open_map() -> void:
 func open_workshop() -> void:
 	playing = false
 	change_scene(WORKSHOP)
+
+func show_credits() -> void:
+	playing = false
+	change_scene(CREDITS)
+
+func new_game() -> Error:
+	var fresh: Dictionary = SaveManager.defaults()
+	var settings: Dictionary = data.get("settings", fresh["settings"])
+	fresh["settings"] = settings.duplicate(true)
+	save_error = SaveManager.save_game(fresh)
+	if save_error == OK:
+		data = fresh
+		start_run()
+	return save_error
 
 func menu() -> void:
 	playing = false

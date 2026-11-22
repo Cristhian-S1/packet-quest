@@ -86,3 +86,12 @@ Validación final: import, inicio, cinco pruebas y 300 frames: exit=0, sin error
 - **Descarga y chips.** El carril de y = 256 coincide con el borde superior de los chips y la consulta de impacto absorbía el disparo al nacer sobre ellos. Las balas de la descarga excluyen esos dos cuerpos de su consulta, con las demás colisiones del pool activas.
 - **Invocación y mímicos.** Los minions de F2 duran hasta el cierre del cofre. En F3, el cofre real se distingue durante los primeros 0,4 s del aviso. Los mímicos pueden hacer daño al terminar el aviso de 0,6 s.
 - **Revelación y victoria.** Los pósteres muestran las pistas cuando Byte se acerca. El núcleo de S4 aparece por proximidad. La victoria abona el núcleo del jefe y muestra la tarjeta durante 0,8 s antes de volver al mapa.
+
+## Decisiones M11
+
+- **Cinco mundos.** M10 ya limitaba los guardados a cinco mundos y el mapa ya mostraba los cinco nombres. Se conservó esa migración y se registraron las escenas de Centro de datos en la lista de GameState.
+- **Estadísticas de núcleos.** El denominador incluye los diez núcleos enumerados en M11. El numerador usa el saldo del guardado, tal como pide la especificación. Firewall Corrupto y Troyano Real ya otorgaban recompensas adicionales en M9 y M10. Se conservaron ambas, de modo que el saldo baja al comprar mejoras y puede llegar a 12 si se recogen todos los núcleos y se guardan ambas recompensas.
+- **Sala QoS.** Los interruptores se repartieron en un orden distinto del de urgencia para que los bloques guíen la solución. Los puentes son plataformas de un sentido sobre suelo firme. Al caer, permiten volver a intentar la secuencia sin daño.
+- **Arena.** Las ventanas tienen un aviso de 0,6 s. El daño al núcleo se detiene en el siguiente umbral de fase para preservar el puzle incluso con impactos simultáneos. El doble anillo mantiene un ciclo de 2 s con 0,8 s de recuperación y una espera de 0,25 s. El borrado de suelo conserva su propio reloj.
+- **Nueva partida.** Inicia 1-1 con progreso y estadísticas nuevos y conserva los ajustes de la partida anterior.
+- **Reloj de pruebas.** La suite principal usa un paso fijo de 60 Hz para completar la simulación headless sin depender del tiempo de pared. La suite de integración conserva el reloj del motor.
