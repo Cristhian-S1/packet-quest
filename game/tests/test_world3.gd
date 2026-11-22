@@ -5,6 +5,7 @@ var finished: bool = false
 
 func run(_tree: SceneTree) -> PackedStringArray:
 	_test_world_progress()
+	await _test_filter(_tree)
 	await _test_armor(_tree)
 	await _test_hazards(_tree)
 	finished = true
@@ -124,6 +125,62 @@ func _require_scene(path: String) -> PackedScene:
 		errors.append("falta " + path.get_file())
 		return null
 	return load(path) as PackedScene
+
+
+func _test_filter(tree: SceneTree) -> void:
+	var filter: Script = _require_script("res://scripts/puzzles/firewall_filter.gd")
+	var scene: PackedScene = _require_scene("res://scenes/puzzles/FirewallPuzzle.tscn")
+	if filter == null or scene == null:
+		return
+	var enums: Dictionary = filter.get_script_constant_map()
+	var circle: int = enums["CIRCLE"]
+	var triangle: int = enums["TRIANGLE"]
+	var square: int = enums["SQUARE"]
+	var red: int = enums["RED"]
+	var green: int = enums["GREEN"]
+	var blue: int = enums["BLUE"]
+	for shape: int in [circle, triangle, square]:
+		for color: int in [red, green, blue]:
+			check(bool(filter.call(&"is_allowed", shape, color, triangle, red)) == (shape == triangle and color != red),
+				"filtro para forma %d y color %d" % [shape, color])
+	var sequence: Array[Dictionary] = filter.call(&"generate_sequence", 0)
+	var expected: Array[Vector2i] = [Vector2i(circle, red), Vector2i(triangle, green), Vector2i(square, red),
+		Vector2i(triangle, red), Vector2i(triangle, blue), Vector2i(circle, green),
+		Vector2i(triangle, green), Vector2i(square, blue), Vector2i(circle, blue), Vector2i(triangle, green)]
+	check(sequence.size() == 10, "la cinta prepara diez paquetes")
+	var allowed: int = 0
+	for index: int in range(mini(sequence.size(), expected.size())):
+		var packet: Dictionary = sequence[index]
+		check(Vector2i(packet["shape"], packet["color"]) == expected[index], "paquete %d de la secuencia canónica" % [index + 1])
+		allowed += int(filter.call(&"is_allowed", packet["shape"], packet["color"], triangle, red))
+	check(allowed == 4 and sequence.size() - allowed == 6, "cuatro permitidos y seis bloqueados")
+	check(sequence == filter.call(&"generate_sequence", 0) and sequence != filter.call(&"generate_sequence", 1), "la semilla determina el orden")
+
+	var puzzle: Node2D = scene.instantiate() as Node2D
+	tree.root.add_child(puzzle)
+	var pass_node: NetworkNode = puzzle.get(&"pass_node") as NetworkNode
+	var block_node: NetworkNode = puzzle.get(&"block_node") as NetworkNode
+	var reset_node: NetworkNode = puzzle.get(&"reset_node") as NetworkNode
+	var door: PacketDoor = puzzle.get(&"door") as PacketDoor
+	var solved_calls: Array[bool] = []
+	puzzle.connect(&"solved", func() -> void: solved_calls.append(true))
+	for wrong_count: int in [3, 2]:
+		for index: int in range(sequence.size()):
+			var packet: Dictionary = sequence[index]
+			var pass_packet: bool = bool(filter.call(&"is_allowed", packet["shape"], packet["color"], triangle, red))
+			if index < wrong_count:
+				pass_packet = not pass_packet
+			var node: NetworkNode = pass_node if pass_packet else block_node
+			node.interact()
+		check(int(puzzle.get(&"mistakes")) == wrong_count, "la cinta recorre todos los paquetes y suma los fallos")
+		check(door.opened == (wrong_count <= 2) and GameState.puzzle_complete == door.opened,
+			"la compuerta aplica el límite de dos fallos")
+		reset_node.interact()
+		check(int(puzzle.get(&"packet_index")) == 0 and int(puzzle.get(&"mistakes")) == 0 and not door.opened,
+			"el reinicio restaura el paquete inicial y cierra la puerta")
+	check(solved_calls.size() == 1 and AudioManager.last_sfx == &"firewall_connected", "el éxito emite solved y reproduce la conexión")
+	puzzle.queue_free()
+	await tree.process_frame
 
 func check(condition: bool, message: String) -> void:
 	if not condition:
