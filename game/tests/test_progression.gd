@@ -5,7 +5,69 @@ var errors: PackedStringArray = []
 func run(_tree: SceneTree) -> PackedStringArray:
 	errors = []
 	_test_catalog()
+	_test_buy_exact_and_insufficient()
+	_test_no_double_buy()
+	_test_weapon_autoequip()
+	_test_cannot_unequip_last_weapon()
+	_test_passive_rules()
+	_test_equipped_filters_invalid()
 	return errors
+
+func fresh(cores: int) -> Dictionary:
+	var data: Dictionary = SaveManager.defaults()
+	data["data_cores"] = cores
+	return data
+
+func _test_buy_exact_and_insufficient() -> void:
+	var data: Dictionary = fresh(2)
+	check(Progression.buy(data, &"marker"), "compra con núcleos justos")
+	check(int(data["data_cores"]) == 0, "núcleos a 0 tras compra justa")
+	check(not Progression.can_buy(data, &"long_dash"), "can_buy sin núcleos")
+	check(not Progression.buy(data, &"long_dash"), "compra sin núcleos rechazada")
+	check(data["owned_upgrades"] == ["marker"], "owned sin cambios tras rechazo")
+	check(not Progression.buy(data, &"nope"), "compra de id inexistente")
+
+func _test_no_double_buy() -> void:
+	var data: Dictionary = fresh(5)
+	Progression.buy(data, &"long_dash")
+	check(not Progression.buy(data, &"long_dash"), "segunda compra rechazada")
+	check(int(data["data_cores"]) == 4, "núcleos no bajan en doble compra")
+
+func _test_weapon_autoequip() -> void:
+	var data: Dictionary = fresh(4)
+	Progression.buy(data, &"triple")
+	check(Progression.equipped_weapons(data) == [&"packet", &"triple"], "triple se autoequipa")
+	Progression.buy(data, &"ping")
+	check(Progression.equipped_weapons(data).size() == 2, "máximo 2 armas equipadas")
+	check(Progression.owns(data, &"ping"), "ping poseída")
+	check(Progression.owns(data, &"packet"), "packet siempre poseída")
+
+func _test_cannot_unequip_last_weapon() -> void:
+	var data: Dictionary = fresh(2)
+	Progression.buy(data, &"triple")
+	check(Progression.toggle_weapon(data, &"triple"), "quitar triple")
+	check(Progression.equipped_weapons(data) == [&"packet"], "queda packet")
+	check(not Progression.toggle_weapon(data, &"packet"), "no se quita la última")
+	check(Progression.equipped_weapons(data) == [&"packet"], "packet sigue equipada")
+	check(Progression.toggle_weapon(data, &"triple"), "volver a equipar triple")
+	check(not Progression.toggle_weapon(data, &"ping"), "no se equipa arma no poseída")
+
+func _test_passive_rules() -> void:
+	var data: Dictionary = fresh(4)
+	check(not Progression.set_passive(data, &"marker"), "pasiva no poseída rechazada")
+	Progression.buy(data, &"marker")
+	check(Progression.set_passive(data, &"marker"), "equipar pasiva poseída")
+	check(Progression.has_effect(data, &"marker"), "efecto de pasiva equipada")
+	Progression.buy(data, &"more_health")
+	check(not Progression.set_passive(data, &"more_health"), "permanente no va en ranura pasiva")
+	check(Progression.has_effect(data, &"more_health"), "efecto de permanente poseída")
+	check(Progression.set_passive(data, &""), "desequipar pasiva")
+	check(not Progression.has_effect(data, &"marker"), "pasiva desequipada sin efecto")
+
+func _test_equipped_filters_invalid() -> void:
+	var data: Dictionary = fresh(0)
+	data["equipped"]["weapons"] = ["laser", "ping"]
+	check(Progression.equipped_weapons(data) == [&"packet"], "ids inválidos o no poseídos → packet")
 
 func check(condition: bool, message: String) -> void:
 	if not condition:
