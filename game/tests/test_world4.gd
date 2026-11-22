@@ -11,6 +11,7 @@ func run(tree: SceneTree) -> PackedStringArray:
 	_test_platforms()
 	await _test_trojan(tree)
 	await _test_password(tree)
+	await _test_boss(tree)
 	finished = true
 	return errors
 
@@ -168,6 +169,96 @@ func _test_password(tree: SceneTree) -> void:
 	check(not door.opened and not GameState.puzzle_complete, "reiniciar restaura el panel y cierra la puerta")
 	puzzle.queue_free()
 	await tree.process_frame
+
+func _test_boss(tree: SceneTree) -> void:
+	var scene: PackedScene = require_scene(BOSS)
+	if scene == null:
+		return
+	var boss: Node2D = scene.instantiate() as Node2D
+	var script: Script = boss.get_script() as Script
+	for ratio: float in [1.0, 0.70, 0.69, 0.40, 0.39]:
+		var phase: int = 1 if ratio > 0.7 else (2 if ratio > 0.4 else 3)
+		check(int(script.call(&"phase_for", ratio)) == phase, "fase de Troyano Real con %.2f PV" % ratio)
+	for sample: Vector3 in [Vector3(1, 0, 1.5), Vector3(2, 1, 2.0), Vector3(2, 4, 3.0), Vector3(3, 2, 2.5)]:
+		check(float(script.call(&"open_window", int(sample.x), int(sample.y))) == sample.z, "apertura para %s" % sample)
+	for index: int in range(-1, 21):
+		var chest_index: int = posmod(index, 3)
+		check(int(script.call(&"true_chest", index)) == chest_index, "cofre real en el ciclo %d" % index)
+		check(script.call(&"chest_spot", index) == Vector2(160 + chest_index * 160, 296), "posición del cofre %d" % index)
+	for index: int in range(13):
+		var lanes: Array = script.call(&"descarga_lanes", index)
+		check(lanes == ([0, 2] if (index >> 1) & 1 == 0 else [1, 2]), "carriles esquivables del ciclo %d" % index)
+	var heights: Array = script.get_script_constant_map()["DESCARGA_LANES"]
+	check(heights == [296.0, 256.0, 216.0] and heights[0] - 3.0 >= 290.0
+		and heights[1] + 3.0 < 290.0 and heights[2] + 3.0 < 304.0 - 60.5 - 14.0,
+		"los carriles se esquivan de pie o con el salto base")
+
+	tree.root.add_child(boss)
+	boss.set_physics_process(false)
+	var body: Hurtbox = boss.get(&"body") as Hurtbox
+	var player: PacketPlayer = boss.get(&"player") as PacketPlayer
+	var pool: ProjectilePool = boss.get(&"pool") as ProjectilePool
+	var health: HealthComponent = boss.get(&"health") as HealthComponent
+	var card: Label = boss.get(&"card") as Label
+	player.set_physics_process(false)
+	check(health.current == 150.0 and body.invulnerable and body.homing_target and body.collision_layer == 4,
+		"el cofre nace cerrado con 150 PV y puede atraer al Ping")
+	body.take_damage(1.0, Vector2.ZERO)
+	boss.call(&"_physics_process", 1.2)
+	boss.call(&"_physics_process", 0.59)
+	check(body.invulnerable and health.current == 150.0, "el aviso de salto no abre el cofre")
+	boss.call(&"_physics_process", 0.011)
+	boss.call(&"_physics_process", 0.3)
+	check(body.position.y < 296.0 and body.invulnerable, "el arco eleva el cofre cerrado")
+	boss.call(&"_physics_process", 0.3)
+	check(body.position == Vector2(160, 296) and not body.invulnerable, "el cofre se abre al aterrizar")
+	boss.call(&"_physics_process", 0.59)
+	check(not pool.enemy_bullets[0].active, "el carril avisa antes de emitir")
+	boss.call(&"_physics_process", 0.011)
+	var shot: Projectile = pool.enemy_bullets[0]
+	check(shot.active and shot.velocity == Vector2(-160, 0) and shot.damage == 1.0
+		and shot.position.y == 296.0 and pool.enemy_bullets[1].position.y == 216.0,
+		"la descarga emite dos proyectiles a 160 px/s en los carriles anunciados")
+	for _cycle: int in range(2):
+		boss.call(&"_physics_process", 1.5)
+		boss.call(&"_physics_process", 0.8)
+		boss.call(&"_physics_process", 0.6)
+		boss.call(&"_physics_process", 0.6)
+		pool.clear_enemy()
+	boss.call(&"_physics_process", 0.6)
+	for _frame: int in range(3):
+		await tree.physics_frame
+	check(shot.active and shot.position.y == 256.0 and shot.position.x < 480.0,
+		"el disparo medio atraviesa el chip situado a la misma altura")
+	body.take_damage(45.0, Vector2.ZERO)
+	check(int(boss.get(&"phase")) == 2 and card.visible and body.invulnerable and not shot.active,
+		"el 70 % limpia el pool y muestra la tarjeta de F2")
+	boss.call(&"_physics_process", 2.39)
+	body.take_damage(45.0, Vector2.ZERO)
+	check(health.current == 105.0 and card.visible, "la pausa conserva la invulnerabilidad por 2,4 s")
+	boss.call(&"_physics_process", 0.01)
+	boss.call(&"_physics_process", 0.6)
+	boss.call(&"_physics_process", 0.6)
+	var minions: Array[PopUp] = _popups(boss)
+	check(not card.visible and not body.invulnerable and minions.size() == 2, "F2 abre el cofre e invoca dos Pop-ups")
+	if minions.size() == 2:
+		check(minions[0].health.current == 3.0 and minions[1].health.current == 3.0, "los minions tienen tres PV")
+		minions[0].take_damage(3.0, Vector2.ZERO)
+	boss.call(&"_physics_process", 1.51)
+	check(not body.invulnerable, "matar un minion extiende la apertura por medio segundo")
+	body.take_damage(45.0, Vector2.ZERO)
+	check(int(boss.get(&"phase")) == 3 and body.invulnerable and card.visible
+		and not pool.enemy_bullets[0].active, "el 40 % inicia la pausa de F3 y cancela la descarga")
+	boss.call(&"_physics_process", 2.4)
+	boss.call(&"_physics_process", 0.6)
+	boss.call(&"_physics_process", 0.6)
+	player.position = Vector2(480, 296)
+	boss.call(&"_physics_process", 0.01)
+	check(body.position == Vector2(160, 296) and not body.invulnerable and player.health.current == 2.0,
+		"en F3 solo el cofre real se abre y el contacto con un mímico quita un PV")
+	boss.queue_free()
+	await tree.process_frame
+	Engine.time_scale = 1.0
 
 func check(condition: bool, message: String) -> void:
 	if not condition:
