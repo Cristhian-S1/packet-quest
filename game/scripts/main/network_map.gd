@@ -21,10 +21,12 @@ func _ready() -> void:
 		if playable:
 			_playable.append(world)
 		var status: String = "DISPONIBLE" if playable else "BLOQUEADO"
-		if GameState.is_world_unlocked(GameState.data, world) and not playable:
+		var status_color: Color = PQStyle.GREEN if playable else PQStyle.EDGE
+		if world > GameState.WORLDS.size():
 			status = "PRÓXIMAMENTE"
-		var status_label: Label = PQStyle.label_at(self, status, Vector2(x - 44, NODE_Y + 56), 8,
-			PQStyle.GREEN if playable else PQStyle.EDGE)
+			if GameState.is_world_unlocked(GameState.data, world):
+				status_color = PQStyle.AMBER
+		var status_label: Label = PQStyle.label_at(self, status, Vector2(x - 44, NODE_Y + 56), 8, status_color)
 		status_label.size.x = 88
 		status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	enter_button = PQStyle.button(self, "", Vector2(36, 250), _enter_world, 240)

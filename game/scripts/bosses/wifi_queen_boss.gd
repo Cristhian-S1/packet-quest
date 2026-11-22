@@ -97,7 +97,7 @@ func _ready() -> void:
 	body.hit.connect(take_damage)
 	add_child(body)
 	StageBuilder.hud(self)
-	card = StageBuilder.boss_card(self, "REINA WI-FI", "REINA WI-FI\nSEÑAL ESTABLE")
+	card = StageBuilder.boss_card(self, "REINA WI-FI", "REINA WI-FI\nSEÑAL ESTABLE", Vector2(88, 70))
 	card.position.y = 148.0
 
 func _physics_process(delta: float) -> void:

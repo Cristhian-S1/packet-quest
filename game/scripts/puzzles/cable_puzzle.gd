@@ -5,7 +5,7 @@ signal solved
 
 const CELL_SIZE: int = 32
 const GRID_ORIGIN: Vector2 = Vector2(192, 215)
-const CAPTION: String = "Une la antena con el router. Usa la mira y el salto."
+const CAPTION: String = "Ponte bajo una pieza. Salta y dispara hacia arriba."
 const FACT: String = "Dato: los cables y repetidores llevan la señal donde el Wi-Fi no llega."
 
 var grid: CableGrid = CableGrid.new()
@@ -63,7 +63,7 @@ func _refresh() -> void:
 		GameState.puzzle_complete = is_solved
 	door.set_open(is_solved)
 	_caption.text = FACT if is_solved else CAPTION
-	_caption.modulate = PQStyle.GREEN if is_solved else Color.WHITE
+	_caption.add_theme_color_override("font_color", PQStyle.GREEN if is_solved else PQStyle.EDGE)
 	for piece: CableCell in cells:
 		piece.openings = grid.openings(piece.cell)
 		piece.connected = piece.cell in connected
