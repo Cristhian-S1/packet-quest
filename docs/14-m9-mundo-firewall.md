@@ -32,7 +32,7 @@ rojo oscuro `#2A0F3A`, franjas de advertencia ámbar).
 | Sección | Rango X | Contenido |
 |---|---|---|
 | S1 Reglas | 0–560 | Suelo plano, 2 `ArmoredPopUp` estáticos, letrero "Dispara por detrás" |
-| S2 Puertos | 560–1280 | 3 `PortLaser` sobre un foso de 160 px (caer = muerte), letrero "Los puertos se abren y se cierran" |
+| S2 Puertos | 560–1280 | 3 `PortLaser` sobre el suelo, con un foso de 96 px (salto + dash; caer = muerte) entre el 2.º y el 3.º, letrero "Los puertos se abren y se cierran" |
 | S3 Combate | 1280–1920 | 2 `ArmoredWorm`, 2 `ArmoredPopUp`, 1 `PortLaser` |
 | Checkpoint | 1920 | |
 | S4 Mezcla | 1920–2400 | 1 `RuleBar` + 2 plataformas + 1 `ArmoredPopUp` |
@@ -42,20 +42,24 @@ Núcleos de datos: 2 (`w3_core_a` visible en S2, `w3_core_b` oculto sobre la úl
 
 ### PortLaser (`scripts/objects/port_laser.gd`)
 
-- `Area2D` rectangular (export `size`, por defecto 48×16) que emite un **láser horizontal** de
-  "puerto bloqueado". Mientras está `blocked`, Byte que lo toca recibe 1 PV (capa 7 `hazard`, máscara `player`).
+- `Area2D` rectangular (export `size`, por defecto 16×96, apoyado en el suelo) que emite un **láser vertical** de
+  "puerto bloqueado" que corta el paso. Mientras está `blocked`, Byte que lo toca recibe 1 PV (capa 7 `hazard`, máscara `player`).
 - Ciclo: bloqueado 1,6 s → abierto 1,4 s; los últimos 0,5 s del abierto son `warning` (el láser
-  parpadea y deja de hacer daño antes de cerrarse). Estado inicial configurable (`phase_offset`).
+  parpadea para avisar de que va a cerrarse; todavía no hace daño). Estado inicial configurable (`phase_offset`).
 - Función pura testeable: `static func state_at(t: float) -> StringName` devuelve `&"blocked"`,
   `&"open"` o `&"warning"` (periodo 3,0 s: 0–1,6 bloqueado, 1,6–2,5 abierto, 2,5–3,0 aviso).
 
 ### RuleBar (`scripts/objects/rule_bar.gd`)
 
 - Barrera vertical de 16×360 px en una posición fija (capa 7 `hazard`) con un **hueco de 64 px**.
-  El hueco cambia de altura entre 3 carriles (y = 280, 208, 136) cada **1,5 s**.
+  El hueco (centrado en el carril) cambia entre 3 carriles cada **1,5 s**: y = 288 (a ras de suelo),
+  y = 240 (sobre una plataforma a y = 256 o saltando desde el suelo) e y = 184 (saltando desde una plataforma).
+  El salto de Byte sube ~60 px (330² / (2·900)), así que **todo carril debe ser alcanzable** desde el suelo o
+  desde una plataforma a y = 256; S4 coloca sus 2 plataformas a esa altura delante de la barra.
 - Tocar la parte sólida = 1 PV; pasar por el hueco es seguro. Aviso 0,4 s antes de mover el hueco
   (el hueco parpadea en blanco). Reutiliza el concepto del hueco del jefe (F1) para enseñar a leer huecos.
-- Función pura: `static func gap_lane(t: float) -> int` = `int(fposmod(t / 1.5, 3.0))` (0/1/2 → 280/208/136), determinista.
+- Función pura: `static func gap_lane(t: float) -> int` = `int(fposmod(t / 1.5, 3.0))` (0/1/2 → 288/240/184), determinista.
+- Constante compartida con el jefe: `const LANES_Y: Array[float] = [288.0, 240.0, 184.0]`.
 
 ## 3 · Enemigos blindados (`scripts/enemies/armor_rule.gd`, `armored_popup.gd`, `armored_worm.gd`)
 
@@ -105,22 +109,27 @@ Arena fija de 640×360, suelo en y = 304. El **muro de reglas** ocupa el lado de
 **núcleo** es una `Hurtbox` de 48×48 (`homing_target = true`, capa 3 `enemy`) detrás del muro. **120 PV**.
 El muro se construye con `StageBuilder.platform` (capa 1) en tramos, dejando un hueco de 48×48 en el puerto abierto.
 
-**Puertos** (cómo se daña): el muro tiene 3 puertos en (520, 112), (520, 176) y (520, 240). El núcleo solo
+La arena tiene 2 plataformas-chip de 80 px con el borde superior en y = 256, en x 96–176 y 272–352, para
+alcanzar los carriles altos de las reglas.
+
+**Puertos** (cómo se daña): el muro tiene 3 puertos en (520, 184), (520, 240) y (520, 288) (alto/medio/bajo,
+los mismos carriles `LANES_Y`, alcanzables disparando en horizontal o en diagonal hacia arriba). El núcleo solo
 es dañable cuando un puerto está abierto (`core.invulnerable = false`); con todos cerrados, `invulnerable = true`.
 El resto del muro absorbe las balas de Byte (capa 1 `world`).
 
 | | F1 "Reglas de bloqueo" (100–70 %) | F2 "Puertos abiertos" (70–40 %) | F3 "El muro avanza" (40–0 %) |
 |---|---|---|---|
-| Ataque A | **Reglas de bloqueo:** una regla vertical (16×360 px) barre de derecha a izquierda a **140 px/s** con un **hueco de 64 px** en una de 3 alturas (y = 280, 208, 136). Aviso **0,7 s**: la franja del hueco parpadea en blanco. Una regla cada **2,2 s**. | Igual, a **170 px/s**, con **2 huecos** en dos alturas distintas. | Igual que F2, cada **1,6 s**, 1 hueco. |
+| Ataque A | **Reglas de bloqueo:** una regla vertical (16×360 px) barre de derecha a izquierda a **140 px/s** con un **hueco de 64 px** centrado en uno de los 3 carriles `LANES_Y` (y = 288, 240, 184). Aviso **0,7 s**: la franja del hueco parpadea en blanco. Una regla cada **2,2 s**. | Igual, a **170 px/s**, con **2 huecos** en dos alturas distintas. | Igual que F2, cada **1,6 s**, 1 hueco. |
 | Ataque B | — | **Láser de puerto:** desde el puerto abierto sale un láser horizontal a la altura de Byte, activo **0,45 s**. Aviso **0,8 s**: línea discontinua roja. | — |
-| Ataque C | — | — | **Avance del muro:** el muro avanza a **24 px/s** desde x = 640. Cada bala que golpea una "regla" lo retrocede **8 px** (mínimo x = 480). El contacto con el muro quita 1 PV. |
+| Ataque C | — | — | **Avance del muro:** el frente del muro empieza en x = 480 y avanza hacia Byte a **24 px/s**. Cada bala que golpea un ladrillo-regla lo retrocede **8 px**, sin pasar de x = 480. Nunca avanza más allá de x = 160 (Byte siempre conserva 160 px). El contacto con el muro quita 1 PV (con los i-frames normales). El núcleo se desplaza con el frente (x = frente + 40). |
 | Punto débil | Núcleo tras el puerto **central** (y = 176), abierto **1,2 s** cada **2,8 s** (aviso **0,4 s**: el marco parpadea en blanco). | Núcleo tras el puerto **indicado por color** (destello rojo/verde/azul = alto/medio/bajo); los 3 puertos se abren en secuencia **1,2 s** cada uno. | Núcleo expuesto de forma **permanente** en el puerto central; el resto del muro son reglas destructibles. |
 | Patrón | A, A, A… (apertura en paralelo), recuperación 1,0 s | B, A, B, A…, recuperación 0,8 s | C continuo + A cada 1,6 s, recuperación 0,8 s |
 
 Funciones puras testeables: `static func phase_for(hp_ratio: float) -> int` (1, 2 o 3),
-`static func rule_gap_lane(index: int) -> int` (0/1/2 → y = 280/208/136, determinista por índice),
+`static func rule_gap_lane(index: int) -> int` (0/1/2 → `LANES_Y`, determinista por índice),
 `static func correct_port(step: int) -> int` (0/1/2 → alto/medio/bajo, determinista por paso) y
-`static func wall_x(hits: int) -> float` (`maxf(480.0, 640.0 - hits * 8.0)`).
+`static func wall_x(elapsed: float, hits: int) -> float` = `clampf(480.0 - 24.0 * elapsed + 8.0 * hits, 160.0, 480.0)`
+(`elapsed` = segundos en F3 sin contar pausas).
 
 Al vencerlo: `GameState.win()` (desbloquea el Mundo 4 en el mapa, que seguirá como PRÓXIMAMENTE).
 
@@ -130,9 +139,9 @@ Nuevo `tests/test_world3.gd` registrado en `test_runner.gd` (con el patrón `fin
 
 1. `FirewallFilter`: `is_allowed` solo es `true` para ▲G y ▲B (con `allowed_shape = TRIANGLE`, `blocked_color = RED`); `generate_sequence(0)` da 10 paquetes con 4 permitidos y 6 bloqueados; `generate_sequence(0) == generate_sequence(0)` y `generate_sequence(0) != generate_sequence(1)`.
 2. `PortLaser.state_at`: 0,0 → blocked, 1,5 → blocked, 1,7 → open, 2,4 → open, 2,6 → warning, 3,1 → blocked.
-3. `RuleBar.gap_lane`: 0,0 → 0, 1,6 → 1, 3,1 → 2 (determinista y solo 0/1/2).
+3. `RuleBar.gap_lane`: 0,0 → 0, 1,6 → 1, 3,1 → 2 (determinista y solo 0/1/2). Todo `LANES_Y[i]` está a ≤ 60 px por encima de una superficie pisable (suelo y = 304 o plataforma y = 256) del nivel y de la arena.
 4. `ArmorRule.blocks`: disparo por delante → `true`, por detrás → `false`. `ArmoredPopUp`: con Byte a la izquierda, una bala desde la izquierda no reduce PV; desde la derecha sí.
-5. Firewall: `phase_for(1.0) == 1`, `phase_for(0.69) == 2`, `phase_for(0.39) == 3`; `rule_gap_lane` y `correct_port` devuelven solo 0/1/2 para índices 0–20 y ciclan de forma determinista; `wall_x(0) == 640`, `wall_x(10) == 560`, `wall_x(100) == 480`.
+5. Firewall: `phase_for(1.0) == 1`, `phase_for(0.69) == 2`, `phase_for(0.39) == 3`; `rule_gap_lane` y `correct_port` devuelven solo 0/1/2 para índices 0–20 y ciclan de forma determinista; `wall_x(0, 0) == 480`, `wall_x(5, 0) == 360`, `wall_x(5, 10) == 440`, `wall_x(100, 0) == 160`, `wall_x(0, 50) == 480`.
 6. GameState: `win()` en el mundo 2 desbloquea el 3; `is_world_playable(data, 3)` falso antes de añadir la escena y verdadero después; `is_world_playable(data, 4)` falso aunque esté desbloqueado.
 7. `test_scenes_load.gd`: subir el mínimo de escenas según las nuevas (≥ 29).
 
