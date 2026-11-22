@@ -167,8 +167,13 @@ func run(scene_tree: SceneTree) -> PackedStringArray:
 	check(world.puzzle.door.global_position.x == 2720, "compuerta desalineada con transición")
 	# Exercise the real scene transition, death screen and checkpoint retry.
 	tree.current_scene = world
-	byte.global_position = Vector2(2724, 296)
-	await frames(4)
+	# Byte debe llegar caminando: el muro del borde no puede tapar la salida.
+	byte.global_position = Vector2(2680, 296)
+	byte.velocity = Vector2.ZERO
+	Input.action_press("move_right")
+	await frames(60)
+	Input.action_release("move_right")
+	await frames(2)
 	check(tree.current_scene is RouterBoss, "puerta no lleva a arena")
 	check(state.checkpoint == Vector2(64, 296), "entrar al jefe no fija checkpoint de arena")
 	var retry_boss: RouterBoss = tree.current_scene as RouterBoss

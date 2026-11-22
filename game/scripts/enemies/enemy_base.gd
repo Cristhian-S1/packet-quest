@@ -88,6 +88,7 @@ func _die() -> void:
 	state = State.DEAD
 	timer = 0.3
 	collision_layer = 0
+	remove_from_group("homing_target")
 	Events.impact.emit(0.03, 0.0)
 	if player != null and randf() < 0.1:
 		var cache: DataCore = DataCore.new()

@@ -337,7 +337,7 @@ func shoot() -> void:
 			bullet.homing_turn_rad = deg_to_rad(item.homing_turn_deg)
 			bullet.marks = marker_active
 	shoot_wait += 1.0 / item.fire_rate
-	AudioManager.play_sfx(&"packet")
+	AudioManager.play_sfx(item.sfx)
 
 func interact() -> void:
 	var nearest: Node2D = null

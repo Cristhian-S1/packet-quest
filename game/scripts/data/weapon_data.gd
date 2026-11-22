@@ -9,3 +9,4 @@ extends Resource
 @export var spread_count: int = 1
 @export var spread_angle_deg: float = 0.0
 @export var homing_turn_deg: float = 0.0
+@export var sfx: StringName = &"packet"

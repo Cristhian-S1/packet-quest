@@ -12,8 +12,11 @@ func run(_tree: SceneTree) -> PackedStringArray:
 	_test_weapon_autoequip()
 	_test_cannot_unequip_last_weapon()
 	_test_passive_rules()
+	_test_buy_passive_autoequips()
 	_test_equipped_filters_invalid()
 	_test_workshop_status()
+	_test_workshop_slots_full()
+	_test_upgrades_returns_copy()
 	finished = true
 	return errors
 
@@ -68,6 +71,14 @@ func _test_passive_rules() -> void:
 	check(Progression.set_passive(data, &""), "desequipar pasiva")
 	check(not Progression.has_effect(data, &"marker"), "pasiva desequipada sin efecto")
 
+func _test_buy_passive_autoequips() -> void:
+	var data: Dictionary = fresh(6)
+	check(Progression.buy(data, &"marker"), "compra pasiva marker")
+	check(Progression.has_effect(data, &"marker"), "pasiva se autoequipa al comprar con ranura vacía")
+	check(Progression.buy(data, &"slowdown"), "compra pasiva slowdown")
+	check(Progression.has_effect(data, &"marker"), "nueva pasiva no desequipa la equipada")
+	check(not Progression.has_effect(data, &"slowdown"), "segunda pasiva no se autoequipa sobre la primera")
+
 func _test_workshop_status() -> void:
 	var workshop: Script = load("res://scripts/ui/workshop.gd") as Script
 	var data: Dictionary = fresh(2)
@@ -80,6 +91,19 @@ func _test_workshop_status() -> void:
 	data["data_cores"] = 2
 	Progression.buy(data, &"more_health")
 	check(workshop.call("status", data, Catalog.upgrade(&"more_health")) == "Instalada", "taller: permanente")
+
+func _test_workshop_slots_full() -> void:
+	var workshop: Script = load("res://scripts/ui/workshop.gd") as Script
+	var data: Dictionary = fresh(4)
+	Progression.buy(data, &"triple")
+	Progression.buy(data, &"ping")
+	check(workshop.call("status", data, Catalog.upgrade(&"ping")) == "Ranuras llenas", "taller: ranuras llenas")
+	check(workshop.call("status", data, Catalog.upgrade(&"triple")) == "Equipada", "taller: arma equipada")
+
+func _test_upgrades_returns_copy() -> void:
+	var copy: Array[UpgradeData] = Catalog.upgrades()
+	copy.clear()
+	check(copy.is_empty() and Catalog.upgrades().size() == 7, "catálogo: upgrades() devuelve una copia mutable")
 
 func _test_equipped_filters_invalid() -> void:
 	var data: Dictionary = fresh(0)
