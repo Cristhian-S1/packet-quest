@@ -35,6 +35,7 @@ enum State { IDLE, RUN, JUMP, FALL, DASH, SHIELD, HURT, DEAD }
 @export var weapon: WeaponData = preload("res://resources/weapons/packet.tres")
 
 var state: State = State.IDLE
+var external_push: Vector2 = Vector2.ZERO
 var health: HealthComponent
 var camera: Camera2D
 var hurtbox: Hurtbox
@@ -176,6 +177,7 @@ func _physics_process(delta: float) -> void:
 	animation_time += delta
 	queue_redraw()
 	if state == State.DEAD:
+		external_push = Vector2.ZERO
 		return
 	cooldown = maxf(0, cooldown - delta)
 	invulnerability = maxf(0, invulnerability - delta)
@@ -237,7 +239,13 @@ func _physics_process(delta: float) -> void:
 		state = State.SHIELD if shield_active else (State.RUN if absf(velocity.x) > 1 else State.IDLE)
 		if not is_on_floor():
 			state = State.JUMP if velocity.y < 0 else State.FALL
+	var push_x: float = external_push.x
+	external_push = Vector2.ZERO
+	velocity.x += push_x
+	var combined_speed: float = velocity.x
 	move_and_slide()
+	if is_equal_approx(velocity.x, combined_speed):
+		velocity.x -= push_x
 	if global_position.y > 388:
 		pit_respawn()
 	if Input.is_action_pressed("shoot") and not shield_active and shoot_wait <= 0 and state != State.DEAD and hurt_left <= 0:
