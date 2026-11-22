@@ -68,6 +68,16 @@ func _test_player(tree: SceneTree) -> void:
 		if bullet.active:
 			active += 1
 	check(active == 3, "triple dispara 3 balas (hubo %d)" % active)
+	# test_slowdown_counts_game_time: la duración avanza solo con el juego (no en pausa)
+	player.apply_progression(_data(3, [&"slowdown"], &"slowdown"))
+	player._check_slowdown(1.0, 3.0)
+	check(is_equal_approx(Projectile.enemy_time_scale, 0.5), "ralentizador activa 50 %")
+	player.tick_slowdown(2.9)
+	check(is_equal_approx(Projectile.enemy_time_scale, 0.5), "ralentizador sigue a los 2,9 s")
+	player.tick_slowdown(0.2)
+	check(is_equal_approx(Projectile.enemy_time_scale, 1.0), "ralentizador termina a los 3 s")
+	player._check_slowdown(1.0, 3.0)
+	check(is_equal_approx(Projectile.enemy_time_scale, 1.0), "ralentizador solo 1 vez por nivel")
 	stage.queue_free()
 	await tree.process_frame
 	player_checked = true

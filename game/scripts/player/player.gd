@@ -65,6 +65,7 @@ var weapon_slots: Array[WeaponData] = []
 var weapon_index: int = 0
 var marker_active: bool = false
 var slowdown_available: bool = false
+var slowdown_left: float = 0.0
 var _base: Dictionary = {}
 
 func _ready() -> void:
@@ -156,13 +157,22 @@ func _check_slowdown(current: float, _maximum: float) -> void:
 	if not slowdown_available or not is_equal_approx(current, 1.0):
 		return
 	slowdown_available = false
+	slowdown_left = 3.0
 	Projectile.enemy_time_scale = 0.5
-	get_tree().create_timer(3.0, true, false, true).timeout.connect(func() -> void: Projectile.enemy_time_scale = 1.0)
+
+## Cuenta en tiempo de juego: _physics_process no corre en pausa.
+func tick_slowdown(delta: float) -> void:
+	if slowdown_left <= 0.0:
+		return
+	slowdown_left -= delta
+	if slowdown_left <= 0.0:
+		Projectile.enemy_time_scale = 1.0
 
 func _exit_tree() -> void:
 	Projectile.enemy_time_scale = 1.0
 
 func _physics_process(delta: float) -> void:
+	tick_slowdown(delta)
 	animation_time += delta
 	queue_redraw()
 	if state == State.DEAD:
