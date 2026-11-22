@@ -52,7 +52,7 @@ acentos cian. `EXIT_X = 3590` (la compuerta/muro final está en x = 3600; ver §
 
 | Sección | Rango X | Contenido |
 |---|---|---|
-| S1 Corrientes | 0–560 | 1 `WaveZone` + 2 `AirCurrent` (suben a una plataforma en y = 184, 120 px, inalcanzable con salto); letrero "Ondas y corrientes de aire" |
+| S1 Corrientes | 0–560 | 1 `WaveZone` + 2 `AirVent` de M10 (suben a una plataforma en y = 184, 120 px, inalcanzable con salto); letrero "Ondas y corrientes de aire" |
 | S2 Cobertura | 560–1280 | 1 router + 4 `CoveragePlatform` sobre un foso de 240 px (caer = muerte); letrero "Mantente cerca del router" |
 | S3 Puertos | 1280–1920 | 3 `PortLaser`; un hueco de 96 px (salto + dash) entre el 2.º y el 3.º; letrero "Los puertos se abren y se cierran" |
 | S4 Combate | 1920–2560 | 1 `NetworkWorm`, 2 `PopUp`, 1 `Spyware`, 1 `Trojan`, 2 `BotDDoS` |
@@ -73,18 +73,14 @@ Núcleos de datos: 2 (`w5_core_a` visible en S3, sobre la plataforma tras el hue
 - Función pura testeable: `static func state_at(t: float) -> StringName` devuelve `&"solid"`,
   `&"fading"` o `&"gone"` (periodo 4,0 s: 0–2,0 solid, 2,0–2,5 fading, 2,5–4,0 gone).
 
-### AirCurrent (`scripts/objects/air_current.gd`)
+### Corrientes de aire: se reutiliza `AirVent` de M10
 
-- `Area2D` rectangular (`@export var size: Vector2 = Vector2(80, 160)`), `@export var lift: float = 150.0`
-  px/s, siempre hacia arriba. Mientras está `active` y Byte dentro:
-  `player.external_push.y -= lift`.
-- Requiere que Byte consuma también el eje vertical de `external_push` (M11 añade una línea en
-  `player.gd` análoga al consumo actual de `external_push.x`):
-  `velocity.y += external_push.y` antes de `move_and_slide()`.
-- Ciclo: activa 2,0 s → inactiva 1,0 s (periodo 3,0 s), `phase_offset` configurable. El arco de
-  viento se dibuja con líneas que suben y parpadean en ámbar cuando se acerca la inactividad.
-- Función pura testeable: `static func state_at(t: float) -> StringName` devuelve `&"active"` o
-  `&"inactive"` (periodo 3,0 s: 0–2,0 active, 2,0–3,0 inactive).
+No se crea un objeto nuevo: S1 usa el `AirVent` de `docs/15-m10-mundo-servidor.md`
+(`scripts/objects/air_vent.gd`, columna de 96×120 desde el suelo, `push_up = 240`,
+`lift_velocity`, ciclo de 3,0 s). Con esos valores Byte sube hasta 152 px sobre el suelo, así que
+la plataforma de S1 a y = 184 (120 px) es alcanzable y el salto solo (60,5 px) no basta.
+(Revisión del director: el borrador definía un `AirCurrent` que restaba `lift` a la velocidad en
+cada frame, lo que acelera a Byte sin límite; además duplicaba el objeto de M10.)
 
 ### Reuso de objetos de mundos anteriores
 
@@ -162,18 +158,21 @@ Constantes: `PHASE_TWO = 0.75`, `PHASE_THREE = 0.50`, `PHASE_FOUR = 0.25`;
 
 | | F1 "Remezcla" (100–75 %) | F2 "Cables vivos" (75–50 %) | F3 "Núcleo blindado" (50–25 %) | F4 "Borrado de datos" (25–0 %) |
 |---|---|---|---|---|
-| Ataque A | **Anillo de señal** (Router): 12 balas en círculo desde (320, 112) a 150 px/s. Aviso 0,6 s (el núcleo brilla) | **Cables vivos:** 2 cables horizontales barren en vertical entre y 96 y 240 a 90 px/s (uno sube, otro baja). Tocarlos = 1 PV. Aviso 0,6 s (el cable se enciende) | **Regla de bloqueo** (Firewall): barra vertical 16×360 px que barre de derecha a izquierda a 140 px/s con un hueco de 64 px centrado en un carril `LANES_Y` (288/240/184). Aviso 0,7 s (la franja parpadea) | **Borrado de datos:** el suelo se borra por columnas de 64 px (de derecha a izquierda), 1 columna cada 1,5 s; caer = muerte. Aviso 0,8 s (la columna parpadea en rojo) |
-| Ataque B | **Ondas horizontales** (Reina): 2 de 3 carriles `WAVE_LANES` (296/256/216), fila de 5 a 160 px/s, rebote 1. Aviso 0,6 s (línea en el carril) | **Ventanas emergentes:** 2 ventanas tapan la pantalla 1,2 s (ocultan los avisos de otros ataques; no dañan) | **Ping descendente** (Reina): 5 balas caen en x de Byte ±0/32/64 a 180 px/s. Aviso 0,8 s (marcas en el techo) | **Anillo doble** (Router F2): 2 anillos de 12 desfasados 15°, a 0,35 s |
+| Ataque A | **Anillo de señal** (Router): 12 balas en círculo desde (320, 112) a 150 px/s. Aviso 0,6 s (el núcleo brilla) | **Cables vivos:** 2 cables horizontales de 4 px barren en vertical entre y 96 y 300 a 90 px/s (uno baja desde 96, otro sube desde 300). Cada cable tiene un **hueco de 64 px** en `cable_gap_x(index)`; Byte se pone bajo el hueco del que baja y salta por el hueco del que sube. Tocarlos = 1 PV. Aviso 0,6 s (el cable se enciende y su hueco se marca en cian) | **Regla de bloqueo** (Firewall): barra vertical 16×360 px que barre de derecha a izquierda a 140 px/s con un hueco de 64 px centrado en un carril `LANES_Y` (288/240/184). Aviso 0,7 s (la franja parpadea) | **Borrado de datos:** el suelo se borra por columnas de 64 px (de derecha a izquierda), 1 columna cada 1,5 s; caer = muerte. Aviso 0,8 s (la columna parpadea en rojo) |
+| Ataque B | **Ondas horizontales** (Reina): 2 de 3 carriles `WAVE_LANES` (296/256/216), fila de 5 a 160 px/s, rebote 1. Aviso 0,6 s (línea en el carril) | **Ventanas emergentes:** 2 ventanas de 160×96 aparecen en las esquinas superiores durante 1,2 s; se dibujan **debajo** de cables, balas y avisos (nunca ocultan un aviso: pilar "legible antes que difícil"), no dañan y se cierran con 1 disparo | **Ping descendente** (Reina): 5 balas caen en x de Byte ±0/32/64 a 180 px/s. Aviso 0,8 s (marcas en el techo) | **Anillo doble** (Router F2): 2 anillos de 12 desfasados 15°, a 0,35 s |
 | Punto débil | Cuerpo (hurtbox) | Cuerpo (hurtbox) | **Puzle en combate:** 3 nodos a conectar quitan 3 escudos; luego el cuerpo es vulnerable | Cuerpo (hurtbox) |
-| Patrón | A, B, A, B… rec 1,0 s | E, F, E, F… rec 0,8 s | C, D, C, D… (nodos en paralelo) rec 0,8 s | G continuo + B cada 2 s, rec 0,8 s |
+| Patrón | A, B, A, B… rec 1,0 s | A, B, A, B… rec 0,8 s | A, B, A, B… (nodos en paralelo) rec 0,8 s | A continuo + B cada 2 s, rec 0,8 s |
 
 Funciones puras testeables:
 
 - `static func phase_for(hp_ratio: float) -> int`: 1 si `> 0.75`, 2 si `> 0.50`, 3 si `> 0.25`,
   si no 4.
 - `static func erased_columns(elapsed: float) -> Array[int]`: columnas de suelo borradas en F4.
-  Con 10 columnas de 64 px (0–639), cada 1,5 s se borra una más desde la derecha:
-  `n = clampi(floori(elapsed / 1.5) + 1, 0, 10)`; devuelve `[9, 8, …]` (las `n` más a la derecha).
+  Con 10 columnas de 64 px (0–639), cada 1,5 s se borra una más desde la derecha, **como máximo 6**
+  (las columnas 0–3, x 0–255, nunca se borran: siempre queda suelo):
+  `n = clampi(floori(elapsed / 1.5), 0, 6)`; devuelve `[9, 8, …]` (las `n` más a la derecha).
+- `static func cable_gap_x(index: int) -> float`: x izquierda del hueco de 64 px de cada cable,
+  determinista y dentro de [32, 544] (p. ej. `[64.0, 288.0, 512.0, 176.0, 400.0][posmod(index, 5)]`).
 - `static func node_positions() -> Array[Vector2]`: las 3 posiciones fijas del puzle en combate
   `[Vector2(120, 288), Vector2(320, 240), Vector2(520, 288)]`.
 
@@ -227,8 +226,8 @@ Valores de `player.gd` (no cambiar): `jump_speed = 330`, `gravity = 900`, `fall_
    ≤ 96 px (en S2: 4 apoyos a ~64 px; en S5: 3 nubes a ~70 px).
 4. **Regla de 60 px.** Toda superficie pisable está a ≤ 60 px por encima de otra alcanzable: una
    plataforma a y = 256 (48 px sobre el suelo) se alcanza con salto (60,5 px). La plataforma de S1
-   a y = 184 (120 px) **no** se salta: se alcanza con la `AirCurrent` (lift 150 px/s × 2,0 s
-   activa = hasta 300 px de subida).
+   a y = 184 (120 px) **no** se salta: se alcanza con el `AirVent` (sube hasta 152 px sobre el suelo, ver §15-6
+   de M10).
 5. **Carriles de la regla (`LANES_Y` = 288/240/184) en F3.** Hueco de 64 px centrado en el carril:
    288 → pasa de pie (hueco 256–320, piso 304); 240 → salto desde el suelo (hueco 208–272, pico
    229,5–243,5); 184 → desde la plataforma a y = 256 (pico 181,5–195,5 dentro de 152–216). La arena
@@ -241,7 +240,8 @@ Valores de `player.gd` (no cambiar): `jump_speed = 330`, `gravity = 900`, `fall_
    muro sólido en la x de salida (mismo patrón que `World1Level1.EXIT_X = 2710`).
 8. **F4.** El borrado deja 2 plataformas permanentes en y = 256 (x 96–176 y 272–352) alcanzables
    desde el suelo antes de que desaparezca su columna; `erased_columns` borra de derecha a izquierda
-   para que Byte siempre tenga una columna contigua hacia la izquierda.
+   y nunca más de 6 columnas: x 0–255 siempre tiene suelo. Los cables de F2 bajan hasta y = 300
+   (alcanzan a Byte de pie) pero cada uno deja un hueco de 64 px (> 10 px de Byte) marcado en el aviso.
 
 ## 8 · Pruebas obligatorias (TDD: prueba roja → código → verde)
 
@@ -249,14 +249,14 @@ Nuevo `tests/test_world5.gd` registrado en `test_runner.gd` (`TESTS` += `"world5
 `finished` de los demás:
 
 1. `CloudPlatform.state_at`: 0,0 → solid, 1,9 → solid, 2,2 → fading, 2,6 → gone, 3,9 → gone, 4,1 → solid.
-2. `AirCurrent.state_at`: 0,0 → active, 1,9 → active, 2,1 → inactive, 3,1 → active.
+2. Reutiliza `AirVent` (sus pruebas son de M10); comprueba que la plataforma de S1 está a ≤ 152 px del suelo y a > 60 px (exige el ventilador).
 3. `QosPuzzle`: `is_correct_order([]) == false`; `is_correct_order([voz, video, correo, descarga]) == true`;
    `is_correct_order([video, voz, correo, descarga]) == false`; `urgency` = 4/3/2/1;
    `next_expected([voz, video]) == &"correo"`.
 4. `BotDDoS.fan_directions`: 6 direcciones, la primera y la última desfasadas ~120°, todas de
    longitud ≈ 1 (normalizadas).
 5. `Malwarex.phase_for`: 1,0 → 1, 0,76 → 1, 0,75 → 2, 0,51 → 2, 0,50 → 3, 0,26 → 3, 0,25 → 4, 0,0 → 4.
-6. `Malwarex.erased_columns`: 0,0 → `[]`, 1,5 → `[9]`, 3,0 → `[9, 8]`, 16,0 → las 10 columnas.
+6. `Malwarex.erased_columns`: 0,0 → `[]`, 1,5 → `[9]`, 3,0 → `[9, 8]`, 16,0 → `[9, 8, 7, 6, 5, 4]` (nunca borra 0–3); `cable_gap_x` devuelve valores en [32, 544] para índices 0–20.
 7. Integración (igual patrón que `_test_queen`): instanciar Malwarex, `take_damage` cruza 75/50/25 %
    con `timer == 2.4` y balas limpiadas; en F3 `body.invulnerable` hasta conectar los 3 nodos; la
    derrota marca `finished` y abre `CreditsScreen`; `format_time(65) == "01:05"`.
