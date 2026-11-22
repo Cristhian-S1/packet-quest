@@ -45,7 +45,7 @@ func _physics_process(delta: float) -> void:
 	var center: Vector2 = camera.get_screen_center_position() if camera != null else Vector2(320, 180)
 	on_screen = Rect2(center - Vector2(310, 170), Vector2(620, 340)).has_point(global_position)
 	visible = on_screen
-	if not on_screen:
+	if not on_screen and not _runs_offscreen():
 		# Returning enemies must telegraph again before firing.
 		if state == State.TELEGRAPH or state == State.ACTIVE:
 			state = State.IDLE
@@ -54,6 +54,9 @@ func _physics_process(delta: float) -> void:
 	if player != null and player.state != PacketPlayer.State.DEAD and global_position.distance_to(player.global_position) < 17:
 		player.take_damage(1.0, global_position)
 	advance(delta)
+
+func _runs_offscreen() -> bool:
+	return false
 
 func advance(delta: float) -> void:
 	timer -= delta

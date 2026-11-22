@@ -19,11 +19,11 @@ func _test_world_progress() -> void:
 	GameState.win()
 	var saved: Dictionary = SaveManager.load_game()
 	check(GameState.is_world_unlocked(saved, 3), "la victoria del mundo 2 desbloquea Firewall")
-	check(GameState.WORLDS.size() == 3 and GameState.WORLDS.has({
+	check(GameState.WORLDS.has({
 		"level": "res://scenes/levels/World3Level1.tscn", "boss": "res://scenes/bosses/FirewallBoss.tscn"
 	}), "Mundo 3 registrado con el nivel y la arena")
-	saved["unlocked_worlds"].append(4)
-	check(not GameState.is_world_playable(saved, 4), "Servidor desbloqueado sigue sin escenas")
+	saved["unlocked_worlds"].append(5)
+	check(not GameState.is_world_playable(saved, 5), "Centro de datos desbloqueado sigue sin escenas")
 
 
 func _test_hazards(tree: SceneTree) -> void:
@@ -387,8 +387,8 @@ func _test_level_route(tree: SceneTree) -> void:
 	var data: Dictionary = SaveManager.load_game()
 	check(tree.current_scene.scene_file_path == GameState.MAP, "la victoria devuelve a Byte al mapa")
 	check("w3_boss" in data["completed_levels"] and "w3_firewall_boss" in data["collected_cores"]
-		and GameState.is_world_unlocked(data, 4) and not GameState.is_world_playable(data, 4),
-		"la victoria se guarda y desbloquea Servidor como próximo destino")
+		and GameState.is_world_unlocked(data, 4) and GameState.is_world_playable(data, 4),
+		"la victoria se guarda y habilita Servidor como próximo destino")
 
 func _cross_rule_lanes(tree: SceneTree, stage: Node2D, player: PacketPlayer) -> void:
 	var bar: RuleBar

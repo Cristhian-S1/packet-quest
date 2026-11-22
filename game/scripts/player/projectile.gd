@@ -38,11 +38,13 @@ func _ready() -> void:
 	cull_rect.size = VIEW_SIZE
 	deactivate()
 
-func launch(at: Vector2, speed: Vector2, amount: float, gravity_vector: Vector2 = Vector2.ZERO) -> void:
+func launch(at: Vector2, speed: Vector2, amount: float, gravity_vector: Vector2 = Vector2.ZERO,
+		excluded_bodies: Array[RID] = []) -> void:
 	global_position = at
 	velocity = speed
 	damage = amount
 	acceleration = gravity_vector
+	ray.exclude = excluded_bodies
 	active = true
 	age = 0.0
 	rolling = false

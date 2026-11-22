@@ -4,6 +4,7 @@ const WORLDS: Array[Dictionary] = [
 	{"level": "res://scenes/levels/World1Level1.tscn", "boss": "res://scenes/bosses/RouterBoss.tscn"},
 	{"level": "res://scenes/levels/World2Level1.tscn", "boss": "res://scenes/bosses/WifiQueenBoss.tscn"},
 	{"level": "res://scenes/levels/World3Level1.tscn", "boss": "res://scenes/bosses/FirewallBoss.tscn"},
+	{"level": "res://scenes/levels/World4Level1.tscn", "boss": "res://scenes/bosses/TrojanBoss.tscn"},
 ]
 const MAP: String = "res://scenes/main/NetworkMap.tscn"
 const WORKSHOP: String = "res://scenes/ui/Workshop.tscn"
