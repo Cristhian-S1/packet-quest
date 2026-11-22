@@ -7,7 +7,7 @@ enum State { INTRO, IDLE, TELEGRAPH, ACTIVE, RECOVERY, PHASE_TRANSITION, DEFEATE
 
 @export var max_health: float = 60.0
 @export var phase_threshold: float = 0.5
-@export var transition_duration: float = 2.4
+@export var transition_duration: float = StageBuilder.BOSS_TRANSITION_TIME
 @export var ring_telegraph: float = 0.6
 @export var stampede_telegraph: float = 0.8
 @export var laser_telegraph: float = 1.0
@@ -69,13 +69,7 @@ func _ready() -> void:
 	body.hit.connect(take_damage)
 	add_child(body)
 	StageBuilder.hud(self)
-	var hud: CanvasLayer = CanvasLayer.new()
-	hud.layer = 12
-	add_child(hud)
-	PQStyle.label_at(hud, "ROUTER FURIOSO", Vector2(220, 52), 13, PQStyle.MAGENTA)
-	card = PQStyle.label_at(hud, "ROUTER FURIOSO\nSEÑAL ESTABLE", Vector2(128, 104), 24, PQStyle.CYAN)
-	card.size = Vector2(384, 72)
-	card.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	card = StageBuilder.boss_card(self, "ROUTER FURIOSO", "ROUTER FURIOSO\nSEÑAL ESTABLE")
 	GameState.death_cause = "router_boss"
 	GameState.boss_progress = 0
 
@@ -200,9 +194,7 @@ func _begin_transition() -> void:
 	invulnerable = true
 	timer = transition_duration
 	pool.clear_enemy()
-	card.text = "FASE 02\n" + phases[1].name.to_upper()
-	card.modulate = PQStyle.RED
-	card.visible = true
+	StageBuilder.show_boss_phase(card, phase + 1, phases[phase].name, PQStyle.RED)
 	Events.impact.emit(0.0, 6.0)
 	phase_changed.emit(phase)
 

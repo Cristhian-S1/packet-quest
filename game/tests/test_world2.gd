@@ -11,6 +11,7 @@ func run(tree: SceneTree) -> PackedStringArray:
 	_test_coverage()
 	await _test_spyware(tree)
 	_test_cable_grid()
+	await _test_queen(tree)
 	finished = true
 	return errors
 
@@ -98,6 +99,35 @@ func _test_cable_grid() -> void:
 		grid.call(&"rotate_cell", cell)
 	check(bool(grid.call(&"is_solved")), "la ruta especificada conecta la antena al router")
 	check(1 + solution.size() <= 10, "la solución se alcanza con diez disparos o menos")
+
+func _test_queen(tree: SceneTree) -> void:
+	var scene: PackedScene = _require_scene("res://scenes/bosses/WifiQueenBoss.tscn")
+	if scene == null:
+		return
+	var boss: Node2D = scene.instantiate() as Node2D
+	var script: Script = boss.get_script() as Script
+	check(int(script.call(&"phase_for", 1.0)) == 1, "Reina: fase 1 con todos los PV")
+	check(int(script.call(&"phase_for", 0.69)) == 2, "Reina: fase 2 bajo el 70 %")
+	check(int(script.call(&"phase_for", 0.39)) == 3, "Reina: fase 3 bajo el 40 %")
+	for seed_index: int in range(21):
+		var lanes: Array[int] = script.call(&"interference_lanes", seed_index)
+		check(lanes.size() == 2 and mini(lanes[0], lanes[1]) >= 0 and maxi(lanes[0], lanes[1]) <= 3
+			and absi(lanes[1] - lanes[0]) > 1, "Reina: franjas válidas y separadas para %d" % seed_index)
+	tree.root.add_child(boss)
+	var player: PacketPlayer = boss.get("player") as PacketPlayer
+	var pool: ProjectilePool = boss.get("pool") as ProjectilePool
+	player.position = Vector2(88, 288)
+	player.set_physics_process(false)
+	await tree.physics_frame
+	player.interact()
+	await tree.physics_frame
+	var bullet: Projectile = pool.fire(true, Vector2(180, 288), Vector2(-160, 0))
+	for frame: int in range(8):
+		await tree.physics_frame
+	check(not bullet.active, "la cúpula activa intercepta la bala del pool")
+	check(is_equal_approx(player.health.current, player.health.max_health), "la cúpula protege a Byte")
+	boss.queue_free()
+	await tree.process_frame
 
 func _require_scene(path: String) -> PackedScene:
 	if not ResourceLoader.exists(path):

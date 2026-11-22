@@ -16,6 +16,7 @@ var age: float = 0.0
 var rolling: bool = false
 var can_hop: bool = false
 var hopped: bool = false
+var horizontal_bounces: int = 0
 
 func _ready() -> void:
 	collision_layer = 16 if enemy else 8
@@ -38,6 +39,7 @@ func launch(at: Vector2, speed: Vector2, amount: float, gravity_vector: Vector2 
 	rolling = false
 	can_hop = false
 	hopped = false
+	horizontal_bounces = 0
 	homing_turn_rad = 0.0
 	marks = false
 	visible = true
@@ -76,6 +78,13 @@ func _physics_process(delta: float) -> void:
 		hit = _skip_passive_interactables(ray, hit)
 	if not hit.is_empty():
 		var target: Object = hit["collider"] as Object
+		var normal: Vector2 = hit["normal"]
+		var wall: PhysicsBody2D = target as PhysicsBody2D
+		if horizontal_bounces > 0 and wall != null and wall.get_collision_layer_value(1) and absf(normal.x) > 0.9:
+			horizontal_bounces -= 1
+			velocity = velocity.bounce(normal)
+			global_position = Vector2(hit["position"]) + normal * 0.1
+			return
 		var amount: float = damage
 		if marks and "marked" in target:
 			if bool(target.get("marked")):

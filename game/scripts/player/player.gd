@@ -337,15 +337,20 @@ func shoot() -> void:
 
 func interact() -> void:
 	var nearest: Node2D = null
-	var distance: float = interact_range + 0.01
+	var distance: float = INF
 	for candidate: Node in get_tree().get_nodes_in_group("interactable"):
 		var node: Node2D = candidate as Node2D
+		if node == null or not node.has_method(&"interact"):
+			continue
+		var radius: float = interact_range
+		if node.has_method(&"interaction_radius"):
+			radius = float(node.call(&"interaction_radius"))
 		var current_distance: float = global_position.distance_to(node.global_position)
-		if current_distance < distance:
+		if current_distance <= radius and current_distance < distance:
 			nearest = node
 			distance = current_distance
-	if nearest != null and nearest.has_method("interact"):
-		nearest.call("interact")
+	if nearest != null:
+		nearest.call(&"interact")
 
 func _die() -> void:
 	state = State.DEAD

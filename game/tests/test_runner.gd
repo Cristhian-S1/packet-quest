@@ -27,6 +27,8 @@ func run_all() -> void:
 		state.set("data", manager.call("defaults"))
 		state.set("puzzle_complete", false)
 		state.set("checkpoint", Vector2(48, 296))
+		state.set("current_world", 1)
+		state.set("in_boss", false)
 		var errors: PackedStringArray = await test.call("run", self)
 		# A runtime script error aborts run() silently; tests that declare
 		# `finished` must reach the end to count as PASS.
