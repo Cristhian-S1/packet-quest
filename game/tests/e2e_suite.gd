@@ -87,8 +87,7 @@ func _boot_to_menu() -> void:
 	await tree.process_frame
 	await tree.process_frame
 
-func _await_scene_change(max_frames: int = 240) -> bool:
-	var initial: Node = tree.current_scene
+func _await_scene_change(initial: Node, max_frames: int = 240) -> bool:
 	for _i: int in range(max_frames):
 		await tree.process_frame
 		if tree.current_scene != null and tree.current_scene != initial:
@@ -101,10 +100,9 @@ func _player() -> PacketPlayer:
 # --- Menú → mapa → Mundo 1 ---------------------------------------------
 
 func _menu_to_world1() -> bool:
-	# PENDIENTE: action_press actualiza el estado de Input, pero Godot no envía
-	# un InputEvent al botón enfocado. La navegación GUI necesita otra vía.
+	var initial: Node = tree.current_scene
 	await pilot.confirm()
-	if not await _await_scene_change():
+	if not await _await_scene_change(initial):
 		check(false, "el menú no abre el mapa al pulsar Jugar")
 		return false
 	check(tree.current_scene is NetworkMap, "Jugar no lleva al mapa")
@@ -113,8 +111,9 @@ func _menu_to_world1() -> bool:
 		return false
 	await tree.process_frame
 	# El botón Entrar tiene el foco; Enter entra en el mundo seleccionado (1).
+	initial = tree.current_scene
 	await pilot.confirm()
-	if not await _await_scene_change():
+	if not await _await_scene_change(initial):
 		check(false, "el mapa no abre el mundo 1 al pulsar Entrar")
 		return false
 	check(tree.current_scene is World1Level1, "Entrar no carga el nivel 1-1")
@@ -291,14 +290,15 @@ func _map_to_world2() -> bool:
 		func() -> bool: return int(map.get(&"selected_world")) == 2, 120)
 	if not selected2:
 		# Intenta desplazar la selección con derecha (igual que el jugador).
-		await pilot.tap(&"move_right")
+		await pilot.key_tap(KEY_RIGHT)
 		selected2 = await pilot.wait_until(
 			func() -> bool: return int(map.get(&"selected_world")) == 2, 120)
 	check(selected2, "el mapa no permite elegir Wi-Fi")
 	if not selected2:
 		return false
+	var initial: Node = tree.current_scene
 	await pilot.confirm()
-	var entered: bool = await _await_scene_change()
+	var entered: bool = await _await_scene_change(initial)
 	check(entered and tree.current_scene is World2Level1, "Entrar no carga el nivel 2-1")
 	return entered and tree.current_scene is World2Level1
 
