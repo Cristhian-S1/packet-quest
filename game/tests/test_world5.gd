@@ -11,6 +11,7 @@ func run(tree: SceneTree) -> PackedStringArray:
 	await _test_cloud(tree)
 	await _test_bot(tree)
 	await _test_qos(tree)
+	await _test_malwarex(tree)
 	finished = true
 	return errors
 
@@ -145,6 +146,80 @@ func _test_qos(tree: SceneTree) -> void:
 		check(door.opened and GameState.puzzle_complete and solved.size() == 1
 			and AudioManager.last_sfx == &"cable_connected", "QoS abre la puerta y emite la conexión")
 	puzzle.queue_free()
+	await tree.process_frame
+
+func _test_malwarex(tree: SceneTree) -> void:
+	var scene: PackedScene = require_scene(BOSS)
+	if scene == null:
+		return
+	var boss: Node2D = scene.instantiate() as Node2D
+	var script: Script = boss.get_script() as Script
+	var ratios: Array[float] = [1.0, 0.76, 0.75, 0.51, 0.5, 0.26, 0.25, 0.0]
+	var phases: Array[int] = [1, 1, 2, 2, 3, 3, 4, 4]
+	for index: int in range(ratios.size()):
+		check(int(script.call(&"phase_for", ratios[index])) == phases[index], "fase de Malwarex al %.0f %%" % (ratios[index] * 100.0))
+	var times: Array[float] = [0.0, 1.5, 3.0, 16.0]
+	var columns: Array[Array] = [[], [9], [9, 8], [9, 8, 7, 6, 5, 4]]
+	for index: int in range(times.size()):
+		check(script.call(&"erased_columns", times[index]) == columns[index], "borrado de suelo a %.1f s" % times[index])
+	for index: int in range(21):
+		var x: float = script.call(&"cable_gap_x", index)
+		check(x >= 32.0 and x <= 544.0, "hueco de cable %d queda dentro de la arena" % index)
+		var lanes: Array[int] = script.call(&"wave_lanes", index)
+		check(lanes == [0, 2] or lanes == [1, 2], "la oleada %d deja un carril esquivable" % index)
+	var expected_positions: Array[Vector2] = [Vector2(120, 288), Vector2(320, 240), Vector2(520, 288)]
+	check(script.call(&"node_positions") == expected_positions, "posiciones de los tres nodos de combate")
+
+	GameState.data = SaveManager.defaults()
+	tree.root.add_child(boss)
+	boss.set_physics_process(false)
+	var player: PacketPlayer = boss.get(&"player") as PacketPlayer
+	player.set_physics_process(false)
+	var body: Hurtbox = boss.get(&"body") as Hurtbox
+	var health: HealthComponent = boss.get(&"health") as HealthComponent
+	var pool: ProjectilePool = boss.get(&"pool") as ProjectilePool
+	var card: Label = boss.get(&"card") as Label
+	check(health.current == 200.0 and body.homing_target and body.collision_layer == 4,
+		"Malwarex tiene 200 PV y una hurtbox para Ping")
+	boss.call(&"_physics_process", 1.2)
+	boss.call(&"_physics_process", 0.59)
+	check(not pool.enemy_bullets[0].active, "el anillo conserva el aviso")
+	boss.call(&"_physics_process", 0.011)
+	var first_shot: Projectile = pool.enemy_bullets[0]
+	check(first_shot.active and first_shot.position == Vector2(320, 112)
+		and is_equal_approx(first_shot.velocity.length(), 150.0), "el anillo de señal sale del emisor")
+	for phase: int in range(2, 5):
+		var shot: Projectile = pool.fire(true, Vector2(320, 100), Vector2.DOWN)
+		body.take_damage(50.0, Vector2.ZERO)
+		check(int(boss.get(&"phase")) == phase and card.visible and body.invulnerable
+			and is_equal_approx(float(boss.get(&"timer")), 2.4) and not shot.active and not first_shot.active,
+			"F%d inicia 2,4 s invulnerables y limpia las balas" % phase)
+		boss.call(&"_physics_process", 2.39)
+		body.take_damage(10.0, Vector2.ZERO)
+		check(health.current == 200.0 - (phase - 1) * 50.0 and card.visible, "F%d mantiene la pausa" % phase)
+		boss.call(&"_physics_process", 0.01)
+		if phase == 3:
+			var nodes: Array = boss.get(&"network_nodes")
+			check(body.invulnerable and not card.visible and nodes.size() == 3, "F3 blinda el núcleo y muestra los nodos")
+			for index: int in range(nodes.size()):
+				var node: NetworkNode = nodes[index] as NetworkNode
+				if index < expected_positions.size():
+					check(node.position == expected_positions[index], "el nodo %d aparece en su posición" % index)
+				node.interact()
+				node.interact()
+				check(body.invulnerable == (index < 2), "el nodo %d solo quita un escudo" % index)
+		else:
+			check(not body.invulnerable and not card.visible, "F%d vuelve a exponer el núcleo" % phase)
+	var floor_shapes: Array = boss.get(&"_floor_shapes")
+	boss.call(&"_physics_process", 1.5)
+	await tree.process_frame
+	check(floor_shapes.size() == 10 and floor_shapes[9].disabled and not floor_shapes[8].disabled,
+		"F4 quita físicamente la columna derecha después del aviso")
+	body.take_damage(50.0, Vector2.ZERO)
+	check(bool(GameState.data.get("finished", false)) and "w5_boss" in GameState.data["completed_levels"]
+		and not GameState.is_world_unlocked(GameState.data, 6) and GameState.data["collected_cores"].is_empty(),
+		"la derrota completa la partida sin núcleo ni sexto mundo")
+	boss.queue_free()
 	await tree.process_frame
 
 func require_scene(path: String) -> PackedScene:

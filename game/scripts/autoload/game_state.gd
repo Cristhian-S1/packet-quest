@@ -9,6 +9,7 @@ const WORLDS: Array[Dictionary] = [
 ]
 const MAP: String = "res://scenes/main/NetworkMap.tscn"
 const WORKSHOP: String = "res://scenes/ui/Workshop.tscn"
+const CREDITS: String = "res://scenes/ui/CreditsScreen.tscn"
 var data: Dictionary = {}
 var checkpoint: Vector2 = Vector2(48, 296)
 var current_world: int = 1
@@ -116,6 +117,10 @@ func open_map() -> void:
 func open_workshop() -> void:
 	playing = false
 	change_scene(WORKSHOP)
+
+func show_credits() -> void:
+	playing = false
+	change_scene(CREDITS)
 
 func menu() -> void:
 	playing = false
