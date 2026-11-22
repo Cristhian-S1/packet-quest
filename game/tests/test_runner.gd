@@ -1,6 +1,6 @@
 extends SceneTree
 
-const TESTS: Array[String] = ["health_component", "route_puzzle", "boss_phases", "save_manager", "scenes_load"]
+const TESTS: Array[String] = ["health_component", "route_puzzle", "boss_phases", "save_manager", "scenes_load", "progression"]
 
 func _initialize() -> void:
 	call_deferred("run_all")
@@ -19,6 +19,10 @@ func run_all() -> void:
 			failures += 1
 			continue
 		var script: Script = load(path) as Script
+		if script == null or not script.can_instantiate():
+			print("FAIL test_%s: el script no compila" % test_name)
+			failures += 1
+			continue
 		var test: RefCounted = script.new() as RefCounted
 		state.set("data", manager.call("defaults"))
 		state.set("puzzle_complete", false)

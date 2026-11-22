@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="UpgradeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/upgrade_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"slowdown"
+display_name = "Ralentizador"
+description = "Pasiva: al quedar con 1 PV, las balas enemigas van al 50 % durante 3 s (1 vez por nivel)."
+cost = 3
+kind = 1

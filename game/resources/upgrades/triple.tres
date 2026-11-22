@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="UpgradeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/upgrade_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"triple"
+display_name = "Ráfaga triple"
+description = "Arma: 3 balas en abanico de ±12°."
+cost = 2
+kind = 0
