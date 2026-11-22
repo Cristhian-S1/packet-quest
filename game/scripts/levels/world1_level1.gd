@@ -3,6 +3,9 @@ extends Node2D
 
 var player: PacketPlayer
 var puzzle: RoutePuzzle
+# La compuerta ocupa x 2712–2728 y el muro empieza en 2720; con el colisionador de 10 px Byte
+# llega a x ≈ 2707 con la compuerta cerrada y a ≈ 2715 abierta. 2710 solo se alcanza tras abrirla.
+const EXIT_X: float = 2710.0
 var transitioning: bool = false
 
 func _ready() -> void:
@@ -49,7 +52,7 @@ func _tutorial() -> void:
 	PQStyle.label_at(self, "K dash", Vector2(384, 240), 14, PQStyle.CYAN)
 	PQStyle.label_at(self, "02 / SALTOS", Vector2(528, 192), 16, PQStyle.EDGE)
 	PQStyle.label_at(self, "Salta + K en el aire", Vector2(672, 208), 12, PQStyle.CYAN)
-	PQStyle.label_at(self, "↑ + K", Vector2(896, 112), 10, PQStyle.AMBER)
+	PQStyle.label_at(self, "Salta y ↑ + K", Vector2(880, 112), 10, PQStyle.AMBER)
 	PQStyle.label_at(self, "03 / TRÁFICO HOSTIL", Vector2(1168, 160), 18, PQStyle.MAGENTA)
 	PQStyle.label_at(self, "L escudo frontal  ·  I fija la mira", Vector2(1168, 192), 12)
 	PQStyle.label_at(self, "PUNTO DE RESTAURACIÓN", Vector2(1712, 208), 12, PQStyle.GREEN)
@@ -57,7 +60,7 @@ func _tutorial() -> void:
 	PQStyle.label_at(self, "ROUTER FURIOSO  →", Vector2(2720, 208), 18, PQStyle.RED)
 
 func _physics_process(_delta: float) -> void:
-	if not transitioning and player.global_position.x >= 2720 and puzzle.is_solved:
+	if not transitioning and player.global_position.x >= EXIT_X and puzzle.is_solved:
 		transitioning = true
 		GameState.enter_boss()
 
