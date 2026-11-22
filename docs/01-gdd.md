@@ -83,5 +83,7 @@ Detalle en `04-niveles.md`.
 | `11-investigacion.md` | Fuentes consultadas |
 | `12-herramientas.md` | Herramientas de arte/audio, MCP, skills y plugins recomendados (¿hace falta Blender?) |
 | `13-m8-mundo-wifi.md` | Especificación de implementación del Mundo 2 Wi-Fi (M8) |
-| `14-m9-mundo-firewall.md` | Especificación de implementación del Mundo 3 Firewall (M9) |
+| `14-m9-mundo-firewall.md` | Especificación del Mundo 3 Firewall (M9) |
+| `15-m10-mundo-servidor.md` | Especificación del Mundo 4 Servidor (M10) |
+| `16-m11-centro-de-datos.md` | Especificación del Mundo 5 Centro de datos, nivel final (M11) |
 | `superpowers/plans/` | Planes de implementación por hito (M7 en adelante) |
