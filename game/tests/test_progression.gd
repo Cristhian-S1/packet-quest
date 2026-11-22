@@ -13,6 +13,7 @@ func run(_tree: SceneTree) -> PackedStringArray:
 	_test_cannot_unequip_last_weapon()
 	_test_passive_rules()
 	_test_equipped_filters_invalid()
+	_test_workshop_status()
 	finished = true
 	return errors
 
@@ -66,6 +67,19 @@ func _test_passive_rules() -> void:
 	check(Progression.has_effect(data, &"more_health"), "efecto de permanente poseída")
 	check(Progression.set_passive(data, &""), "desequipar pasiva")
 	check(not Progression.has_effect(data, &"marker"), "pasiva desequipada sin efecto")
+
+func _test_workshop_status() -> void:
+	var workshop: Script = load("res://scripts/ui/workshop.gd") as Script
+	var data: Dictionary = fresh(2)
+	check(workshop.call("status", data, Catalog.upgrade(&"slowdown")) == "Sin núcleos", "taller: sin núcleos")
+	check(workshop.call("status", data, Catalog.upgrade(&"triple")) == "Comprar", "taller: comprar")
+	Progression.buy(data, &"triple")
+	check(workshop.call("status", data, Catalog.upgrade(&"triple")) == "Equipada", "taller: arma equipada")
+	Progression.toggle_weapon(data, &"triple")
+	check(workshop.call("status", data, Catalog.upgrade(&"triple")) == "Equipar", "taller: arma sin equipar")
+	data["data_cores"] = 2
+	Progression.buy(data, &"more_health")
+	check(workshop.call("status", data, Catalog.upgrade(&"more_health")) == "Instalada", "taller: permanente")
 
 func _test_equipped_filters_invalid() -> void:
 	var data: Dictionary = fresh(0)

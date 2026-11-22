@@ -2,6 +2,8 @@ extends Node
 
 const LEVEL: String = "res://scenes/levels/World1Level1.tscn"
 const BOSS: String = "res://scenes/bosses/RouterBoss.tscn"
+const MAP: String = "res://scenes/main/NetworkMap.tscn"
+const WORKSHOP: String = "res://scenes/ui/Workshop.tscn"
 var data: Dictionary = {}
 var checkpoint: Vector2 = Vector2(48, 296)
 var current_level: String = LEVEL
@@ -70,6 +72,18 @@ func win() -> void:
 	if 2 not in worlds:
 		worlds.append(2)
 	save_error = SaveManager.save_game(data)
+
+func save() -> Error:
+	save_error = SaveManager.save_game(data)
+	return save_error
+
+func open_map() -> void:
+	playing = false
+	change_scene(MAP)
+
+func open_workshop() -> void:
+	playing = false
+	change_scene(WORKSHOP)
 
 func menu() -> void:
 	playing = false

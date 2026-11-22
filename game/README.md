@@ -30,7 +30,7 @@ Recorre S1–S4, conecta la ruta de tres nodos y cruza la compuerta. Derrota al 
 | Cambiar arma | Q | Select / Back |
 | Pausar / continuar | Esc | Start |
 
-El dash recorre 72 px en 0,18 s, protege durante 0,15 s y se recarga en 0,6 s. Hay un dash aéreo por salto. El firewall impide disparar, reduce la velocidad a la mitad y solo bloquea proyectiles que llegan por delante. Q está mapeado; este prototipo únicamente equipa **Paquete**.
+El dash recorre 72 px en 0,18 s, protege durante 0,15 s y se recarga en 0,6 s. Hay un dash aéreo por salto. El firewall impide disparar, reduce la velocidad a la mitad y solo bloquea proyectiles que llegan por delante. Q alterna entre las 2 armas equipadas (Paquete, Ráfaga triple o Ping).
 
 En el puzle, E gira la flecha del nodo más cercano. El terminal verde **REINICIAR** restaura los tres nodos y cierra la puerta. La solución es **derecha, arriba, derecha**. El nodo superior se alcanza saltando; las pistas suaves se activan tras 60 segundos en la sala.
 
@@ -97,3 +97,9 @@ Se han elegido los tiempos no fijados por el diseño: láser activo 0,45 s; esta
 El Gusano usa un Area2D raíz con Path2D/PathFollow2D internos. Las siluetas y animaciones se dibujan por código; no hay sprite sheets ni fotogramas de arte final. Audio deliberadamente silencioso, con llamadas seguras ante streams ausentes. El mapa, taller, otras armas/mundos, interfaz de remapeo, menú de accesibilidad y exportaciones pertenecen a hitos posteriores. Las opciones `screen_shake`, `reduce_flashes` y `assist_mode` del guardado ya se respetan.
 
 No se ha hecho el playtest con cinco personas ni se certifican 60 FPS gráficos con 100 balas en hardware objetivo. Las pruebas automáticas y las capturas no sustituyen esa evaluación de dificultad y rendimiento.
+
+## M7 · Taller de Mejoras y Mapa de la red
+
+- **Menú → Mapa de la red:** seis segmentos; de momento solo se puede entrar en el Mundo 1 (Red Local).
+- **Taller:** gasta núcleos de datos en 7 mejoras (`resources/upgrades/*.tres`). Las armas (Ráfaga triple, Ping) se equipan en 2 ranuras; las pasivas (Firewall reforzado, Marcador, Ralentizador) en 1 ranura; Más vida y Dash extendido son permanentes.
+- La lógica está en `scripts/progression/progression.gd` (pura, probada en `tests/test_progression.gd`) y los datos en `scripts/data/catalog.gd`.
