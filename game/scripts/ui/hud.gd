@@ -27,7 +27,8 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	canvas.queue_redraw()
-	info.text = "PAQUETE   ·   NÚCLEOS %02d   ·   ESC pausa" % int(GameState.data.get("data_cores", 0))
+	var weapon_name: String = player.current_weapon().display_name.to_upper() if is_instance_valid(player) else "PAQUETE"
+	info.text = "%s   ·   NÚCLEOS %02d   ·   ESC pausa" % [weapon_name, int(GameState.data.get("data_cores", 0))]
 	notice_time = maxf(0, notice_time - delta)
 	notice.visible = notice_time > 0
 	if hit_stop_until > 0 and Time.get_ticks_msec() >= hit_stop_until:

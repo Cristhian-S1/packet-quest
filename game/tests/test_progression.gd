@@ -1,9 +1,11 @@
 extends RefCounted
 
 var errors: PackedStringArray = []
+var finished: bool = false
 
 func run(_tree: SceneTree) -> PackedStringArray:
 	errors = []
+	finished = false
 	_test_catalog()
 	_test_buy_exact_and_insufficient()
 	_test_no_double_buy()
@@ -11,6 +13,7 @@ func run(_tree: SceneTree) -> PackedStringArray:
 	_test_cannot_unequip_last_weapon()
 	_test_passive_rules()
 	_test_equipped_filters_invalid()
+	finished = true
 	return errors
 
 func fresh(cores: int) -> Dictionary:

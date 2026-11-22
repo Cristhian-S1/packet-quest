@@ -61,6 +61,11 @@ var animation_time: float = 0.0
 var trails: Array[Vector2] = []
 var shake_left: float = 0.0
 var shake_power: float = 0.0
+var weapon_slots: Array[WeaponData] = []
+var weapon_index: int = 0
+var marker_active: bool = false
+var slowdown_available: bool = false
+var _base: Dictionary = {}
 
 func _ready() -> void:
 	add_to_group("player")
@@ -110,6 +115,52 @@ func _ready() -> void:
 	shield_meter = shield_max
 	pool = get_tree().get_first_node_in_group("projectile_pool") as ProjectilePool
 	Events.impact.connect(_impact)
+	health.changed.connect(_check_slowdown)
+	apply_progression(GameState.data)
+
+## Configura armas y mejoras desde save.json. Idempotente: parte siempre de los
+## valores base del Inspector. Se llama al empezar el nivel, así que llena la vida.
+func apply_progression(data: Dictionary) -> void:
+	if _base.is_empty():
+		_base = {"hp": max_hp, "dash": dash_distance, "shield": shield_max, "recharge": shield_recharge}
+	weapon_slots.clear()
+	for id: StringName in Progression.equipped_weapons(data):
+		var item: WeaponData = Catalog.weapon(id)
+		if item != null:
+			weapon_slots.append(item)
+	if weapon_slots.is_empty():
+		weapon_slots.append(weapon)
+	weapon_index = 0
+	var assist: bool = bool(data.get("settings", {}).get("assist_mode", false))
+	health.max_health = float(_base["hp"]) + (1.0 if Progression.has_effect(data, &"more_health") else 0.0) + (1.0 if assist else 0.0)
+	health.reset()
+	dash_distance = 96.0 if Progression.has_effect(data, &"long_dash") else float(_base["dash"])
+	var strong: bool = Progression.has_effect(data, &"strong_firewall")
+	shield_max = 150.0 if strong else float(_base["shield"])
+	shield_recharge = float(_base["recharge"]) * (1.3 if strong else 1.0)
+	shield_meter = shield_max
+	marker_active = Progression.has_effect(data, &"marker")
+	slowdown_available = Progression.has_effect(data, &"slowdown")
+
+func current_weapon() -> WeaponData:
+	return weapon_slots[weapon_index] if not weapon_slots.is_empty() else weapon
+
+func swap_weapon() -> void:
+	if weapon_slots.size() < 2:
+		return
+	weapon_index = (weapon_index + 1) % weapon_slots.size()
+	AudioManager.play_sfx(&"weapon_swap")
+
+## Ralentizador: 1 vez por nivel, al quedar con 1 PV, balas enemigas al 50 % durante 3 s.
+func _check_slowdown(current: float, _maximum: float) -> void:
+	if not slowdown_available or not is_equal_approx(current, 1.0):
+		return
+	slowdown_available = false
+	Projectile.enemy_time_scale = 0.5
+	get_tree().create_timer(3.0, true, false, true).timeout.connect(func() -> void: Projectile.enemy_time_scale = 1.0)
+
+func _exit_tree() -> void:
+	Projectile.enemy_time_scale = 1.0
 
 func _physics_process(delta: float) -> void:
 	animation_time += delta
@@ -183,9 +234,8 @@ func _physics_process(delta: float) -> void:
 		shoot()
 	if Input.is_action_just_pressed("interact"):
 		interact()
-	# Packet is the only equipped weapon in the M0–M6 slice.
 	if Input.is_action_just_pressed("swap_weapon"):
-		AudioManager.play_sfx(&"weapon_packet")
+		swap_weapon()
 	if shake_left > 0:
 		shake_left -= delta
 		camera.offset = Vector2(sin(animation_time * 120), cos(animation_time * 99)) * shake_power
@@ -258,8 +308,13 @@ func pit_respawn() -> void:
 func shoot() -> void:
 	if pool == null:
 		return
-	pool.fire(false, muzzle.global_position, aim * weapon.bullet_speed, weapon.damage)
-	shoot_wait += 1.0 / weapon.fire_rate
+	var item: WeaponData = current_weapon()
+	for direction: Vector2 in Projectile.spread_directions(aim, item.spread_count, item.spread_angle_deg):
+		var bullet: Projectile = pool.fire(false, muzzle.global_position, direction * item.bullet_speed, item.damage)
+		if bullet != null:
+			bullet.homing_turn_rad = deg_to_rad(item.homing_turn_deg)
+			bullet.marks = marker_active
+	shoot_wait += 1.0 / item.fire_rate
 	AudioManager.play_sfx(&"packet")
 
 func interact() -> void:
