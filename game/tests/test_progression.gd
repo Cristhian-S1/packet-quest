@@ -16,6 +16,7 @@ func run(_tree: SceneTree) -> PackedStringArray:
 	_test_equipped_filters_invalid()
 	_test_workshop_status()
 	_test_workshop_slots_full()
+	_test_upgrades_returns_copy()
 	finished = true
 	return errors
 
@@ -98,6 +99,11 @@ func _test_workshop_slots_full() -> void:
 	Progression.buy(data, &"ping")
 	check(workshop.call("status", data, Catalog.upgrade(&"ping")) == "Ranuras llenas", "taller: ranuras llenas")
 	check(workshop.call("status", data, Catalog.upgrade(&"triple")) == "Equipada", "taller: arma equipada")
+
+func _test_upgrades_returns_copy() -> void:
+	var copy: Array[UpgradeData] = Catalog.upgrades()
+	copy.clear()
+	check(copy.is_empty() and Catalog.upgrades().size() == 7, "catálogo: upgrades() devuelve una copia mutable")
 
 func _test_equipped_filters_invalid() -> void:
 	var data: Dictionary = fresh(0)
