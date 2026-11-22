@@ -12,6 +12,7 @@ func run(tree: SceneTree) -> PackedStringArray:
 	await _test_trojan(tree)
 	await _test_password(tree)
 	await _test_boss(tree)
+	await _test_level_route(tree)
 	finished = true
 	return errors
 
@@ -259,6 +260,161 @@ func _test_boss(tree: SceneTree) -> void:
 	boss.queue_free()
 	await tree.process_frame
 	Engine.time_scale = 1.0
+
+func _test_level_route(tree: SceneTree) -> void:
+	if require_scene(LEVEL) == null:
+		return
+	GameState.data = SaveManager.defaults()
+	GameState.data["unlocked_worlds"].assign([1, 2, 3])
+	GameState.current_world = 3
+	GameState.win()
+	check(GameState.is_world_playable(GameState.data, 4), "Servidor se habilita al vencer al Firewall")
+	GameState.open_map()
+	await tree.scene_changed
+	var network_map: Node = tree.current_scene
+	await _map_right(tree)
+	var enter: Button = network_map.get(&"enter_button") as Button
+	check(int(network_map.get(&"selected_world")) == 4 and "Servidor" in enter.text, "el mapa permite seleccionar Servidor")
+	if int(network_map.get(&"selected_world")) != 4:
+		return
+	enter.pressed.emit()
+	await tree.scene_changed
+	var stage: Node2D = tree.current_scene as Node2D
+	check(stage.scene_file_path == LEVEL, "Entrar abre 4-1")
+	if stage.scene_file_path != LEVEL:
+		return
+	var player: PacketPlayer = stage.get(&"player") as PacketPlayer
+	player.invulnerability = 60.0
+	await _walk_to(tree, player, 176.0)
+	for _frame: int in range(180):
+		await tree.physics_frame
+		if player.is_on_floor() and player.position.y < 208.0 and "w4_core_a" in GameState.data["collected_cores"]:
+			break
+	check(player.position.y < 208.0 and "w4_core_a" in GameState.data["collected_cores"],
+		"caminar a la corriente alcanza el núcleo y la repisa de S1 (Byte %s)" % player.position)
+
+	if not await _reach_rack(tree, player, stage.get_node("ElevatorS2") as DataElevator, 858.0):
+		return
+	await _walk_to(tree, player, 1534.0)
+	check(player.position.y > 289.0 and player.is_on_floor(), "bajar del rack deja a Byte en el suelo de S3")
+	Input.action_press(&"move_right")
+	Input.action_press(&"jump")
+	await _frames(tree, 15)
+	Input.action_press(&"dash")
+	await _frames(tree, 1)
+	Input.action_release(&"dash")
+	await _frames(tree, 36)
+	Input.action_release(&"jump")
+	Input.action_release(&"move_right")
+	check(player.position.x > 1664.0 and player.is_on_floor(), "Byte cruza 96 px con salto y dash (Byte %s)" % player.position)
+	if player.position.x <= 1664.0:
+		return
+	await _walk_to(tree, player, 1944.0)
+	check(GameState.checkpoint == Vector2(1920, 296) and player.fatal_pits, "S4 activa el punto de restauración")
+	await _walk_to(tree, player, 1616.0)
+	await _frames(tree, 40)
+	check(player.state == PacketPlayer.State.DEAD, "caminar al foso sin saltar es letal")
+	GameState.retry()
+	await tree.scene_changed
+	stage = tree.current_scene as Node2D
+	player = stage.get(&"player") as PacketPlayer
+	check(player.position == Vector2(1920, 296), "reintentar reaparece en el checkpoint de S4")
+	player.invulnerability = 60.0
+	if not await _reach_rack(tree, player, stage.get_node("ElevatorS4") as DataElevator, 2280.0):
+		return
+	check("w4_core_b" in GameState.data["collected_cores"], "el ascensor de S4 permite recoger el núcleo oculto")
+	await _walk_to(tree, player, 2590.0)
+	check(GameState.checkpoint == Vector2(2560, 296), "caminar al puzle activa el segundo checkpoint")
+	var puzzle: PasswordPuzzle = stage.get(&"puzzle") as PasswordPuzzle
+	for slot: PasswordSlot in puzzle.slots:
+		await _walk_to(tree, player, slot.global_position.x)
+		for _turn: int in range(3):
+			Input.action_press(&"interact")
+			await _frames(tree, 2)
+			Input.action_release(&"interact")
+			await _frames(tree, 2)
+	check(puzzle.is_solved and puzzle.door.opened and puzzle.door.position.x + puzzle.position.x == 3200.0,
+		"interactuar con las cuatro ranuras abre la compuerta en x = 3200")
+	if not puzzle.is_solved:
+		return
+	Input.action_press(&"move_right")
+	for _frame: int in range(150):
+		await tree.physics_frame
+		if tree.current_scene is TrojanBoss:
+			break
+	Input.action_release(&"move_right")
+	var boss: TrojanBoss = tree.current_scene as TrojanBoss
+	check(boss != null and GameState.in_boss, "caminar desde la última ranura lleva a Troyano Real")
+	if boss == null:
+		return
+	boss.set_physics_process(false)
+	boss._physics_process(1.2)
+	for damage: float in [45.0, 45.0, 60.0]:
+		boss._physics_process(0.6)
+		boss._physics_process(0.6)
+		boss.body.take_damage(damage, Vector2.ZERO)
+		if boss.health.current > 0.0:
+			boss._physics_process(2.4)
+	check(boss.health.current == 0.0, "vencer al último cofre completa Servidor")
+	if boss.health.current > 0.0:
+		return
+	boss._physics_process(0.8)
+	await tree.scene_changed
+	var saved: Dictionary = SaveManager.load_game()
+	check(tree.current_scene.scene_file_path == GameState.MAP and "w4_boss" in saved["completed_levels"]
+		and "w4_trojan_boss" in saved["collected_cores"] and GameState.is_world_unlocked(saved, 5)
+		and not GameState.is_world_playable(saved, 5), "el mapa guarda la victoria y Centro de datos queda PRÓXIMAMENTE")
+	await _map_right(tree)
+	check(int(tree.current_scene.get(&"selected_world")) == 1, "derecha desde Servidor pasa al primer mundo disponible")
+
+func _reach_rack(tree: SceneTree, player: PacketPlayer, elevator: DataElevator, target: float) -> bool:
+	await _walk_to(tree, player, elevator.position.x + elevator.size.x * 0.5)
+	var riding: bool = false
+	for _frame: int in range(240):
+		await tree.physics_frame
+		if not player.is_on_floor():
+			continue
+		if player.position.y <= 215.0 and elevator.position.y <= 221.0:
+			riding = true
+			break
+		if player.position.y > 290.0 and elevator.position.y >= 263.0:
+			Input.action_press(&"jump")
+			await _frames(tree, 34)
+			Input.action_release(&"jump")
+	check(riding, "Byte monta el ascensor de %d y sube con la cabina (Byte %s)" % [elevator.position.x, player.position])
+	if not riding:
+		return false
+	Input.action_press(&"jump")
+	await _walk_to(tree, player, target)
+	Input.action_release(&"jump")
+	await _frames(tree, 24)
+	var reached: bool = player.is_on_floor() and absf(player.position.y + 7.0 - 176.0) < 1.0
+	check(reached, "Byte salta de la cabina al rack de y = 176 (Byte %s)" % player.position)
+	return reached
+
+func _walk_to(tree: SceneTree, player: PacketPlayer, x: float) -> void:
+	var right: bool = player.position.x < x
+	var action: StringName = &"move_right" if right else &"move_left"
+	Input.action_press(action)
+	for _frame: int in range(360):
+		await tree.physics_frame
+		if (player.position.x >= x if right else player.position.x <= x) or player.state == PacketPlayer.State.DEAD:
+			break
+	Input.action_release(action)
+
+func _map_right(tree: SceneTree) -> void:
+	var event: InputEventAction = InputEventAction.new()
+	event.action = &"ui_right"
+	event.pressed = true
+	Input.parse_input_event(event)
+	await tree.process_frame
+	event = InputEventAction.new()
+	event.action = &"ui_right"
+	Input.parse_input_event(event)
+
+func _frames(tree: SceneTree, count: int) -> void:
+	for _frame: int in range(count):
+		await tree.physics_frame
 
 func check(condition: bool, message: String) -> void:
 	if not condition:

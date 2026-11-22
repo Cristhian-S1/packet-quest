@@ -387,8 +387,8 @@ func _test_level_route(tree: SceneTree) -> void:
 	var data: Dictionary = SaveManager.load_game()
 	check(tree.current_scene.scene_file_path == GameState.MAP, "la victoria devuelve a Byte al mapa")
 	check("w3_boss" in data["completed_levels"] and "w3_firewall_boss" in data["collected_cores"]
-		and GameState.is_world_unlocked(data, 4) and not GameState.is_world_playable(data, 4),
-		"la victoria se guarda y desbloquea Servidor como próximo destino")
+		and GameState.is_world_unlocked(data, 4) and GameState.is_world_playable(data, 4),
+		"la victoria se guarda y habilita Servidor como próximo destino")
 
 func _cross_rule_lanes(tree: SceneTree, stage: Node2D, player: PacketPlayer) -> void:
 	var bar: RuleBar
