@@ -2,6 +2,8 @@ extends Node
 
 @export var save_path: String = "user://save.json"
 
+const WORLD_COUNT: int = 5
+
 func defaults() -> Dictionary:
 	return {
 		"version": 1, "unlocked_worlds": [1], "completed_levels": [],
@@ -41,8 +43,10 @@ func load_game(path: String = "") -> Dictionary:
 		if not data.get(key) is Array:
 			return base
 	for world: Variant in data["unlocked_worlds"]:
-		if not _is_count(world) or float(world) < 1 or float(world) > 6:
+		if not _is_count(world) or float(world) < 1:
 			return base
+	# Partidas de cuando había 6 mundos: se descartan los que ya no existen sin borrar el resto.
+	data["unlocked_worlds"] = data["unlocked_worlds"].filter(func(world: Variant) -> bool: return float(world) <= WORLD_COUNT)
 	for key: String in ["completed_levels", "collected_cores", "owned_upgrades"]:
 		for item: Variant in data[key]:
 			if not item is String:

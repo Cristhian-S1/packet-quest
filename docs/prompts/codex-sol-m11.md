@@ -39,3 +39,5 @@ decisiones tomadas, y lo que quede pendiente.
   `Input.action_press("move_right")`, nunca teletransportándolo.
 - Todo hueco, carril o puerto debe ser alcanzable: el salto de Byte sube ~60 px, el dash recorre 72 px.
 - Reutiliza `GameState.WORLDS`, `is_world_playable` y el mapa por mundos que creó M8; no los dupliques.
+- El runner de pruebas ahora marca FAIL cualquier error del motor o de GDScript durante una prueba (Logger): no dejes `SCRIPT ERROR` ni `ERROR:` en la salida.
+- El juego tiene exactamente 5 mundos (`SaveManager.WORLD_COUNT`); no añadas un sexto.

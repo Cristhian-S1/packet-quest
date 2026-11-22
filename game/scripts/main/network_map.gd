@@ -1,6 +1,7 @@
 extends Node2D
 
-const WORLDS: Array[String] = ["Red Local", "Wi-Fi", "Firewall", "Servidor", "Nube", "Centro de datos"]
+# 5 niveles (requisito del encargo): un mundo por jefe del documento original.
+const WORLDS: Array[String] = ["Red Local", "Wi-Fi", "Firewall", "Servidor", "Centro de datos"]
 const NODE_Y: float = 150.0
 var age: float = 0.0
 var selected_world: int = 1
@@ -67,7 +68,7 @@ func _enter_world() -> void:
 	GameState.start_run(selected_world)
 
 static func node_x(index: int) -> float:
-	return 70.0 + index * 100.0
+	return 70.0 + index * 125.0
 
 func _process(delta: float) -> void:
 	age += delta
