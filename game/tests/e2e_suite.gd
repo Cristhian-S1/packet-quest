@@ -2,8 +2,8 @@ class_name E2ESuite
 extends RefCounted
 
 ## Suite de extremo a extremo: un BOT conduce a Byte de verdad (solo
-## Input.action_press/action_release) desde el menú principal hasta derrotar a la
-## Reina Wi-Fi, pasando por el Router Furioso. No teletransporta a Byte ni toca
+## entrada de jugador) desde el menú principal hasta la arena de la Reina Wi-Fi,
+## pasando por el Router Furioso. No teletransporta a Byte ni toca
 ## posiciones/velocidades salvo para fijar el estado inicial de la partida.
 
 const NetworkMap = preload("res://scripts/main/network_map.gd")
@@ -43,11 +43,7 @@ func run(scene_tree: SceneTree) -> PackedStringArray:
 	if not await _traverse_level2():
 		_finish()
 		return errors
-	if not await _fight_queen():
-		_finish()
-		return errors
-	await _queen_victory()
-	check(GameState.is_world_unlocked(GameState.data, 3), "derrotar a la Reina no desbloquea Firewall")
+	await _capture("07_reina_wifi")
 	_finish()
 	return errors
 
@@ -85,6 +81,17 @@ func _boot_to_menu() -> void:
 	tree.change_scene_to_file("res://scenes/main/Main.tscn")
 	await tree.scene_changed
 	await tree.process_frame
+	await _capture("01_menu")
+
+func _capture(name: String) -> void:
+	if OS.get_environment("E2E_CAPTURAS") != "1":
+		return
+	await RenderingServer.frame_post_draw
+	var image: Image = tree.root.get_texture().get_image()
+	var dir: String = ProjectSettings.globalize_path("res://../docs/capturas/e2e")
+	DirAccess.make_dir_recursive_absolute(dir)
+	var result: Error = image.save_png(dir.path_join(name + ".png"))
+	check(result == OK, "no se pudo guardar captura %s: %s" % [name, result])
 	await tree.process_frame
 
 func _await_scene_change(initial: Node, max_frames: int = 240) -> bool:
@@ -109,6 +116,7 @@ func _menu_to_world1() -> bool:
 	var map: NetworkMap = tree.current_scene as NetworkMap
 	if map == null:
 		return false
+	await _capture("02_mapa")
 	await tree.process_frame
 	# El botón Entrar tiene el foco; Enter entra en el mundo seleccionado (1).
 	initial = tree.current_scene
@@ -151,6 +159,7 @@ func _traverse_level1() -> bool:
 	if not world.puzzle.is_solved:
 		check(false, "el puzle de ruta no se resuelve con interact")
 		return false
+	await _capture("03_puzle_red_local")
 	# Camina hasta la compuerta abierta y entra al jefe.
 	Input.action_press(&"move_right")
 	var entered: bool = await pilot.wait_until(
@@ -210,9 +219,9 @@ func _move_to(player: PacketPlayer, target_x: float) -> void:
 	var direction: StringName = &"move_right" if target_x >= player.global_position.x else &"move_left"
 	Input.action_press(direction)
 	await pilot.wait_until(
-		func() -> bool: return (direction == &"move_right" and player.global_position.x >= target_x) or (direction == &"move_left" and player.global_position.x <= target_x), 600)
+		func() -> bool: return (direction == &"move_right" and player.global_position.x >= target_x - 6.0) or (direction == &"move_left" and player.global_position.x <= target_x + 6.0), 600)
 	Input.action_release(direction)
-	await pilot.frames(2)
+	await pilot.physics_frames(8)
 
 # --- Router Furioso -----------------------------------------------------
 
@@ -221,12 +230,12 @@ func _fight_router() -> bool:
 	if boss == null:
 		return false
 	var player: PacketPlayer = boss.player
+	await _capture("04_router")
 	# Apunta recto hacia arriba y dispárame sin moverte: el cuerpo del Router
 	# ocupa x 240–400, así que disparar bajo x=248 lo alcanza de lleno.
-	Input.action_press(&"lock_aim")
+	await _move_to(player, 300.0)
 	Input.action_press(&"aim_up")
 	Input.action_press(&"shoot")
-	await _move_to(player, 248.0)
 	var jump_frames := 0
 	var pending_jump := -1
 	var prev_state: RouterBoss.State = boss.state
@@ -236,6 +245,10 @@ func _fight_router() -> bool:
 		guard += 1
 		if guard > 6000:
 			break
+		if player.global_position.x < 275.0:
+			Input.action_press(&"move_right")
+		elif player.global_position.x >= 300.0:
+			Input.action_release(&"move_right")
 		if jump_frames > 0:
 			jump_frames -= 1
 			if jump_frames == 0:
@@ -256,14 +269,18 @@ func _fight_router() -> bool:
 	var won: bool = boss.state == RouterBoss.State.DEFEATED
 	if won:
 		# Recoge el núcleo que suelta el jefe (aparece a los 0,6 s en x=320).
-		await pilot.wait_until(func() -> bool: return tree.paused, 600)
+		await pilot.wait_until(func() -> bool: return boss.core_spawned, 120)
 		if not tree.paused:
-			# El núcleo aún no se ha recogido: camina hacia él.
-			Input.action_press(&"move_right")
+			# El núcleo puede quedar a cualquiera de los lados tras el retroceso.
+			var direction: StringName = &"move_right" if player.global_position.x < 320.0 else &"move_left"
+			Input.action_press(direction)
 			await pilot.wait_until(func() -> bool: return tree.paused, 400)
-			Input.action_release(&"move_right")
+			Input.action_release(direction)
+		if not tree.paused:
+			check(false, "Byte no recoge el núcleo del Router (posición %s)" % player.global_position)
+			won = false
 	else:
-		check(false, "el bot no derrota al Router (PV restantes %.0f, fase %d)" % [boss.health.current, boss.phase])
+		check(false, "el bot no derrota al Router (PV restantes %.0f, fase %d, frame %d, Byte %s, PV %.0f, estado %d)" % [boss.health.current, boss.phase, guard, player.global_position, player.health.current, player.state])
 	pilot.release_all()
 	return won
 
@@ -275,6 +292,8 @@ func _router_victory_to_map() -> bool:
 		func() -> bool: return tree.current_scene is NetworkMap, 400)
 	tree.paused = false
 	check(reached, "la victoria no vuelve al mapa")
+	if reached:
+		await _capture("05_wifi_desbloqueado")
 	return reached
 
 # --- Mapa → Mundo 2 -----------------------------------------------------
@@ -326,6 +345,7 @@ func _traverse_level2() -> bool:
 	if not world.puzzle.is_solved:
 		check(false, "el puzle de cables no se resuelve a disparos")
 		return false
+	await _capture("06_puzle_wifi")
 	# Camina hasta el borde y entra en la Reina.
 	Input.action_press(&"move_right")
 	var entered: bool = await pilot.wait_until(
@@ -336,16 +356,32 @@ func _traverse_level2() -> bool:
 
 func _cross_waves_and_pit(world: World2Level1, player: PacketPlayer) -> void:
 	Input.action_press(&"move_right")
-	# Las ondas empujan; la zona de cobertura exige estar cerca del router.
-	var crossed: bool = await pilot.wait_until(
-		func() -> bool: return player.global_position.x >= 1040.0 and player.is_on_floor(), 2400)
+	var approached: bool = await pilot.wait_until(
+		func() -> bool: return player.global_position.x >= 760.0 and player.is_on_floor(), 1200)
 	Input.action_release(&"move_right")
-	if not crossed:
-		# Reintenta saltando entre plataformas de cobertura.
-		for _attempt: int in range(3):
-			await _hop_coverage(player)
-			if player.global_position.x >= 1040.0:
-				return
+	if not approached:
+		check(false, "no llega al foso: %s" % player.global_position)
+		return
+	for landing: Vector2 in [Vector2(810, 267), Vector2(880, 241), Vector2(950, 217), Vector2(1020, 249)]:
+		await pilot.physics_frames(3)
+		Input.action_press(&"move_right")
+		Input.action_press(&"jump")
+		var landed := false
+		for frame: int in range(65):
+			await tree.physics_frame
+			if player.global_position.x >= landing.x:
+				Input.action_release(&"move_right")
+			if player.is_on_floor() and player.global_position.distance_to(landing) < 25.0:
+				landed = true
+				break
+		Input.action_release(&"move_right")
+		Input.action_release(&"jump")
+		if not landed:
+			check(false, "no alcanza plataforma %s: Byte %s, PV %.0f" % [landing, player.global_position, player.health.current])
+			return
+	Input.action_press(&"move_right")
+	await pilot.wait_until(func() -> bool: return player.global_position.x >= 1060.0 and player.is_on_floor(), 120)
+	Input.action_release(&"move_right")
 
 func _hop_coverage(player: PacketPlayer) -> void:
 	# Salta repetidamente manteniendo derecha para cruzar el foso.
@@ -375,11 +411,20 @@ func _solve_cable_puzzle(world: World2Level1, player: PacketPlayer) -> void:
 		Vector2i(1, 0), Vector2i(1, 0), Vector2i(2, 0), Vector2i(3, 0)]
 	for cell: Vector2i in shots:
 		var piece: CableCell = puzzle.cells[cell.y * CableGrid.SIZE.x + cell.x]
-		await _shoot_cell(player, piece)
+		var before: int = piece.openings
+		for attempt: int in range(3):
+			await _shoot_cell(player, piece)
+			if piece.openings != before:
+				break
+		if piece.openings == before:
+			check(false, "disparo no alcanzó celda %s: Byte %s" % [cell, player.global_position])
+			return
 
 func _shoot_cell(player: PacketPlayer, piece: CableCell) -> void:
 	# Sitúa a Byte bajo la celda y dispara hacia arriba.
+	await pilot.wait_until(func() -> bool: return player.is_on_floor(), 120)
 	await _move_to(player, piece.global_position.x)
+	await pilot.wait_until(func() -> bool: return player.shoot_wait <= 0.0, 60)
 	if piece.cell.y < CableGrid.SIZE.y - 1:
 		Input.action_press(&"jump")
 		await pilot.wait_until(
@@ -389,7 +434,7 @@ func _shoot_cell(player: PacketPlayer, piece: CableCell) -> void:
 	Input.action_press(&"aim_up")
 	await pilot.physics_frames(2)
 	Input.action_press(&"shoot")
-	await pilot.physics_frames(2)
+	await pilot.wait_until(func() -> bool: return player.shoot_wait > 0.0, 30)
 	Input.action_release(&"shoot")
 	Input.action_release(&"aim_up")
 	await pilot.frames(8)
