@@ -12,6 +12,7 @@ func run(_tree: SceneTree) -> PackedStringArray:
 	_test_weapon_autoequip()
 	_test_cannot_unequip_last_weapon()
 	_test_passive_rules()
+	_test_buy_passive_autoequips()
 	_test_equipped_filters_invalid()
 	_test_workshop_status()
 	finished = true
@@ -67,6 +68,14 @@ func _test_passive_rules() -> void:
 	check(Progression.has_effect(data, &"more_health"), "efecto de permanente poseída")
 	check(Progression.set_passive(data, &""), "desequipar pasiva")
 	check(not Progression.has_effect(data, &"marker"), "pasiva desequipada sin efecto")
+
+func _test_buy_passive_autoequips() -> void:
+	var data: Dictionary = fresh(6)
+	check(Progression.buy(data, &"marker"), "compra pasiva marker")
+	check(Progression.has_effect(data, &"marker"), "pasiva se autoequipa al comprar con ranura vacía")
+	check(Progression.buy(data, &"slowdown"), "compra pasiva slowdown")
+	check(Progression.has_effect(data, &"marker"), "nueva pasiva no desequipa la equipada")
+	check(not Progression.has_effect(data, &"slowdown"), "segunda pasiva no se autoequipa sobre la primera")
 
 func _test_workshop_status() -> void:
 	var workshop: Script = load("res://scripts/ui/workshop.gd") as Script

@@ -23,6 +23,8 @@ static func buy(data: Dictionary, id: StringName) -> bool:
 	(data["owned_upgrades"] as Array).append(String(id))
 	if item.kind == UpgradeData.Kind.WEAPON and equipped_weapons(data).size() < MAX_WEAPONS:
 		_set_weapons(data, equipped_weapons(data) + [id])
+	elif item.kind == UpgradeData.Kind.PASSIVE and str(data.get("equipped", {}).get("passive", "")) == "":
+		set_passive(data, id)
 	return true
 
 static func equipped_weapons(data: Dictionary) -> Array[StringName]:
