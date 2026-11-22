@@ -6,8 +6,9 @@ const BOSS: String = "res://scenes/bosses/MalwarexBoss.tscn"
 var errors: PackedStringArray = []
 var finished: bool = false
 
-func run(_tree: SceneTree) -> PackedStringArray:
+func run(tree: SceneTree) -> PackedStringArray:
 	_test_progress()
+	await _test_cloud(tree)
 	finished = true
 	return errors
 
@@ -32,6 +33,37 @@ func _test_progress() -> void:
 	check(bool(GameState.data.get("finished", false)) and not GameState.is_world_unlocked(GameState.data, 6)
 		and GameState.data["completed_levels"].count("w5_boss") == 1
 		and bool(SaveManager.load_game().get("finished", false)), "Malwarex registra la victoria final una vez")
+
+func _test_cloud(tree: SceneTree) -> void:
+	var script: Script = require_script("res://scripts/objects/cloud_platform.gd")
+	if script == null:
+		return
+	var times: Array[float] = [0.0, 1.9, 2.2, 2.6, 3.9, 4.1]
+	var expected: Array[StringName] = [&"solid", &"solid", &"fading", &"gone", &"gone", &"solid"]
+	for index: int in range(times.size()):
+		check(script.call(&"state_at", times[index]) == expected[index], "estado de nube a %.1f s" % times[index])
+	var cloud: StaticBody2D = script.new() as StaticBody2D
+	tree.root.add_child(cloud)
+	cloud.set_physics_process(false)
+	var shape: CollisionShape2D = cloud.get_child(0) as CollisionShape2D
+	check(cloud.collision_layer == 1 and not shape.disabled, "nube sólida en la capa del mundo")
+	cloud.call(&"_physics_process", 2.2)
+	await tree.process_frame
+	check(not shape.disabled, "la nube conserva la colisión durante el aviso")
+	cloud.call(&"_physics_process", 0.4)
+	await tree.process_frame
+	check(shape.disabled, "la nube pierde la colisión al desaparecer")
+	cloud.call(&"_physics_process", 1.5)
+	await tree.process_frame
+	check(not shape.disabled, "la nube recupera la colisión al reiniciar su ciclo")
+	cloud.queue_free()
+	await tree.process_frame
+
+func require_script(path: String) -> Script:
+	if not ResourceLoader.exists(path):
+		errors.append("falta " + path.get_file())
+		return null
+	return load(path) as Script
 
 func check(condition: bool, message: String) -> void:
 	if not condition:
