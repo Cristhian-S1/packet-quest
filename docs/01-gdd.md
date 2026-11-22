@@ -83,4 +83,5 @@ Detalle en `04-niveles.md`.
 | `10-qa-y-pruebas.md` | Plan de pruebas y métricas |
 | `11-investigacion.md` | Fuentes consultadas |
 | `12-herramientas.md` | Herramientas de arte/audio, MCP, skills y plugins recomendados (¿hace falta Blender?) |
+| `13-m8-mundo-wifi.md` | Especificación de implementación del Mundo 2 Wi-Fi (M8) |
 | `superpowers/plans/` | Planes de implementación por hito (M7 en adelante) |
