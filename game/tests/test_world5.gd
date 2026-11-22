@@ -122,8 +122,12 @@ func _test_qos(tree: SceneTree) -> void:
 
 	GameState.puzzle_complete = false
 	GameState.current_world = 5
+	var stage: Node2D = Node2D.new()
+	tree.root.add_child(stage)
+	var player: PacketPlayer = StageBuilder.player(stage, Vector2(64, 296), 640)
+	player.set_physics_process(false)
 	var puzzle: Node2D = scene.instantiate() as Node2D
-	tree.root.add_child(puzzle)
+	stage.add_child(puzzle)
 	var nodes: Dictionary[StringName, Area2D] = {}
 	for node: Area2D in puzzle.get(&"nodes"):
 		nodes[StringName(node.get(&"traffic_id"))] = node
@@ -142,11 +146,15 @@ func _test_qos(tree: SceneTree) -> void:
 		check(Array(puzzle.get(&"activated")).size() == 1, "cada interruptor cuenta una vez")
 		reset.interact()
 		check(Array(puzzle.get(&"activated")).is_empty(), "el nodo de reinicio vacía la secuencia")
+		puzzle.call(&"_process", 60.0)
+		check(puzzle.get(&"_hint_bridge") == &"voz", "a los 60 s la pista ilumina el puente de voz")
+		puzzle.call(&"_process", 1.1)
+		check(puzzle.get(&"_hint_bridge") == &"", "la pista deja de iluminar el puente tras un segundo")
 		for id: StringName in correct:
 			nodes[id].call(&"interact")
 		check(door.opened and GameState.puzzle_complete and solved.size() == 1
 			and AudioManager.last_sfx == &"cable_connected", "QoS abre la puerta y emite la conexión")
-	puzzle.queue_free()
+	stage.queue_free()
 	await tree.process_frame
 
 func _test_malwarex(tree: SceneTree) -> void:

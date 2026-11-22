@@ -17,6 +17,7 @@ var _player: PacketPlayer
 var _caption: Label
 var _elapsed: float = 0.0
 var _fall: float = 0.0
+var _hint_bridge: StringName = &""
 
 @onready var nodes: Array[QosNode] = [$Correo, $Voz, $Descarga, $Video]
 @onready var door: PacketDoor = $Door
@@ -105,6 +106,9 @@ func _refresh() -> void:
 	queue_redraw()
 
 func _update_lights(hint: StringName) -> void:
+	if hint != _hint_bridge:
+		_hint_bridge = hint
+		queue_redraw()
 	for node: QosNode in nodes:
 		var id: StringName = StringName(node.traffic_id)
 		node.set_lights(id in activated, id == hint)
@@ -113,11 +117,13 @@ func _draw() -> void:
 	var fall_progress: float = 1.0 - _fall / FALL_TIME
 	for node: QosNode in nodes:
 		var position_at: Vector2 = Vector2(node.position.x, BRIDGE_Y)
-		var active: bool = StringName(node.traffic_id) in activated
+		var id: StringName = StringName(node.traffic_id)
+		var active: bool = id in activated
 		if _fall > 0.0 and not active:
 			position_at.y += 42.0 * fall_progress * fall_progress
 			draw_rect(Rect2(position_at - BRIDGE_SIZE / 2.0, BRIDGE_SIZE),
 				Color(PQStyle.CYAN, 1.0 - fall_progress))
 		else:
+			var color: Color = PQStyle.CYAN if active or id == _hint_bridge else Color(PQStyle.EDGE, 0.28)
 			draw_rect(Rect2(position_at - BRIDGE_SIZE / 2.0, BRIDGE_SIZE),
-				PQStyle.CYAN if active else Color(PQStyle.EDGE, 0.28), active)
+				color, active)
