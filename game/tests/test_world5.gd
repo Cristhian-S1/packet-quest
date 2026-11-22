@@ -9,6 +9,7 @@ var finished: bool = false
 func run(tree: SceneTree) -> PackedStringArray:
 	_test_progress()
 	await _test_cloud(tree)
+	await _test_bot(tree)
 	finished = true
 	return errors
 
@@ -58,6 +59,53 @@ func _test_cloud(tree: SceneTree) -> void:
 	check(not shape.disabled, "la nube recupera la colisión al reiniciar su ciclo")
 	cloud.queue_free()
 	await tree.process_frame
+
+func _test_bot(tree: SceneTree) -> void:
+	var script: Script = require_script("res://scripts/enemies/bot_ddos.gd")
+	var scene: PackedScene = require_scene("res://scenes/enemies/BotDDoS.tscn")
+	if script == null or scene == null:
+		return
+	var directions: Array[Vector2] = script.call(&"fan_directions", Vector2(0, 3), 6, 120.0)
+	check(directions.size() == 6, "el abanico tiene seis direcciones")
+	if directions.size() == 6:
+		check(is_equal_approx(rad_to_deg(directions[0].angle_to(directions[5])), 120.0),
+			"los extremos del abanico abarcan 120 grados")
+		for index: int in range(directions.size()):
+			var angle: float = rad_to_deg(Vector2.DOWN.angle_to(directions[index]))
+			check(directions[index].is_normalized() and is_equal_approx(angle, -60.0 + index * 24.0),
+				"dirección normalizada y centrada %d" % index)
+	var stage: Node2D = Node2D.new()
+	tree.root.add_child(stage)
+	var pool: ProjectilePool = ProjectilePool.new()
+	stage.add_child(pool)
+	var player: PacketPlayer = StageBuilder.player(stage, Vector2(64, 296), 640)
+	player.set_physics_process(false)
+	var bot: EnemyBase = scene.instantiate() as EnemyBase
+	bot.position = Vector2(320, 224)
+	stage.add_child(bot)
+	bot.set_physics_process(false)
+	check(bot.health.current == 2.0 and bot.is_in_group(&"homing_target"), "Bot DDoS aparece con dos PV")
+	bot.advance(bot.timer)
+	bot.advance(0.59)
+	check(bot.state == EnemyBase.State.TELEGRAPH and not pool.enemy_bullets[0].active, "aviso de 0,6 s antes del abanico")
+	bot.on_screen = true
+	bot.advance(0.011)
+	for index: int in range(6):
+		var shot: Projectile = pool.enemy_bullets[index]
+		check(shot.active and is_equal_approx(shot.velocity.length(), 90.0)
+			and shot.damage == 1.0 and shot.get(&"enemy_color") == PQStyle.AMBER, "bala ámbar %d" % index)
+	pool.clear_enemy()
+	bot.on_screen = false
+	bot.fire()
+	check(not pool.enemy_bullets[0].active, "el Bot DDoS no dispara fuera de pantalla")
+	stage.queue_free()
+	await tree.process_frame
+
+func require_scene(path: String) -> PackedScene:
+	if not ResourceLoader.exists(path, "PackedScene"):
+		errors.append("falta " + path.get_file())
+		return null
+	return load(path) as PackedScene
 
 func require_script(path: String) -> Script:
 	if not ResourceLoader.exists(path):
