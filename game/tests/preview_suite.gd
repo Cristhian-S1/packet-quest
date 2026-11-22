@@ -106,3 +106,37 @@ func capture_m9(scene_tree: SceneTree) -> void:
 	else:
 		print("CAPTURAS M9: level3.png y boss3.png")
 		tree.quit()
+
+func capture_m10(scene_tree: SceneTree) -> void:
+	tree = scene_tree
+	SaveManager.save_path = "res://.godot/preview_m10_session.json"
+	GameState.data = SaveManager.defaults()
+	GameState.checkpoint = Vector2(170, 296)
+	var directory: String = ProjectSettings.globalize_path("res://../docs/capturas").simplify_path()
+	var stage: World4Level1 = preload("res://scenes/levels/World4Level1.tscn").instantiate() as World4Level1
+	tree.root.add_child(stage)
+	await tree.create_timer(0.2).timeout
+	var level_result: Error = await snap("level4", directory)
+	stage.queue_free()
+	await tree.process_frame
+
+	var boss: TrojanBoss = preload("res://scenes/bosses/TrojanBoss.tscn").instantiate() as TrojanBoss
+	tree.root.add_child(boss)
+	boss.set_physics_process(false)
+	boss.player.set_physics_process(false)
+	boss.player.position = Vector2(364, 296)
+	boss._physics_process(1.2)
+	for damage: float in [45.0, 45.0]:
+		boss._physics_process(0.6)
+		boss._physics_process(0.6)
+		boss.body.take_damage(damage, Vector2.ZERO)
+		boss._physics_process(2.4)
+	boss._physics_process(0.6)
+	boss._physics_process(0.6)
+	var boss_result: Error = await snap("boss4", directory)
+	if level_result != OK or boss_result != OK:
+		push_error("Error al guardar las capturas M10 (%d, %d)" % [level_result, boss_result])
+		tree.quit(1)
+	else:
+		print("CAPTURAS M10: level4.png y boss4.png")
+		tree.quit()

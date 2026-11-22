@@ -77,3 +77,12 @@ Validación final: import, inicio, cinco pruebas y 300 frames: exit=0, sin error
 - **Victoria y salida.** La compuerta de 3-1 coincide con el umbral de salida en x = 3040. La
   prueba cruza desde el último terminal caminando con `move_right`. El núcleo del jefe se abona
   al vencerlo y la tarjeta precede al regreso al mapa.
+
+## Decisiones M10
+
+- **Cronología del portal.** Los 5 s corresponden al ciclo completo, que incluye el aviso de 1 s. El Troyano patrulla durante la recuperación y conserva el portal en el lugar donde lo abrió. El ciclo sigue fuera de cámara, con tope de cuatro Pop-ups vivos por portal.
+- **Anclaje del ascensor.** `ChipPlatform` toma la esquina superior izquierda como origen. En 4-1 se coloca a x = 720 y x = 2120 para que los centros queden en x = 760 y x = 2160. Los bordes superiores mantienen los 280 y 216 px de altura previstos.
+- **Cronología del cofre.** La sombra avisa durante 0,6 s y el salto dura otros 0,6 s. Al aterrizar comienza la apertura de 1,5 s y, dentro de ella, el aviso de descarga de 0,6 s. La dirección se fija al iniciar el aviso. Un cambio de fase cancela el ataque y comienza la pausa invulnerable de 2,4 s.
+- **Descarga y chips.** El carril de y = 256 coincide con el borde superior de los chips y la consulta de impacto absorbía el disparo al nacer sobre ellos. Las balas de la descarga excluyen esos dos cuerpos de su consulta, con las demás colisiones del pool activas.
+- **Invocación y mímicos.** Los minions de F2 duran hasta el cierre del cofre. En F3, el cofre real se distingue durante los primeros 0,4 s del aviso. Los mímicos pueden hacer daño al terminar el aviso de 0,6 s.
+- **Revelación y victoria.** Los pósteres muestran las pistas cuando Byte se acerca. El núcleo de S4 aparece por proximidad. La victoria abona el núcleo del jefe y muestra la tarjeta durante 0,8 s antes de volver al mapa.
