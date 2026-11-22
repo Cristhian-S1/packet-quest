@@ -10,6 +10,7 @@ func run(tree: SceneTree) -> PackedStringArray:
 	_test_world_progress()
 	_test_platforms()
 	await _test_trojan(tree)
+	await _test_password(tree)
 	finished = true
 	return errors
 
@@ -109,6 +110,64 @@ func _popups(stage: Node2D) -> Array[PopUp]:
 		if child is PopUp:
 			popups.append(child as PopUp)
 	return popups
+
+func _test_password(tree: SceneTree) -> void:
+	var logic: Script = require_script("res://scripts/puzzles/password_logic.gd")
+	var scene: PackedScene = require_scene("res://scenes/puzzles/PasswordPuzzle.tscn")
+	if logic == null or scene == null:
+		return
+	var canonical: Array[int] = [0, 1, 2, 3]
+	check(bool(logic.call(&"is_solution", canonical)), "▲ ● ★ ■ resuelve el panel")
+	for code: Array in [[1, 0, 2, 3], [0, 1, 3, 2], [2, 0, 1, 3], [3, 1, 2, 3]]:
+		check(not bool(logic.call(&"is_solution", code)), "se rechaza %s" % [code])
+	check(int(logic.call(&"cycle", 0)) == 1 and int(logic.call(&"cycle", 3)) == 0, "las ranuras ciclan entre cuatro símbolos")
+	check(int(logic.call(&"index_of", canonical, 2)) == 2 and int(logic.call(&"index_of", [0], 2)) == -1,
+		"se encuentra la posición o se devuelve −1")
+	var clues: Array[StringName] = [&"circle_before_star", &"triangle_before_square", &"circle_not_first", &"star_not_last"]
+	var counterexamples: Array[Array] = [[0, 1, 3, 2], [3, 1, 2, 0], [1, 2, 0, 3], [0, 3, 1, 2]]
+	for index: int in range(clues.size()):
+		check(bool(logic.call(clues[index], canonical)) and not bool(logic.call(clues[index], counterexamples[index])),
+			"el predicado de la pista %d distingue su contraejemplo" % (index + 1))
+	var permutations: int = 0
+	var permutation_solutions: int = 0
+	var solutions: int = 0
+	for a: int in range(4):
+		for b: int in range(4):
+			for c: int in range(4):
+				for d: int in range(4):
+					var code: Array[int] = [a, b, c, d]
+					var permutation: bool = bool(logic.call(&"is_permutation", code))
+					var solution: bool = bool(logic.call(&"is_solution", code))
+					permutations += int(permutation)
+					permutation_solutions += int(permutation and solution)
+					solutions += int(solution)
+	check(permutations == 24 and permutation_solutions == 1 and solutions == 1, "una solución entre 24 permutaciones y 256 códigos")
+
+	GameState.current_world = 4
+	var puzzle: Node2D = scene.instantiate() as Node2D
+	tree.root.add_child(puzzle)
+	var slots: Array = puzzle.get(&"slots")
+	var door: PacketDoor = puzzle.get(&"door") as PacketDoor
+	var reset: NetworkNode = puzzle.get(&"reset_node") as NetworkNode
+	var notifications: Array[bool] = []
+	puzzle.connect(&"solved", func() -> void: notifications.append(true))
+	check(slots.size() == 4 and not door.opened, "el puzle empieza con cuatro ranuras y puerta cerrada")
+	for slot: NetworkNode in slots:
+		for _turn: int in range(3):
+			slot.interact()
+	check(door.opened and GameState.puzzle_complete and notifications.size() == 1
+		and AudioManager.last_sfx == &"cable_connected", "las ranuras resuelven el puzle, abren la puerta y emiten conexión")
+	puzzle.queue_free()
+	await tree.process_frame
+	puzzle = scene.instantiate() as Node2D
+	tree.root.add_child(puzzle)
+	door = puzzle.get(&"door") as PacketDoor
+	reset = puzzle.get(&"reset_node") as NetworkNode
+	check(door.opened, "reintentar conserva la puerta abierta")
+	reset.interact()
+	check(not door.opened and not GameState.puzzle_complete, "reiniciar restaura el panel y cierra la puerta")
+	puzzle.queue_free()
+	await tree.process_frame
 
 func check(condition: bool, message: String) -> void:
 	if not condition:
