@@ -12,6 +12,7 @@ const SFX_NOTES: Dictionary[StringName, PackedFloat32Array] = {
 	&"firewall_connected": [440.0, 587.0, 784.0],
 	&"firewall_rule": [294.0, 392.0],
 	&"firewall_laser": [440.0, 330.0, 220.0],
+	&"telegraph": [330.0, 440.0],
 }
 var _tones: Dictionary[StringName, AudioStreamWAV] = {}
 

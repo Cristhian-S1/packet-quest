@@ -21,6 +21,7 @@ var rolling: bool = false
 var can_hop: bool = false
 var hopped: bool = false
 var horizontal_bounces: int = 0
+var enemy_color: Color = PQStyle.PINK
 ## Reutilizados en _physics_process para no asignar memoria por frame.
 var ray: PhysicsRayQueryParameters2D
 var cull_rect: Rect2 = Rect2()
@@ -51,6 +52,7 @@ func launch(at: Vector2, speed: Vector2, amount: float, gravity_vector: Vector2 
 	can_hop = false
 	hopped = false
 	horizontal_bounces = 0
+	enemy_color = PQStyle.PINK
 	homing_turn_rad = 0.0
 	marks = false
 	visible = true
@@ -166,7 +168,7 @@ func _nearest_target() -> Node2D:
 
 func _draw() -> void:
 	if enemy:
-		draw_rect(Rect2(-5, -4, 10, 8), PQStyle.PINK)
+		draw_rect(Rect2(-5, -4, 10, 8), enemy_color)
 		draw_rect(Rect2(-2, -2, 4, 4), Color.WHITE)
 	else:
 		draw_line(-velocity.normalized() * 7, Vector2.ZERO, Color(PQStyle.CYAN, 0.3), 4)

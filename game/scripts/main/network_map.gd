@@ -23,7 +23,7 @@ func _ready() -> void:
 			_playable.append(world)
 		var status: String = "DISPONIBLE" if playable else "BLOQUEADO"
 		var status_color: Color = PQStyle.GREEN if playable else PQStyle.EDGE
-		if world > GameState.WORLDS.size():
+		if not GameState.has_world_scenes(world):
 			status = "PRÓXIMAMENTE"
 			if GameState.is_world_unlocked(GameState.data, world):
 				status_color = PQStyle.AMBER
@@ -68,7 +68,7 @@ func _enter_world() -> void:
 	GameState.start_run(selected_world)
 
 static func node_x(index: int) -> float:
-	return 70.0 + index * 125.0
+	return 70.0 + index * 112.0
 
 func _process(delta: float) -> void:
 	age += delta
