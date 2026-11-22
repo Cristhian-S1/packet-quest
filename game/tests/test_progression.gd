@@ -15,6 +15,7 @@ func run(_tree: SceneTree) -> PackedStringArray:
 	_test_buy_passive_autoequips()
 	_test_equipped_filters_invalid()
 	_test_workshop_status()
+	_test_workshop_slots_full()
 	finished = true
 	return errors
 
@@ -89,6 +90,14 @@ func _test_workshop_status() -> void:
 	data["data_cores"] = 2
 	Progression.buy(data, &"more_health")
 	check(workshop.call("status", data, Catalog.upgrade(&"more_health")) == "Instalada", "taller: permanente")
+
+func _test_workshop_slots_full() -> void:
+	var workshop: Script = load("res://scripts/ui/workshop.gd") as Script
+	var data: Dictionary = fresh(4)
+	Progression.buy(data, &"triple")
+	Progression.buy(data, &"ping")
+	check(workshop.call("status", data, Catalog.upgrade(&"ping")) == "Ranuras llenas", "taller: ranuras llenas")
+	check(workshop.call("status", data, Catalog.upgrade(&"triple")) == "Equipada", "taller: arma equipada")
 
 func _test_equipped_filters_invalid() -> void:
 	var data: Dictionary = fresh(0)

@@ -48,7 +48,9 @@ static func status(data: Dictionary, item: UpgradeData) -> String:
 		UpgradeData.Kind.PERMANENT:
 			return "Instalada"
 		UpgradeData.Kind.WEAPON:
-			return "Equipada" if item.id in Progression.equipped_weapons(data) else "Equipar"
+			if item.id in Progression.equipped_weapons(data):
+				return "Equipada"
+			return "Ranuras llenas" if Progression.equipped_weapons(data).size() >= Progression.MAX_WEAPONS else "Equipar"
 		_:
 			return "Equipada" if Progression.has_effect(data, item.id) else "Equipar"
 
