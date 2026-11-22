@@ -5,7 +5,7 @@ signal solved
 
 const EXIT_X: float = 640.0
 const MAX_MISTAKES: int = 2
-const COLORS: Array[Color] = [PQStyle.RED, PQStyle.GREEN, PQStyle.CYAN]
+const COLORS: Array[Color] = [PQStyle.RED, PQStyle.GREEN, PQStyle.BLUE]
 const COLOR_NAMES: Array[String] = ["ROJO", "VERDE", "AZUL"]
 const SHAPE_NAMES: Array[String] = ["CÍRCULO", "TRIÁNGULO", "CUADRADO"]
 const FACT: String = "Dato: un firewall deja pasar o bloquea cada paquete según sus reglas."

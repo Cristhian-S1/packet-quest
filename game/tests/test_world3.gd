@@ -5,6 +5,7 @@ var finished: bool = false
 
 func run(_tree: SceneTree) -> PackedStringArray:
 	_test_world_progress()
+	await _test_boss(_tree)
 	await _test_filter(_tree)
 	await _test_armor(_tree)
 	await _test_hazards(_tree)
@@ -180,6 +181,85 @@ func _test_filter(tree: SceneTree) -> void:
 			"el reinicio restaura el paquete inicial y cierra la puerta")
 	check(solved_calls.size() == 1 and AudioManager.last_sfx == &"firewall_connected", "el éxito emite solved y reproduce la conexión")
 	puzzle.queue_free()
+	await tree.process_frame
+
+
+func _test_boss(tree: SceneTree) -> void:
+	var scene: PackedScene = _require_scene("res://scenes/bosses/FirewallBoss.tscn")
+	if scene == null:
+		return
+	var boss: Node2D = scene.instantiate() as Node2D
+	var script: Script = boss.get_script() as Script
+	for ratio: float in [1.0, 0.70, 0.69, 0.40, 0.39]:
+		var expected_phase: int = 1 if ratio > 0.70 else (2 if ratio > 0.40 else 3)
+		check(int(script.call(&"phase_for", ratio)) == expected_phase, "fase para %.2f PV" % ratio)
+	for index: int in range(21):
+		check(int(script.call(&"rule_gap_lane", index)) == index % 3, "carril de barrido %d" % index)
+		check(int(script.call(&"correct_port", index)) == index % 3, "puerto de ciclo %d" % index)
+	for input: Vector3 in [Vector3(0, 0, 480), Vector3(5, 0, 360), Vector3(5, 10, 440),
+			Vector3(100, 0, 160), Vector3(0, 50, 480)]:
+		check(is_equal_approx(float(script.call(&"wall_x", input.x, int(input.y))), input.z), "límite de avance %s" % input)
+
+	tree.root.add_child(boss)
+	boss.set_physics_process(false)
+	var player: PacketPlayer = boss.get(&"player") as PacketPlayer
+	player.set_physics_process(false)
+	var health: HealthComponent = boss.get(&"health") as HealthComponent
+	var core: Hurtbox = boss.get(&"core") as Hurtbox
+	var card: Label = boss.get(&"card") as Label
+	var pool: ProjectilePool = boss.get(&"pool") as ProjectilePool
+	check(health.current == 120.0 and core.invulnerable and core.homing_target, "el núcleo del Firewall empieza cerrado")
+	boss.call(&"_physics_process", 1.2)
+	boss.call(&"_physics_process", 1.1)
+	check(core.invulnerable, "el aviso del puerto F1 conserva la invulnerabilidad")
+	boss.call(&"_physics_process", 0.6)
+	check(not core.invulnerable and core.global_position == Vector2(520, 176), "F1 abre su puerto central")
+	pool.fire(false, Vector2(450, 247), Vector2.RIGHT * 480.0)
+	for _frame: int in range(12):
+		await tree.physics_frame
+	check(health.current == 120.0, "el mundo absorbe las balas fuera del puerto")
+	pool.fire(false, Vector2(450, 176), Vector2.RIGHT * 480.0)
+	for _frame: int in range(12):
+		await tree.physics_frame
+	check(health.current == 119.0, "la bala del pool atraviesa el puerto abierto y alcanza el núcleo")
+
+	var shot: Projectile = pool.fire(true, Vector2(340, 140), Vector2.LEFT * 100)
+	core.take_damage(35.0, Vector2.ZERO)
+	check(int(boss.get(&"phase")) == 2 and core.invulnerable and card.visible and not shot.active,
+		"el 70 % muestra la tarjeta, cierra el núcleo y limpia proyectiles")
+	boss.call(&"_physics_process", 2.39)
+	core.take_damage(36.0, Vector2.ZERO)
+	check(health.current == 84.0 and core.invulnerable, "el cambio mantiene 2,4 s de invulnerabilidad")
+	boss.call(&"_physics_process", 0.01)
+	check(core.position.y == 184.0 and not core.invulnerable and not card.visible, "F2 empieza por el puerto alto")
+	boss.call(&"_physics_process", 1.21)
+	check(core.position.y == 240.0, "F2 continúa por el puerto medio")
+	check(player.health.current == 3.0, "el aviso del láser horizontal es inocuo")
+	boss.call(&"_physics_process", 1.2)
+	check(core.position.y == 288.0, "F2 termina por el puerto bajo")
+
+	core.take_damage(36.0, Vector2.ZERO)
+	check(int(boss.get(&"phase")) == 2 and core.invulnerable, "el láser en curso termina antes de la pausa")
+	boss.call(&"_physics_process", 0.45)
+	check(player.health.current == 2.0, "el láser activo quita un PV a la altura señalada")
+	Engine.time_scale = 1.0
+	check(int(boss.get(&"phase")) == 3 and core.invulnerable and card.visible, "el 40 % inicia la fase de avance")
+	boss.call(&"_physics_process", 2.4)
+	check(core.global_position == Vector2(520, 176) and not core.invulnerable, "F3 expone el puerto central")
+	boss.call(&"_physics_process", 5.0)
+	check(is_equal_approx(core.global_position.x, 400.0), "el núcleo avanza con el muro")
+	pool.fire(false, Vector2(320, 219), Vector2.RIGHT * 480.0)
+	for _frame: int in range(12):
+		await tree.physics_frame
+	check(is_equal_approx(core.global_position.x, 408.0) and health.current == 48.0,
+		"disparar a un ladrillo lo empuja ocho píxeles (núcleo: %s, PV: %s)" % [core.global_position, health.current])
+	boss.call(&"_physics_process", 60.0)
+	check(is_equal_approx(core.global_position.x, 200.0), "el muro conserva 160 píxeles de arena")
+	pool.fire(false, Vector2(100, 219), Vector2.RIGHT * 480.0)
+	for _frame: int in range(12):
+		await tree.physics_frame
+	check(is_equal_approx(core.global_position.x, 208.0), "un ladrillo también retrocede desde el tope (núcleo: %s)" % core.global_position)
+	boss.queue_free()
 	await tree.process_frame
 
 func check(condition: bool, message: String) -> void:
