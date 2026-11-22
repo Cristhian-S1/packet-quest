@@ -17,6 +17,7 @@ func run(_tree: SceneTree) -> PackedStringArray:
 	_test_workshop_status()
 	_test_workshop_slots_full()
 	_test_upgrades_returns_copy()
+	_test_five_worlds()
 	finished = true
 	return errors
 
@@ -134,3 +135,24 @@ func _test_catalog() -> void:
 	var health: UpgradeData = Catalog.upgrade(&"more_health")
 	check(health != null and health.kind == UpgradeData.Kind.PERMANENT, "catálogo: más vida permanente")
 	check(Catalog.upgrade(&"nope") == null, "catálogo: id inexistente")
+
+# Requisito del encargo: el juego tiene exactamente 5 niveles (5 mundos, uno por jefe).
+func _test_five_worlds() -> void:
+	var map_script: Script = load("res://scripts/main/network_map.gd") as Script
+	var names: Array = map_script.get_script_constant_map().get("WORLDS", [])
+	check(SaveManager.WORLD_COUNT == 5, "5 niveles: WORLD_COUNT == 5")
+	check(names.size() == 5, "5 niveles: el mapa muestra 5 mundos (hay %d)" % names.size())
+	check(not names.has("Nube") and names.back() == "Centro de datos", "5 niveles: sin Nube y el último es el Centro de datos")
+	var last_x: float = map_script.call(&"node_x", names.size() - 1)
+	check(map_script.call(&"node_x", 0) >= 40.0 and last_x <= 600.0, "5 niveles: los nodos caben en 640 px")
+	# Una partida con mundos fuera de rango no se borra: solo se descartan esos mundos.
+	var path: String = "user://test_five_worlds.json"
+	var data: Dictionary = SaveManager.defaults()
+	data["unlocked_worlds"] = [1, 2, 6]
+	data["data_cores"] = 3
+	SaveManager.save_game(data, path)
+	var loaded: Dictionary = SaveManager.load_game(path)
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+	var worlds: Array = loaded.get("unlocked_worlds", [])
+	check(worlds.size() == 2 and not worlds.has(6.0) and not worlds.has(6), "5 niveles: se descarta el mundo 6 al cargar")
+	check(int(loaded.get("data_cores", 0)) == 3, "5 niveles: el resto de la partida se conserva")

@@ -9,6 +9,7 @@ const CYAN: Color = Color("3be8ff")
 const MAGENTA: Color = Color("ff4fd8")
 const PINK: Color = Color("ff3d8b")
 const RED: Color = Color("ff3355")
+const BLUE: Color = Color("67a7ff")
 const GREEN: Color = Color("3bff8a")
 const AMBER: Color = Color("ffb13b")
 

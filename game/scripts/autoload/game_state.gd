@@ -3,6 +3,8 @@ extends Node
 const WORLDS: Array[Dictionary] = [
 	{"level": "res://scenes/levels/World1Level1.tscn", "boss": "res://scenes/bosses/RouterBoss.tscn"},
 	{"level": "res://scenes/levels/World2Level1.tscn", "boss": "res://scenes/bosses/WifiQueenBoss.tscn"},
+	{"level": "res://scenes/levels/World3Level1.tscn", "boss": "res://scenes/bosses/FirewallBoss.tscn"},
+	{"level": "res://scenes/levels/World4Level1.tscn", "boss": "res://scenes/bosses/TrojanBoss.tscn"},
 ]
 const MAP: String = "res://scenes/main/NetworkMap.tscn"
 const WORKSHOP: String = "res://scenes/ui/Workshop.tscn"
@@ -35,7 +37,10 @@ static func is_world_unlocked(progress: Dictionary, world: int) -> bool:
 	return world in unlocked or float(world) in unlocked
 
 static func is_world_playable(progress: Dictionary, world: int) -> bool:
-	return world >= 1 and world <= WORLDS.size() and is_world_unlocked(progress, world)
+	if world < 1 or world > WORLDS.size() or not is_world_unlocked(progress, world):
+		return false
+	var scenes: Dictionary = WORLDS[world - 1]
+	return ResourceLoader.exists(scenes["level"], "PackedScene") and ResourceLoader.exists(scenes["boss"], "PackedScene")
 
 func start_run(world: int = 1) -> void:
 	if not is_world_playable(data, world):

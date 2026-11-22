@@ -44,9 +44,19 @@ entre mundos y jefes.
 | 11 | No hay calendario ni criterios de "terminado". | Medio | Hitos M0–M6 con criterios de aceptación en `02-plan-desarrollo.md`. |
 | 12 | Accesibilidad no mencionada. | Bajo | Opciones de reducir parpadeo, sacudida de cámara y velocidad de juego (modo asistido). |
 
+## Nota de decisión (director)
+
+> El encargo exige exactamente **5 niveles = 5 mundos**, uno por cada jefe del documento
+> original `contexto.md`. Se **revoca** la decisión del problema 1: se vuelve a los
+> **5 jefes originales** (Router Furioso, Reina Wi-Fi, Firewall Corrupto, Troyano Real y
+> Malwarex). Se **elimina** el mundo Nube y su jefe **Botnet Nimbus**; sus elementos — el
+> enemigo Bot DDoS, las plataformas de nube que se desvanecen y el puzle "Prioridad de
+> tráfico" (QoS) — pasan al **Mundo 5 · Centro de datos**. Ver `04-niveles.md` y
+> `05-enemigos-y-jefes.md`.
+
 ## Riesgos
 
-1. **Alcance:** 6 mundos × (nivel + puzle + jefe) es mucho trabajo para un equipo pequeño. Conviene cerrar primero un mundo vertical completo.
+1. **Alcance:** 5 mundos × (nivel + puzle + jefe) es mucho trabajo para un equipo pequeño. Conviene cerrar primero un mundo vertical completo.
 2. **Arte:** sin artista, el juego puede verse genérico. El prototipo usa gráficos dibujados por código (formas y neón) para no bloquear el desarrollo.
 3. **Dificultad:** los jefes por fases necesitan pruebas con jugadores reales. Se registrarán muertes por ataque (ver `10-qa-y-pruebas.md`).
 

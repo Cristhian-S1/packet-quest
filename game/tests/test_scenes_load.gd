@@ -4,7 +4,7 @@ func run(tree: SceneTree) -> PackedStringArray:
 	var errors: PackedStringArray = []
 	var paths: PackedStringArray = []
 	_find_scenes("res://scenes", paths)
-	if paths.size() < 24: errors.append("faltan escenas requeridas (%d)" % paths.size())
+	if paths.size() < 34: errors.append("faltan escenas requeridas (%d)" % paths.size())
 	for path: String in paths:
 		var packed: PackedScene = load(path) as PackedScene
 		if packed == null:

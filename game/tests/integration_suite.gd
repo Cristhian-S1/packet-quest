@@ -140,9 +140,9 @@ func run(scene_tree: SceneTree) -> PackedStringArray:
 	byte.pit_respawn()
 	check(byte.health.current == 2 and byte.global_position == Vector2(64, 296), "vacío no restaura posición y resta PV")
 	var pool: ProjectilePool = byte.pool
-	for index: int in range(24):
-		check(pool.fire(false, Vector2(60, 100), Vector2.RIGHT) != null, "pool jugador no ofrece 24")
-	check(pool.fire(false, Vector2.ZERO, Vector2.RIGHT) == null, "pool excede 24")
+	for index: int in range(pool.player_capacity):
+		check(pool.fire(false, Vector2(60, 100), Vector2.RIGHT) != null, "pool jugador no ofrece %d" % pool.player_capacity)
+	check(pool.fire(false, Vector2.ZERO, Vector2.RIGHT) == null, "pool excede %d" % pool.player_capacity)
 	pool.player_bullets[0].deactivate()
 	check(pool.fire(false, Vector2.ZERO, Vector2.RIGHT) != null, "pool no recicla")
 	# A moving AnimatableBody2D must carry its passenger.

@@ -7,15 +7,27 @@ const SFX_PITCH: Dictionary = {
 	&"triple": 0.85,
 	&"ping": 1.35,
 }
+const SFX_NOTES: Dictionary[StringName, PackedFloat32Array] = {
+	&"cable_connected": [440.0, 554.37, 659.25],
+	&"firewall_connected": [440.0, 587.0, 784.0],
+	&"firewall_rule": [294.0, 392.0],
+	&"firewall_laser": [440.0, 330.0, 220.0],
+}
+var _tones: Dictionary[StringName, AudioStreamWAV] = {}
 
 ## Último sfx y pitch reproducidos (observable para tests y diagnóstico).
 var last_sfx: StringName = &""
 var last_pitch: float = 1.0
 
-# El prototipo usa silencio deliberado y acepta recursos ausentes.
 func play_sfx(id: StringName, stream: AudioStream = null) -> void:
 	last_sfx = id
 	last_pitch = float(SFX_PITCH.get(id, 1.0))
+	if stream == null and id in SFX_NOTES:
+		if DisplayServer.get_name() == "headless":
+			return
+		if id not in _tones:
+			_tones[id] = _synthesize(SFX_NOTES[id])
+		stream = _tones[id]
 	if stream == null:
 		return
 	var voice: AudioStreamPlayer = AudioStreamPlayer.new()
@@ -24,6 +36,22 @@ func play_sfx(id: StringName, stream: AudioStream = null) -> void:
 	add_child(voice)
 	voice.finished.connect(voice.queue_free)
 	voice.play()
+
+func _synthesize(notes: PackedFloat32Array) -> AudioStreamWAV:
+	const RATE: int = 22050
+	const NOTE_SAMPLES: int = 1764
+	var samples: PackedByteArray = []
+	samples.resize(notes.size() * NOTE_SAMPLES * 2)
+	for note: int in range(notes.size()):
+		for frame: int in range(NOTE_SAMPLES):
+			var envelope: float = minf(1.0, minf(frame / 150.0, (NOTE_SAMPLES - frame) / 360.0))
+			var sample: float = sin(TAU * notes[note] * frame / RATE) * envelope
+			samples.encode_s16((note * NOTE_SAMPLES + frame) * 2, int(sample * 5200))
+	var stream: AudioStreamWAV = AudioStreamWAV.new()
+	stream.format = AudioStreamWAV.FORMAT_16_BITS
+	stream.mix_rate = RATE
+	stream.data = samples
+	return stream
 
 func play_music(_id: StringName) -> void:
 	pass

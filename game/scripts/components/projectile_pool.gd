@@ -1,7 +1,7 @@
 class_name ProjectilePool
 extends Node2D
 
-@export var player_capacity: int = 24
+@export var player_capacity: int = 32
 @export var enemy_capacity: int = 128
 var player_bullets: Array[Projectile] = []
 var enemy_bullets: Array[Projectile] = []
@@ -17,11 +17,12 @@ func _ready() -> void:
 		else:
 			player_bullets.append(bullet)
 
-func fire(enemy: bool, at: Vector2, velocity: Vector2, damage: float = 1.0, gravity_vector: Vector2 = Vector2.ZERO) -> Projectile:
+func fire(enemy: bool, at: Vector2, velocity: Vector2, damage: float = 1.0,
+		gravity_vector: Vector2 = Vector2.ZERO, excluded_bodies: Array[RID] = []) -> Projectile:
 	var bullets: Array[Projectile] = enemy_bullets if enemy else player_bullets
 	for bullet: Projectile in bullets:
 		if not bullet.active:
-			bullet.launch(at, velocity, damage, gravity_vector)
+			bullet.launch(at, velocity, damage, gravity_vector, excluded_bodies)
 			return bullet
 	return null
 

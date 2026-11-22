@@ -33,7 +33,8 @@ func _test_world_progress() -> void:
 	if has_world_query:
 		check(bool(state.call(&"is_world_playable", saved, 2)), "Wi-Fi se puede jugar tras cargar el progreso")
 		saved["unlocked_worlds"].append(3)
-		check(not bool(state.call(&"is_world_playable", saved, 3)), "Firewall desbloqueado sigue sin escenas")
+		saved["unlocked_worlds"].append(5)
+		check(not bool(state.call(&"is_world_playable", saved, 5)), "Centro de datos desbloqueado sigue sin escenas")
 
 func _test_wave() -> void:
 	var wave: Script = _require_script("res://scripts/objects/wave_zone.gd")
@@ -257,7 +258,7 @@ func _test_route_to_queen(tree: SceneTree) -> void:
 	var saved: Dictionary = SaveManager.load_game()
 	check(tree.current_scene.scene_file_path == GameState.MAP, "la victoria vuelve al mapa")
 	check("w2_boss" in saved["completed_levels"] and GameState.is_world_unlocked(saved, 3)
-		and not GameState.is_world_playable(saved, 3), "la victoria guardada desbloquea Firewall como próximo mundo")
+		and GameState.is_world_playable(saved, 3), "la victoria guardada habilita Firewall en el mapa")
 
 func _cross_coverage_pit(tree: SceneTree, player: PacketPlayer) -> void:
 	player.position = Vector2(766, 296)

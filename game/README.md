@@ -1,6 +1,6 @@
 # Packet Quest: La Red Rota
 
-Prototipo vertical jugable M0–M8 en **Godot 4.7.2**, con GDScript tipado y renderer Compatibility. Gráficos procedurales, sin recursos externos ni complementos. Resolución lógica 640×360, ventana 1280×720, escala entera y filtro nearest.
+Prototipo vertical jugable M0–M10 en **Godot 4.7.2**, con GDScript tipado y renderer Compatibility. Gráficos procedurales, sin recursos externos ni complementos. Resolución lógica 640×360, ventana 1280×720, escala entera y filtro nearest.
 
 ## Jugar
 
@@ -49,12 +49,12 @@ En el puzle, E gira la flecha del nodo más cercano. El terminal verde **REINICI
 ```text
 game/
   project.godot
-  scenes/       24 escenas; los hijos se construyen en _ready
+  scenes/       34 escenas con hijos construidos en _ready
   scripts/      autoload, components, data, player, enemies, levels,
                 objects, puzzles, bosses, ui, main
   resources/    arma Paquete y dos fases del Router en .tres
   assets/       directorios vacíos; fuente incorporada de Godot
-  tests/        runner de ocho pruebas, suite de integración y capturas
+  tests/        runner de once pruebas, suite de integración y capturas
   validation/   logs y capturas generadas por el propio motor (.gdignore)
   IMPLEMENTACION.md
 ```
@@ -100,7 +100,7 @@ No se ha hecho el playtest con cinco personas ni se certifican 60 FPS gráficos 
 
 ## M7 · Taller de Mejoras y Mapa de la red
 
-- **Menú → Mapa de la red** muestra los seis segmentos y el progreso de la partida.
+- **Menú → Mapa de la red** muestra los cinco segmentos y el progreso de la partida.
 - **Taller:** gasta núcleos de datos en 7 mejoras (`resources/upgrades/*.tres`). Las armas (Ráfaga triple, Ping) se equipan en 2 ranuras; las pasivas (Firewall reforzado, Marcador, Ralentizador) en 1 ranura; Más vida y Dash extendido son permanentes.
 - La lógica está en `scripts/progression/progression.gd` (pura, probada en `tests/test_progression.gd`) y los datos en `scripts/data/catalog.gd`.
 
@@ -111,7 +111,7 @@ Vence al Router Furioso y recoge su núcleo para desbloquear Wi-Fi. En el mapa, 
 - **Zona de cobertura (2-1).** Las ondas empujan a Byte. Salta entre plataformas sin salir del alcance del router y busca los dos núcleos de datos. El foso es letal y el recorrido tiene dos puntos de restauración.
 - **Spyware.** Se camufla como núcleo, se revela cuando te acercas y avisa antes de saltar. Puedes dispararle desde que se revela.
 - **Reparar cables.** Dispara a las piezas para girarlas. Ponte debajo de una pieza y salta para acertar en las filas superiores. Interactúa con **↻ Reiniciar** para restaurar la disposición original.
-- **Reina Wi-Fi.** Tiene 90 PV y tres fases. Acércate a un repetidor y pulsa **E** (o **Y / Triángulo**) para activar una cúpula durante tres segundos. Al vencer a la Reina, el mapa muestra Firewall como desbloqueado y **PRÓXIMAMENTE**.
+- **Reina Wi-Fi.** Tiene 90 PV y tres fases. Acércate a un repetidor y pulsa **E** (o **Y / Triángulo**) para activar una cúpula durante tres segundos. Al vencer a la Reina, puedes seleccionar Firewall en el mapa.
 
 Desde la raíz del repositorio, ejecuta la suite completa y las pruebas de 300 frames:
 
@@ -128,3 +128,38 @@ Regenera ambas capturas con el renderer Compatibility:
 ```
 
 [Zona de cobertura](../docs/capturas/level2.png) · [Reina Wi-Fi](../docs/capturas/boss2.png)
+
+## M9 · Mundo 3 Firewall
+
+Vence a la Reina Wi-Fi y selecciona **Firewall** con **← / →** en el mapa.
+
+- **Muro de reglas (3-1).** Rodea a los enemigos blindados para disparar por detrás. Cruza los láseres cuando se abran y usa salto con dash para superar el foso. Después del primer checkpoint, las plataformas te dan acceso a los huecos más altos de la barra.
+- **Filtro de paquetes.** Acércate a **PASAR** o **BLOQUEAR** y pulsa **E** (o **Y / Triángulo**). Solo pasan los triángulos verdes y azules. Puedes cometer hasta dos fallos en diez paquetes. Usa **↺ Reiniciar** para volver a empezar.
+- **Firewall Corrupto.** Tiene 120 PV. Usa las plataformas para disparar por el puerto abierto y esquiva los barridos por los huecos. En la última fase, cada disparo a un ladrillo empuja el muro hacia atrás. La victoria guarda el progreso y devuelve a Byte al mapa con **Servidor** disponible.
+
+```powershell
+bash tools/run-tests.sh --integration
+& $godot --headless --path game --fixed-fps 60 --quit-after 300 res://scenes/levels/World3Level1.tscn
+& $godot --headless --path game --fixed-fps 60 --quit-after 300 res://scenes/bosses/FirewallBoss.tscn
+& $godot --path game -s res://tests/capture_preview.gd -- --m9
+```
+
+[Muro de reglas](../docs/capturas/level3.png) · [Firewall Corrupto](../docs/capturas/boss3.png)
+
+## M10 · Mundo 4 Servidor
+
+Vence al Firewall Corrupto, selecciona **Servidor** con **← / →** en el mapa y pulsa **Entrar**.
+
+- **Sala de servidores (4-1).** Las corrientes de aire elevan a Byte. Salta a los ascensores cuando bajen y espera a que suban para alcanzar los racks. Cruza el foso con salto y dash. Hay dos núcleos de datos y dos puntos de restauración.
+- **Troyano.** Sus portales generan Pop-ups mientras siga vivo. Acaba primero con el Troyano para cerrar el portal.
+- **Contraseñas lógicas.** Busca los cuatro pósteres y pulsa **E** (o **Y / Triángulo**) en cada ranura para cambiar su símbolo. Usa cada símbolo una vez. Cuando se abra la compuerta, sigue caminando hacia la derecha.
+- **Troyano Real.** Tiene 150 PV y tres fases. Dispara cuando el cofre esté abierto. En la segunda fase, elimina a los Pop-ups para extender la apertura. En la tercera, el destello cian identifica al cofre real al inicio del ciclo. La victoria desbloquea **Centro de datos**, marcado **PRÓXIMAMENTE** en el mapa.
+
+```powershell
+bash tools/run-tests.sh --integration
+& $godot --headless --path game --fixed-fps 60 --quit-after 300 res://scenes/levels/World4Level1.tscn
+& $godot --headless --path game --fixed-fps 60 --quit-after 300 res://scenes/bosses/TrojanBoss.tscn
+& $godot --path game -s res://tests/capture_preview.gd -- --m10
+```
+
+[Sala de servidores](../docs/capturas/level4.png) · [Troyano Real](../docs/capturas/boss4.png)

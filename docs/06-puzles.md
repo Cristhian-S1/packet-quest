@@ -41,7 +41,7 @@ Panel de 4 símbolos. Las pistas visuales están escondidas en la sala (póstere
 "El círculo va antes que el triángulo", "El cuadrado no va al final".
 Concepto: autenticación (y por qué las contraseñas obvias son malas).
 
-## 5 · Prioridad de tráfico (Mundo 5)
+## 5 · Prioridad de tráfico (Mundo 5 · Centro de datos)
 
 4 interruptores que activan puentes. Cada uno tiene una etiqueta (Voz, Vídeo, Correo,
 Descarga). Hay que activarlos en orden de prioridad (QoS); el orden se muestra con iconos

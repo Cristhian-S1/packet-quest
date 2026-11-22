@@ -4,6 +4,7 @@ extends Area2D
 signal activated
 @export var targets: Array[NodePath] = []
 @export var corruption_hits: int = 0
+@export var accent: Color = PQStyle.GREEN
 var nearby: bool = false
 
 func _ready() -> void:
@@ -34,7 +35,7 @@ func take_damage(_amount: float, _origin: Vector2) -> void:
 
 func _draw() -> void:
 	draw_rect(Rect2(-8, -10, 16, 20), PQStyle.CHIP)
-	draw_rect(Rect2(-5, -7, 10, 9), PQStyle.RED if corruption_hits > 0 else PQStyle.GREEN)
+	draw_rect(Rect2(-5, -7, 10, 9), PQStyle.RED if corruption_hits > 0 else accent)
 	if nearby:
-		draw_arc(Vector2.ZERO, 15, 0, TAU, 16, PQStyle.GREEN, 1)
+		draw_arc(Vector2.ZERO, 15, 0, TAU, 16, accent, 1)
 		draw_string(ThemeDB.fallback_font, Vector2(-3, -19), "E", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color.WHITE)
