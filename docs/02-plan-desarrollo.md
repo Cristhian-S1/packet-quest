@@ -22,8 +22,8 @@
 | **M5 · Router Furioso** | 2 fases, ataques A/B/C, transición de fase, HUD del jefe, victoria | Prueba `test_boss_phases` en verde |
 | **M6 · Bucle completo** | Menú, HUD, pausa, muerte con barra de progreso, victoria, guardado | Checklist manual de `10-qa-y-pruebas.md` |
 | M7 | Taller de Mejoras + mapa de la red | Comprar y equipar 2 mejoras |
-| M8–M12 | Mundos 2–6 (uno por hito) | Cada mundo cumple la estructura nivel + puzle + jefe |
-| M13 | Arte final, audio, accesibilidad, exportación | Builds para Windows y Web |
+| M8–M11 | Mundos 2–5 (uno por hito) | Cada mundo cumple la estructura nivel + puzle + jefe |
+| M12 | Arte final, audio, accesibilidad, exportación | Builds para Windows y Web |
 
 **Alcance de esta entrega (prototipo vertical):** M0–M6.
 

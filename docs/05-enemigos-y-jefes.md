@@ -71,14 +71,7 @@ Se esconde dentro de un cofre digital. Solo es vulnerable cuando se abre.
 - F2: invoca troyanos menores; si se eliminan rápido, el cofre se queda abierto más tiempo.
 - F3: falsos cofres (mímicos); el verdadero brilla un instante al principio de cada ciclo.
 
-### 5 · Botnet Nimbus (Mundo 5, jefe nuevo)
-
-Una nube de tormenta formada por cientos de bots. Ataca con tráfico masivo (DDoS).
-- F1: lluvia de balas lentas y densas, con un "carril limpio" que se desplaza.
-- F2: se divide en 3 nubes pequeñas; hay que eliminarlas en orden de tamaño.
-- F3: "Balanceo de carga": las plataformas cambian de altura según dónde dispara el jugador.
-
-### 6 · Malwarex (jefe final)
+### 5 · Malwarex (jefe final, Mundo 5)
 
 Un virus con forma de núcleo glitch rodeado de ventanas emergentes y cables vivos.
 - F1: remezcla de los ataques del Router y de la Reina Wi-Fi.
