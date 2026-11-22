@@ -8,8 +8,10 @@ var follower: PathFollow2D
 var anchor: Vector2
 var pending_attack: bool = false
 
-func _ready() -> void:
+func _init() -> void:
 	max_health = 5
+
+func _ready() -> void:
 	telegraph_time = 0.3
 	super._ready()
 	anchor = position

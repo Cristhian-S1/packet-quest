@@ -1,6 +1,6 @@
 extends SceneTree
 
-const TESTS: Array[String] = ["performance", "health_component", "route_puzzle", "boss_phases", "save_manager", "scenes_load", "progression", "weapons", "world2"]
+const TESTS: Array[String] = ["performance", "health_component", "route_puzzle", "boss_phases", "save_manager", "scenes_load", "progression", "weapons", "world2", "world3"]
 
 func _initialize() -> void:
 	call_deferred("run_all")

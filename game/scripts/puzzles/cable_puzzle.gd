@@ -48,7 +48,7 @@ func _rotate(cell: Vector2i) -> void:
 	grid.rotate_cell(cell)
 	_refresh()
 	if is_solved:
-		AudioManager.play_sfx(&"cable_connected", _connection_sound())
+		AudioManager.play_sfx(&"cable_connected")
 		Events.puzzle_solved.emit(&"w2_cable")
 		solved.emit()
 
@@ -82,20 +82,3 @@ func _draw() -> void:
 
 static func _cell_center(cell: Vector2i) -> Vector2:
 	return GRID_ORIGIN + Vector2(cell) * CELL_SIZE
-
-static func _connection_sound() -> AudioStreamWAV:
-	const MIX_RATE: int = 22050
-	const NOTE_LENGTH: int = 1764
-	const NOTES: Array[float] = [440.0, 554.37, 659.25]
-	var samples: PackedByteArray = PackedByteArray()
-	samples.resize(NOTE_LENGTH * NOTES.size() * 2)
-	for note: int in range(NOTES.size()):
-		for sample: int in range(NOTE_LENGTH):
-			var envelope: float = minf(sample / 150.0, (NOTE_LENGTH - sample) / 360.0)
-			var wave: float = sin(TAU * NOTES[note] * sample / MIX_RATE)
-			samples.encode_s16((note * NOTE_LENGTH + sample) * 2, int(5200 * minf(1.0, envelope) * wave))
-	var stream: AudioStreamWAV = AudioStreamWAV.new()
-	stream.format = AudioStreamWAV.FORMAT_16_BITS
-	stream.mix_rate = MIX_RATE
-	stream.data = samples
-	return stream

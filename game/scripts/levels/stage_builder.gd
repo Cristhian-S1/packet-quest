@@ -9,8 +9,10 @@ static func background(parent: Node) -> void:
 	layer.add_child(CircuitBackground.new())
 	parent.add_child(layer)
 
-static func platform(parent: Node, pos: Vector2, size: Vector2, moving: float = 0.0, one_way: bool = false) -> ChipPlatform:
-	var chip: ChipPlatform = ChipPlatform.new()
+static func platform(parent: Node, pos: Vector2, size: Vector2, moving: float = 0.0, one_way: bool = false,
+		chip: ChipPlatform = null) -> ChipPlatform:
+	if chip == null:
+		chip = ChipPlatform.new()
 	chip.position = pos
 	chip.size = size
 	chip.vertical_travel = moving
