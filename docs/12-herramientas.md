@@ -36,7 +36,7 @@ Si se quiere que un agente de IA dibuje sprites, el MCP de Aseprite (abajo) lo h
 | **Coding-Solo/godot-mcp** | 6,7k | 2026-04 | Abrir el editor, ejecutar el proyecto y leer la salida de depuración | ✅ **Instalar primero**: el más usado y simple; encaja con Claude Code, Codex y opencode |
 | **tugcantopaloglu/godot-mcp** | 521 | 2026-10 | 157 herramientas de control total (escenas, nodos, recursos); probado con Godot 4.7 | ⚠️ Probar si el anterior se queda corto; mucha superficie de herramientas |
 | ee0pdt/Godot-MCP | 623 | 2025-03 | Plugin de editor + MCP | ❌ Sin mantenimiento desde 2025 |
-| **diivi/aseprite-mcp** | 1,0k | 2026-11 | El agente dibuja y anima sprites en Aseprite | ✅ Para el hito M13 (arte final), si se usa Aseprite |
+| **diivi/aseprite-mcp** | 1,0k | 2026-11 | El agente dibuja y anima sprites en Aseprite | ✅ Para el hito M12 (arte final), si se usa Aseprite |
 | abidoo22/Pixelorama-MCP | 50 | 2026-11 | Lo mismo para Pixelorama | ⚠️ Joven; evaluar si se elige Pixelorama |
 
 ## Skills y plugins para agentes
@@ -65,4 +65,4 @@ Si se quiere que un agente de IA dibuje sprites, el MCP de Aseprite (abajo) lo h
 1. `godot-mcp` (Coding-Solo) para que los agentes ejecuten el juego y lean errores sin scripts ad hoc.
 2. GodotPrompter como skill de dominio para Claude Code.
 3. Instalar Python y después `gdtoolkit`, con `gdlint` en un hook de pre-commit.
-4. En M13: Pixelorama o Aseprite, más su MCP si se quiere arte asistido por IA.
+4. En M12: Pixelorama o Aseprite, más su MCP si se quiere arte asistido por IA.
