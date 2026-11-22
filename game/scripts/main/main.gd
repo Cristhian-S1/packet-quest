@@ -10,8 +10,8 @@ func _ready() -> void:
 	PQStyle.label_at(self, "Una red infectada. Un paquete íntegro.", Vector2(36, 224), 12, PQStyle.EDGE)
 	PQStyle.button(self, "Jugar   →", Vector2(36, 262), GameState.open_map, 176).grab_focus()
 	PQStyle.button(self, "Salir", Vector2(224, 262), _quit, 84)
-	PQStyle.label_at(self, "MUNDO 01  /  RED LOCAL", Vector2(394, 273), 11, PQStyle.GREEN)
-	PQStyle.label_at(self, "GODOT 4.7.2    ·    PROTOTIPO VERTICAL    ·    M7", Vector2(36, 332), 9, PQStyle.EDGE)
+	PQStyle.label_at(self, "RED LOCAL  /  WI-FI", Vector2(394, 273), 11, PQStyle.GREEN)
+	PQStyle.label_at(self, "GODOT 4.7.2    ·    PROTOTIPO VERTICAL    ·    M8", Vector2(36, 332), 9, PQStyle.EDGE)
 
 func _process(delta: float) -> void:
 	age += delta

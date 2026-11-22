@@ -12,6 +12,7 @@ func run(tree: SceneTree) -> PackedStringArray:
 	await _test_spyware(tree)
 	_test_cable_grid()
 	await _test_queen(tree)
+	await _test_route_to_queen(tree)
 	finished = true
 	return errors
 
@@ -128,6 +129,128 @@ func _test_queen(tree: SceneTree) -> void:
 	check(is_equal_approx(player.health.current, player.health.max_health), "la cúpula protege a Byte")
 	boss.queue_free()
 	await tree.process_frame
+
+func _test_route_to_queen(tree: SceneTree) -> void:
+	GameState.data = SaveManager.defaults()
+	GameState.current_world = 1
+	GameState.win()
+	GameState.open_map()
+	await tree.scene_changed
+	var map: Node = tree.current_scene
+	var select: InputEventAction = InputEventAction.new()
+	select.action = &"ui_right"
+	select.pressed = true
+	Input.parse_input_event(select)
+	await tree.process_frame
+	select = InputEventAction.new()
+	select.action = &"ui_right"
+	Input.parse_input_event(select)
+	var entry: Button = map.get("enter_button") as Button
+	check(int(map.get("selected_world")) == 2 and "Wi-Fi" in entry.text, "el mapa permite elegir Wi-Fi")
+	if int(map.get("selected_world")) != 2:
+		return
+	entry.pressed.emit()
+	await tree.scene_changed
+	var level: World2Level1 = tree.current_scene as World2Level1
+	check(level != null, "Entrar abre el nivel 2-1")
+	if level == null:
+		return
+
+	var player: PacketPlayer = level.player
+	player.position = Vector2(240, 296)
+	for frame: int in range(12):
+		await tree.physics_frame
+	check(player.position.x > 250.0 and player.position.x < 260.0, "el empuje real mueve a Byte sin acumular velocidad")
+	player.position = Vector2(2400, 296)
+	player.velocity = Vector2.ZERO
+	for frame: int in range(3):
+		await tree.physics_frame
+	check(GameState.checkpoint == Vector2(2400, 296), "la sala del cable fija el checkpoint")
+	player.position = Vector2(920, 392)
+	await tree.physics_frame
+	await tree.physics_frame
+	check(player.state == PacketPlayer.State.DEAD, "caer al foso mata a Byte")
+	GameState.retry()
+	await tree.scene_changed
+	level = tree.current_scene as World2Level1
+	check(level != null, "reintentar conserva el mundo")
+	if level == null:
+		return
+	player = level.player
+	check(player.position == GameState.checkpoint, "reintentar restaura el checkpoint del cable")
+
+	var puzzle: CablePuzzle = level.puzzle
+	var shots: Array[Vector2i] = [Vector2i(0, 1), Vector2i(1, 1), Vector2i(1, 1),
+		Vector2i(1, 0), Vector2i(1, 0), Vector2i(2, 0), Vector2i(3, 0)]
+	for cell: Vector2i in shots:
+		var piece: CableCell = puzzle.cells[cell.y * CableGrid.SIZE.x + cell.x]
+		var previous: int = piece.openings
+		await _shoot_cable_cell(tree, player, piece)
+		check(piece.openings == ((previous << 1) | (previous >> 3)) & 15,
+			"el disparo gira la celda %s (máscara %d → %d)" % [cell, previous, piece.openings])
+	check(puzzle.is_solved and puzzle.door.opened and GameState.puzzle_complete, "siete disparos reales abren la compuerta")
+	if not puzzle.is_solved:
+		return
+	player.position = Vector2(World2Level1.WIDTH, 296)
+	await tree.scene_changed
+	var queen: WifiQueenBoss = tree.current_scene as WifiQueenBoss
+	check(queen != null and GameState.current_world == 2 and GameState.in_boss, "la compuerta abre la arena de la Reina")
+	if queen == null:
+		return
+	queen.set_physics_process(false)
+	queen.player.set_physics_process(false)
+	queen._physics_process(1.2)
+	var projectile: Projectile = queen.pool.fire(true, Vector2(600, 200), Vector2.RIGHT * 160.0)
+	queen.take_damage(27.0, Vector2.ZERO)
+	check(queen.phase == 2 and queen.body.invulnerable and queen.card.visible
+		and is_equal_approx(queen.timer, 2.4) and not projectile.active, "el 70 % muestra la fase 2 y limpia las balas")
+	queen.take_damage(27.0, Vector2.ZERO)
+	queen._physics_process(2.39)
+	check(is_equal_approx(queen.health.current, 63.0) and queen.body.invulnerable, "la transición conserva la invulnerabilidad")
+	queen._physics_process(0.01)
+	queen.take_damage(27.0, Vector2.ZERO)
+	check(queen.phase == 3 and queen.body.invulnerable, "el 40 % inicia la fase 3")
+	queen._physics_process(2.4)
+	queen.player.position = Vector2(120, 288)
+	queen.player.interact()
+	queen._physics_process(1.1)
+	check(is_equal_approx(queen.player.health.current, 3.0), "la cúpula protege de una franja activa")
+	queen.player.position = Vector2(50, 288)
+	queen._physics_process(0.1)
+	check(is_equal_approx(queen.player.health.current, 2.0), "la interferencia fuera de la cúpula quita un PV")
+	queen.player.invulnerability = 0.0
+	queen._physics_process(0.1)
+	check(is_equal_approx(queen.player.health.current, 2.0), "la franja golpea una vez por activación")
+	queen.take_damage(36.0, Vector2.ZERO)
+	queen._physics_process(0.8)
+	await tree.scene_changed
+	var saved: Dictionary = SaveManager.load_game()
+	check(tree.current_scene.scene_file_path == GameState.MAP, "la victoria vuelve al mapa")
+	check("w2_boss" in saved["completed_levels"] and GameState.is_world_unlocked(saved, 3)
+		and not GameState.is_world_playable(saved, 3), "la victoria guardada desbloquea Firewall como próximo mundo")
+
+func _shoot_cable_cell(tree: SceneTree, player: PacketPlayer, piece: CableCell) -> void:
+	player.position = Vector2(piece.global_position.x, 296)
+	player.velocity = Vector2.ZERO
+	for frame: int in range(3):
+		await tree.physics_frame
+	Input.action_press(&"aim_up")
+	if piece.cell.y < CableGrid.SIZE.y - 1:
+		# El cañón debe pasar por delante de la fila inferior antes de disparar.
+		Input.action_press(&"jump")
+		for frame: int in range(30):
+			await tree.physics_frame
+			if player.position.y < piece.global_position.y + CablePuzzle.CELL_SIZE:
+				break
+	else:
+		# physics_frame precede la actualización de mira de Byte.
+		await tree.physics_frame
+		await tree.physics_frame
+	player.shoot()
+	Input.action_release(&"aim_up")
+	Input.action_release(&"jump")
+	for frame: int in range(9):
+		await tree.physics_frame
 
 func _require_scene(path: String) -> PackedScene:
 	if not ResourceLoader.exists(path):

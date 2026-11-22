@@ -2,12 +2,15 @@ class_name PacketCheckpoint
 extends Area2D
 
 signal reached
+@export var trigger_height: float = 40.0
 var active: bool = false
 
 func _ready() -> void:
 	collision_layer = 32
 	collision_mask = 2
-	add_child(PQStyle.box_shape(Vector2(24, 40)))
+	var trigger: CollisionShape2D = PQStyle.box_shape(Vector2(24, trigger_height))
+	trigger.position.y = (40.0 - trigger_height) / 2.0
+	add_child(trigger)
 	body_entered.connect(_entered)
 	active = GameState.checkpoint.x >= global_position.x - 8
 	queue_redraw()

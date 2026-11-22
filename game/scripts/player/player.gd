@@ -32,6 +32,7 @@ enum State { IDLE, RUN, JUMP, FALL, DASH, SHIELD, HURT, DEAD }
 @export var shield_break_duration: float = 2.0
 @export var interact_range: float = 24.0
 @export var camera_width: int = 2720
+@export var fatal_pits: bool = false
 @export var weapon: WeaponData = preload("res://resources/weapons/packet.tres")
 
 var state: State = State.IDLE
@@ -313,6 +314,9 @@ func take_damage(amount: float, origin: Vector2) -> void:
 	health.damage(amount)
 
 func pit_respawn() -> void:
+	if fatal_pits:
+		health.damage(health.current)
+		return
 	# A pit always costs one HP, including during damage i-frames.
 	health.damage(1)
 	if state == State.DEAD:
