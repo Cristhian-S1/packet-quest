@@ -3,12 +3,13 @@ extends RefCounted
 var errors: PackedStringArray = []
 var finished: bool = false
 
-func run(_tree: SceneTree) -> PackedStringArray:
+func run(tree: SceneTree) -> PackedStringArray:
 	_test_world_progress()
-	await _test_boss(_tree)
-	await _test_filter(_tree)
-	await _test_armor(_tree)
-	await _test_hazards(_tree)
+	await _test_hazards(tree)
+	await _test_armor(tree)
+	await _test_filter(tree)
+	await _test_boss(tree)
+	await _test_level_route(tree)
 	finished = true
 	return errors
 
@@ -261,6 +262,146 @@ func _test_boss(tree: SceneTree) -> void:
 	check(is_equal_approx(core.global_position.x, 208.0), "un ladrillo también retrocede desde el tope (núcleo: %s)" % core.global_position)
 	boss.queue_free()
 	await tree.process_frame
+
+
+func _test_level_route(tree: SceneTree) -> void:
+	var stage_scene: PackedScene = _require_scene("res://scenes/levels/World3Level1.tscn")
+	if stage_scene == null:
+		return
+	GameState.data = SaveManager.defaults()
+	GameState.data["unlocked_worlds"].append(2)
+	GameState.current_world = 2
+	GameState.win()
+	check(GameState.is_world_playable(GameState.data, 3), "el nivel y el jefe habilitan Firewall")
+	GameState.open_map()
+	await tree.scene_changed
+	var network_map: Node = tree.current_scene
+	var event: InputEventAction = InputEventAction.new()
+	event.action = &"ui_right"
+	event.pressed = true
+	Input.parse_input_event(event)
+	await tree.process_frame
+	event = InputEventAction.new()
+	event.action = &"ui_right"
+	Input.parse_input_event(event)
+	var enter: Button = network_map.get(&"enter_button") as Button
+	check(int(network_map.get(&"selected_world")) == 3 and "Firewall" in enter.text, "derecha selecciona Firewall en el mapa")
+	if int(network_map.get(&"selected_world")) != 3:
+		return
+	enter.pressed.emit()
+	await tree.scene_changed
+	var stage: Node2D = tree.current_scene as Node2D
+	check(stage.scene_file_path == stage_scene.resource_path, "Entrar carga el nivel 3-1")
+	if stage.scene_file_path != stage_scene.resource_path:
+		return
+	_check_lane_heights(stage)
+	var player: PacketPlayer = stage.get(&"player") as PacketPlayer
+	var level_constants: Dictionary = (stage.get_script() as Script).get_script_constant_map()
+	var pit_left: float = level_constants["PIT_LEFT"]
+	var pit_right: float = level_constants["PIT_RIGHT"]
+	check(pit_right - pit_left == 96.0, "el foso mide 96 px")
+	player.position = Vector2(pit_left - 34.0, 296)
+	await tree.physics_frame
+	await tree.physics_frame
+	Input.action_press(&"move_right")
+	Input.action_press(&"jump")
+	for _frame: int in range(15):
+		await tree.physics_frame
+	Input.action_press(&"dash")
+	await tree.physics_frame
+	Input.action_release(&"dash")
+	for _frame: int in range(36):
+		await tree.physics_frame
+	Input.action_release(&"jump")
+	Input.action_release(&"move_right")
+	check(player.position.x > pit_right and player.is_on_floor(), "Byte cruza el foso con salto y dash (posición %s)" % player.position)
+
+	player.position = Vector2(2380, 296)
+	player.velocity = Vector2.ZERO
+	await _walk_to(tree, player, 2440.0)
+	check(GameState.checkpoint == Vector2(2400, 296), "caminar a la sala del puzle activa el checkpoint")
+	player.position = Vector2((pit_left + pit_right) / 2.0, 380.0)
+	for _frame: int in range(12):
+		await tree.physics_frame
+	check(player.state == PacketPlayer.State.DEAD, "caer al foso es letal")
+	GameState.retry()
+	await tree.scene_changed
+	stage = tree.current_scene as Node2D
+	player = stage.get(&"player") as PacketPlayer
+	check(player.position == Vector2(2400, 296), "reintentar reaparece en la sala del puzle")
+
+	var puzzle: FirewallPuzzle = stage.get(&"puzzle") as FirewallPuzzle
+	for packet: Dictionary in FirewallFilter.generate_sequence(0):
+		var passes: bool = FirewallFilter.is_allowed(packet["shape"], packet["color"], FirewallFilter.TRIANGLE, FirewallFilter.RED)
+		var node: NetworkNode = puzzle.pass_node if passes else puzzle.block_node
+		await _walk_to(tree, player, node.global_position.x)
+		Input.action_press(&"interact")
+		await tree.physics_frame
+		await tree.physics_frame
+		Input.action_release(&"interact")
+		await tree.physics_frame
+	check(puzzle.is_solved and puzzle.door.opened, "los terminales del nivel abren la compuerta")
+	if not puzzle.is_solved:
+		return
+	# Desde el último terminal se recorre a pie toda la distancia hasta la salida.
+	Input.action_press(&"move_right")
+	for _frame: int in range(260):
+		await tree.physics_frame
+		if tree.current_scene is FirewallBoss:
+			break
+	Input.action_release(&"move_right")
+	var boss: FirewallBoss = tree.current_scene as FirewallBoss
+	check(boss != null and GameState.in_boss and GameState.current_world == 3, "caminar por la salida carga la arena")
+	if boss == null:
+		return
+	_check_lane_heights(boss)
+	boss.set_physics_process(false)
+	boss._physics_process(1.2)
+	boss._physics_process(1.61)
+	boss.core.take_damage(36.0, Vector2.ZERO)
+	boss._physics_process(2.4)
+	boss.core.take_damage(36.0, Vector2.ZERO)
+	boss._physics_process(2.4)
+	boss.core.take_damage(48.0, Vector2.ZERO)
+	check(boss.health.current == 0.0, "derrotar al jefe completa el mundo")
+	if boss.health.current > 0.0:
+		return
+	boss._physics_process(0.8)
+	await tree.scene_changed
+	var data: Dictionary = SaveManager.load_game()
+	check(tree.current_scene.scene_file_path == GameState.MAP, "la victoria devuelve a Byte al mapa")
+	check("w3_boss" in data["completed_levels"] and "w3_firewall_boss" in data["collected_cores"]
+		and GameState.is_world_unlocked(data, 4) and not GameState.is_world_playable(data, 4),
+		"la victoria se guarda y desbloquea Servidor como próximo destino")
+
+func _walk_to(tree: SceneTree, player: PacketPlayer, x: float) -> void:
+	if absf(x - player.position.x) <= 5.0:
+		return
+	var action: StringName = &"move_right" if x > player.position.x else &"move_left"
+	Input.action_press(action)
+	for _frame: int in range(150):
+		await tree.physics_frame
+		if absf(x - player.position.x) <= 5.0:
+			break
+	Input.action_release(action)
+	for _frame: int in range(7):
+		await tree.physics_frame
+
+func _check_lane_heights(stage: Node2D) -> void:
+	var surfaces: Array[float] = []
+	for child: Node in stage.get_children():
+		if child is ChipPlatform and (child as ChipPlatform).position.y in [256.0, 304.0]:
+			surfaces.append((child as ChipPlatform).position.y)
+	check(256.0 in surfaces and 304.0 in surfaces, "suelo y plataformas a 256 en " + stage.name)
+	for y: float in RuleBar.LANES_Y:
+		var reachable: bool = false
+		for surface: float in surfaces:
+			var standing: float = surface - 7.0
+			# El colisionador 10×14 debe caber entero en el hueco de 64 px.
+			var half_clearance: float = RuleBar.GAP_HEIGHT / 2.0 - 7.0
+			if standing >= y - half_clearance and standing - (y + half_clearance) <= 60.0:
+				reachable = true
+		check(reachable, "carril y=%d alcanzable en %s" % [y, stage.name])
 
 func check(condition: bool, message: String) -> void:
 	if not condition:
