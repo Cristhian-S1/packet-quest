@@ -33,8 +33,8 @@ func _test_world_progress() -> void:
 	if has_world_query:
 		check(bool(state.call(&"is_world_playable", saved, 2)), "Wi-Fi se puede jugar tras cargar el progreso")
 		saved["unlocked_worlds"].append(3)
-		saved["unlocked_worlds"].append(4)
-		check(not bool(state.call(&"is_world_playable", saved, 4)), "Servidor desbloqueado sigue sin escenas")
+		saved["unlocked_worlds"].append(5)
+		check(not bool(state.call(&"is_world_playable", saved, 5)), "Centro de datos desbloqueado sigue sin escenas")
 
 func _test_wave() -> void:
 	var wave: Script = _require_script("res://scripts/objects/wave_zone.gd")
