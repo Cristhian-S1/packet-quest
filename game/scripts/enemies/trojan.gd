@@ -60,4 +60,3 @@ func _draw() -> void:
 	draw_rect(Rect2(-10, 6, 6, 2), tint)
 	draw_rect(Rect2(4, 6, 6, 2), tint)
 	draw_line(Vector2(-4, 2), Vector2(4, 2), PQStyle.AMBER, 1.0)
-

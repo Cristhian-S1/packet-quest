@@ -90,4 +90,3 @@ func _draw() -> void:
 		draw_rect(panel, PQStyle.NIGHT)
 		draw_rect(panel, PQStyle.EDGE, false)
 		draw_rect(Rect2(poster + Vector2(125, 5), Vector2(3, 3)), PQStyle.AMBER)
-

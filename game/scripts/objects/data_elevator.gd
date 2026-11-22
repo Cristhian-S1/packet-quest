@@ -6,8 +6,8 @@ func _init() -> void:
 	one_way = true
 	vertical_travel = 64.0
 
-static func top_y(anchor_y: float, travel: float, period: float, t: float) -> float:
-	return ChipPlatform.oscillating_top(anchor_y, travel, period, t)
+static func top_y(anchor_y: float, travel: float, duration: float, t: float) -> float:
+	return ChipPlatform.oscillating_top(anchor_y, travel, duration, t)
 
 func _draw() -> void:
 	var rail_top: float = anchor.y - vertical_travel - position.y

@@ -286,4 +286,3 @@ func _draw_chest(center: Vector2, tint: Color, opened: bool) -> void:
 	else:
 		draw_rect(Rect2(center + Vector2(-5, -15), Vector2(10, 12)), PQStyle.AMBER)
 		draw_rect(Rect2(center + Vector2(-1, -12), Vector2(2, 6)), PQStyle.NIGHT)
-

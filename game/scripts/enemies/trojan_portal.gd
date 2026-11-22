@@ -63,4 +63,3 @@ func _draw() -> void:
 	if _warning_left > 0.0:
 		var radius: float = lerpf(4.0, 21.0, 1.0 - _warning_left / _warning_time)
 		draw_arc(center, radius, 0.0, TAU, 24, PQStyle.AMBER, 1.5)
-

@@ -31,4 +31,3 @@ static func is_permutation(code: Array) -> bool:
 static func is_solution(code: Array) -> bool:
 	return is_permutation(code) and circle_before_star(code) and triangle_before_square(code) \
 		and circle_not_first(code) and star_not_last(code)
-

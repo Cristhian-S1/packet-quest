@@ -24,8 +24,8 @@ func _physics_process(delta: float) -> void:
 		position.y = oscillating_top(anchor.y, vertical_travel, period, age)
 		queue_redraw()
 
-static func oscillating_top(anchor_y: float, travel: float, period: float, t: float) -> float:
-	return anchor_y - (1.0 - cos(t * TAU / period)) * travel / 2.0
+static func oscillating_top(anchor_y: float, travel: float, duration: float, t: float) -> float:
+	return anchor_y - (1.0 - cos(t * TAU / duration)) * travel / 2.0
 
 func _draw() -> void:
 	draw_rect(Rect2(Vector2.ZERO, size), PQStyle.CHIP)

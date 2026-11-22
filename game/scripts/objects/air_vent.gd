@@ -19,8 +19,8 @@ static func state_at(t: float) -> StringName:
 		return &"active"
 	return &"inactive" if phase_time < WARNING_START else &"warning"
 
-static func lift_velocity(fall: float, push_up: float) -> float:
-	return minf(fall, -push_up)
+static func lift_velocity(fall: float, upward_speed: float) -> float:
+	return minf(fall, -upward_speed)
 
 func _ready() -> void:
 	process_physics_priority = -10

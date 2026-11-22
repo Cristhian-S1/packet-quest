@@ -94,4 +94,3 @@ func _draw() -> void:
 		draw_line(Vector2(x - 4, 358), Vector2(x + 4, 349), PQStyle.AMBER, 2.0)
 	for x: float in [PIT_LEFT - 12.0, PIT_RIGHT + 12.0]:
 		draw_rect(Rect2(x - 7.0, FLOOR - 4.0, 14.0, 3.0), PQStyle.AMBER)
-
