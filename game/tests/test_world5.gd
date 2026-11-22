@@ -236,7 +236,8 @@ func _test_credits(tree: SceneTree, boss: Node2D) -> void:
 	var scene: PackedScene = require_scene(GameState.CREDITS)
 	if scene == null:
 		return
-	GameState.data["data_cores"] = 7
+	GameState.data["data_cores"] = 2
+	GameState.data["collected_cores"] = GameState.ALL_CORE_IDS.slice(0, 7)
 	GameState.data["stats"] = {"deaths": {"nivel_5_1": 2, "malwarex": 3}, "play_time_s": 65.9}
 	GameState.data["settings"]["reduce_flashes"] = true
 	boss.call(&"_physics_process", 0.8)
@@ -249,6 +250,16 @@ func _test_credits(tree: SceneTree, boss: Node2D) -> void:
 	var script: Script = credits.get_script() as Script
 	check(script.call(&"format_time", 65.0) == "01:05"
 		and script.call(&"format_time", 3600.0) == "60:00", "formato de minutos y segundos")
+	# Los créditos cuentan núcleos RECOGIDOS (no el saldo gastable) sobre el total real del juego.
+	var all_ids: Array = GameState.ALL_CORE_IDS
+	check(all_ids.size() == 12, "hay 12 núcleos en el juego (hay %d)" % all_ids.size())
+	var sample: Dictionary = SaveManager.defaults()
+	sample["collected_cores"] = ["w1_hidden_a", "w1_router", "w3_firewall_boss", "w1_hidden_a"]
+	sample["data_cores"] = 0
+	check(script.call(&"cores_line", sample) == "Núcleos de datos: 3/12", "créditos: recogidos sin duplicados aunque se hayan gastado")
+	sample["collected_cores"] = all_ids.duplicate()
+	sample["data_cores"] = 99
+	check(script.call(&"cores_line", sample) == "Núcleos de datos: 12/12", "créditos: nunca más que el total")
 	var texts: Array[String] = []
 	var buttons: Dictionary[String, Button] = {}
 	for child: Node in credits.panel.get_children():
@@ -256,7 +267,7 @@ func _test_credits(tree: SceneTree, boss: Node2D) -> void:
 			texts.append((child as Label).text)
 		elif child is Button:
 			buttons[(child as Button).text] = child as Button
-	for title: String in ["INTERNET RESTAURADA", "Núcleos de datos: 7/10", "Muertes: 5", "Tiempo: 01:05"]:
+	for title: String in ["INTERNET RESTAURADA", "Núcleos de datos: 7/12", "Muertes: 5", "Tiempo: 01:05"]:
 		check(title in texts, "los créditos muestran " + title)
 	check(buttons.has("Menú principal") and buttons.has("Nueva partida"), "los créditos ofrecen menú y nueva partida")
 	if buttons.has("Nueva partida"):

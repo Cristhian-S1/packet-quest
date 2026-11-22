@@ -10,6 +10,11 @@ const WORLDS: Array[Dictionary] = [
 const MAP: String = "res://scenes/main/NetworkMap.tscn"
 const WORKSHOP: String = "res://scenes/ui/Workshop.tscn"
 const CREDITS: String = "res://scenes/ui/CreditsScreen.tscn"
+# Todos los núcleos de datos del juego (2 por nivel salvo el 1-1, más los que sueltan los jefes).
+# Los créditos cuentan cuántos se recogieron; `data_cores` es solo el saldo gastable del Taller.
+const ALL_CORE_IDS: Array[String] = ["w1_hidden_a", "w1_router", "w2_core_a", "w2_core_b",
+	"w3_core_a", "w3_core_b", "w3_firewall_boss", "w4_core_a", "w4_core_b", "w4_trojan_boss",
+	"w5_core_a", "w5_core_b"]
 var data: Dictionary = {}
 var checkpoint: Vector2 = Vector2(48, 296)
 var current_world: int = 1

@@ -1,10 +1,16 @@
 class_name CreditsScreen
 extends PacketScreen
 
-const TOTAL_DATA_CORES: int = 10
 const SECONDARY_TEXT: Color = Color("9db4cd")
 
 var _save_status: Label
+
+static func cores_line(data: Dictionary) -> String:
+	var found: Dictionary = {}
+	for id: Variant in data.get("collected_cores", []):
+		if String(id) in GameState.ALL_CORE_IDS:
+			found[String(id)] = true
+	return "Núcleos de datos: %d/%d" % [found.size(), GameState.ALL_CORE_IDS.size()]
 
 static func format_time(seconds: float) -> String:
 	var whole: int = maxi(0, floori(seconds))
@@ -26,7 +32,7 @@ func _ready() -> void:
 		0, 119, 640, 13, SECONDARY_TEXT)
 	_divider(163)
 	_centered("ESTADÍSTICAS", 0, 171, 640, 11, SECONDARY_TEXT)
-	_centered("Núcleos de datos: %d/%d" % [int(GameState.data.get("data_cores", 0)), TOTAL_DATA_CORES],
+	_centered(cores_line(GameState.data),
 		60, 191, 188, 14, PQStyle.AMBER)
 	_centered("Muertes: %d" % total_deaths, 250, 191, 140, 14, Color.WHITE)
 	_centered("Tiempo: %s" % format_time(float(stats.get("play_time_s", 0.0))), 392, 191, 188, 14, Color.WHITE)
