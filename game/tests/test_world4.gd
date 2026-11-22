@@ -22,12 +22,11 @@ func _test_world_progress() -> void:
 	GameState.win()
 	var saved: Dictionary = SaveManager.load_game()
 	check(GameState.is_world_unlocked(saved, 4), "vencer al Firewall desbloquea Servidor")
-	check(GameState.WORLDS.size() == 4 and GameState.WORLDS.has({"level": LEVEL, "boss": BOSS}),
+	check(GameState.WORLDS[3] == {"level": LEVEL, "boss": BOSS},
 		"Servidor registra su nivel y su jefe")
 	check(GameState.is_world_playable(saved, 4) == (ResourceLoader.exists(LEVEL) and ResourceLoader.exists(BOSS)),
 		"Servidor requiere ambas escenas para poder jugar")
-	saved["unlocked_worlds"].append(5)
-	check(not GameState.is_world_playable(saved, 5), "Centro de datos sigue pendiente aunque esté desbloqueado")
+	check(not GameState.is_world_playable(saved, 5), "Centro de datos sigue bloqueado hasta vencer al Troyano Real")
 
 func _test_platforms() -> void:
 	var vent: Script = require_script("res://scripts/objects/air_vent.gd")
@@ -363,9 +362,11 @@ func _test_level_route(tree: SceneTree) -> void:
 	var saved: Dictionary = SaveManager.load_game()
 	check(tree.current_scene.scene_file_path == GameState.MAP and "w4_boss" in saved["completed_levels"]
 		and "w4_trojan_boss" in saved["collected_cores"] and GameState.is_world_unlocked(saved, 5)
-		and not GameState.is_world_playable(saved, 5), "el mapa guarda la victoria y Centro de datos queda PRÓXIMAMENTE")
+		and GameState.is_world_playable(saved, 5) == GameState.has_world_scenes(5),
+		"el mapa guarda la victoria y desbloquea Centro de datos")
 	await _map_right(tree)
-	check(int(tree.current_scene.get(&"selected_world")) == 1, "derecha desde Servidor pasa al primer mundo disponible")
+	var next_world: int = 5 if GameState.has_world_scenes(5) else 1
+	check(int(tree.current_scene.get(&"selected_world")) == next_world, "derecha desde Servidor pasa al siguiente mundo disponible")
 
 func _reach_rack(tree: SceneTree, player: PacketPlayer, elevator: DataElevator, target: float) -> bool:
 	await _walk_to(tree, player, elevator.position.x + elevator.size.x * 0.5)

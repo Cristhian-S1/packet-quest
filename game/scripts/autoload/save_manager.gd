@@ -6,7 +6,7 @@ const WORLD_COUNT: int = 5
 
 func defaults() -> Dictionary:
 	return {
-		"version": 1, "unlocked_worlds": [1], "completed_levels": [],
+		"version": 1, "unlocked_worlds": [1], "completed_levels": [], "finished": false,
 		"data_cores": 0, "collected_cores": [], "owned_upgrades": [],
 		"equipped": {"weapons": ["packet"], "passive": ""},
 		"settings": {"screen_shake": true, "reduce_flashes": false,
@@ -77,6 +77,8 @@ func load_game(path: String = "") -> Dictionary:
 		return base
 	if float(stats["play_time_s"]) < 0:
 		return base
+	var finished: Variant = data.get("finished", false)
+	data["finished"] = finished if finished is bool else false
 	return data
 
 func _is_number(value: Variant) -> bool:

@@ -5,6 +5,7 @@ const WORLDS: Array[Dictionary] = [
 	{"level": "res://scenes/levels/World2Level1.tscn", "boss": "res://scenes/bosses/WifiQueenBoss.tscn"},
 	{"level": "res://scenes/levels/World3Level1.tscn", "boss": "res://scenes/bosses/FirewallBoss.tscn"},
 	{"level": "res://scenes/levels/World4Level1.tscn", "boss": "res://scenes/bosses/TrojanBoss.tscn"},
+	{"level": "res://scenes/levels/World5Level1.tscn", "boss": "res://scenes/bosses/MalwarexBoss.tscn"},
 ]
 const MAP: String = "res://scenes/main/NetworkMap.tscn"
 const WORKSHOP: String = "res://scenes/ui/Workshop.tscn"
@@ -37,7 +38,10 @@ static func is_world_unlocked(progress: Dictionary, world: int) -> bool:
 	return world in unlocked or float(world) in unlocked
 
 static func is_world_playable(progress: Dictionary, world: int) -> bool:
-	if world < 1 or world > WORLDS.size() or not is_world_unlocked(progress, world):
+	return is_world_unlocked(progress, world) and has_world_scenes(world)
+
+static func has_world_scenes(world: int) -> bool:
+	if world < 1 or world > WORLDS.size():
 		return false
 	var scenes: Dictionary = WORLDS[world - 1]
 	return ResourceLoader.exists(scenes["level"], "PackedScene") and ResourceLoader.exists(scenes["boss"], "PackedScene")
@@ -95,7 +99,9 @@ func win() -> void:
 	if boss_id not in completed:
 		completed.append(boss_id)
 	var next_world: int = current_world + 1
-	if not is_world_unlocked(data, next_world):
+	if current_world == WORLDS.size():
+		data["finished"] = true
+	elif not is_world_unlocked(data, next_world):
 		data["unlocked_worlds"].append(next_world)
 	save_error = SaveManager.save_game(data)
 
