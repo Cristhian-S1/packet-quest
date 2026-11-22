@@ -69,8 +69,16 @@ func _exercise(tree: SceneTree, path: String, index: int, frames: int) -> void:
 			var pool: ProjectilePool = node as ProjectilePool
 			if pool.player_bullets.size() > pool.player_capacity or pool.enemy_bullets.size() > pool.enemy_capacity:
 				errors.append("%s frame %d: pool excede su capacidad" % [path, frame])
-		if tree.paused:
+		if is_instance_valid(player) and player.state == PacketPlayer.State.DEAD:
+			_release()
 			tree.paused = false
+			scene.queue_free()
+			await tree.process_frame
+			_setup(index)
+			scene = (load(path) as PackedScene).instantiate()
+			tree.root.add_child(scene)
+			await tree.physics_frame
+			player = tree.get_first_node_in_group(&"player") as PacketPlayer
 	_release()
 	if is_instance_valid(scene):
 		scene.queue_free()
@@ -89,26 +97,38 @@ func _inside_solid(player: PacketPlayer) -> bool:
 	query.transform = player.global_transform
 	query.collision_mask = 1
 	query.exclude = [player.get_rid()]
-	return not player.get_world_2d().direct_space_state.intersect_shape(query, 1).is_empty()
+	# Una plataforma unidireccional permite atravesarla desde abajo.
+	for hit: Dictionary in player.get_world_2d().direct_space_state.intersect_shape(query, 32):
+		var body: CollisionObject2D = hit.collider as CollisionObject2D
+		var owner_id: int = body.shape_find_owner(int(hit.shape))
+		var owner: CollisionShape2D = body.shape_owner_get_owner(owner_id) as CollisionShape2D
+		if owner == null or not owner.one_way_collision:
+			return true
+	return false
 
 func _pause_roundtrip(tree: SceneTree, player: PacketPlayer, path: String, frame: int) -> void:
 	if tree.paused:
 		return
-	var pos: Vector2 = player.global_position
-	var hp: float = player.health.current
-	var shield: float = player.shield_meter
 	_send_pause(true)
+	await tree.process_frame
+	await tree.process_frame
 	_send_pause(false)
 	await tree.process_frame
 	if not tree.paused:
 		errors.append("%s frame %d: no se activó la pausa" % [path, frame])
 		return
+	var pos: Vector2 = player.global_position
+	var hp: float = player.health.current
+	var shield: float = player.shield_meter
+	await tree.process_frame
 	if player.global_position != pos or player.health.current != hp or player.shield_meter != shield:
 		errors.append("%s frame %d: estado cambió durante pausa" % [path, frame])
 	_send_pause(true)
+	await tree.process_frame
+	await tree.process_frame
 	_send_pause(false)
 	await tree.process_frame
-	if tree.paused:
+	if tree.paused and player.state != PacketPlayer.State.DEAD:
 		errors.append("%s frame %d: no se reanudó" % [path, frame])
 		tree.paused = false
 
