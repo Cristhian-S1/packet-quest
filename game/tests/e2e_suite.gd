@@ -6,12 +6,14 @@ extends RefCounted
 ## Reina Wi-Fi, pasando por el Router Furioso. No teletransporta a Byte ni toca
 ## posiciones/velocidades salvo para fijar el estado inicial de la partida.
 
-const SAVE_PATH: String = "user://e2e_session.json"
+const NetworkMap = preload("res://scripts/main/network_map.gd")
 
 var tree: SceneTree
 var pilot: BotPilot
 var errors: PackedStringArray = []
 var finished: bool = false
+var save_path: String
+var original_save_path: String
 
 # --- API del runner ------------------------------------------------------
 
@@ -53,8 +55,9 @@ func _finish() -> void:
 	pilot.release_all()
 	GameState.playing = false
 	tree.paused = false
-	if FileAccess.file_exists(SAVE_PATH):
-		DirAccess.remove_absolute(SAVE_PATH)
+	SaveManager.save_path = original_save_path
+	if FileAccess.file_exists(save_path):
+		DirAccess.remove_absolute(save_path)
 	finished = true
 
 # --- Utilidades ---------------------------------------------------------
@@ -65,7 +68,9 @@ func check(condition: bool, message: String) -> void:
 		printerr("E2E: " + message)
 
 func _reset_state() -> void:
-	SaveManager.save_path = SAVE_PATH
+	original_save_path = SaveManager.save_path
+	save_path = "user://e2e_session_%d.json" % OS.get_process_id()
+	SaveManager.save_path = save_path
 	GameState.data = SaveManager.defaults()
 	GameState.current_world = 1
 	GameState.in_boss = false
@@ -96,8 +101,9 @@ func _player() -> PacketPlayer:
 # --- Menú → mapa → Mundo 1 ---------------------------------------------
 
 func _menu_to_world1() -> bool:
-	# El menú tiene "Jugar" enfocado; Enter (ui_accept) lo activa.
-	pilot.confirm()
+	# PENDIENTE: action_press actualiza el estado de Input, pero Godot no envía
+	# un InputEvent al botón enfocado. La navegación GUI necesita otra vía.
+	await pilot.confirm()
 	if not await _await_scene_change():
 		check(false, "el menú no abre el mapa al pulsar Jugar")
 		return false
@@ -107,7 +113,7 @@ func _menu_to_world1() -> bool:
 		return false
 	await tree.process_frame
 	# El botón Entrar tiene el foco; Enter entra en el mundo seleccionado (1).
-	pilot.confirm()
+	await pilot.confirm()
 	if not await _await_scene_change():
 		check(false, "el mapa no abre el mundo 1 al pulsar Entrar")
 		return false
@@ -205,8 +211,7 @@ func _move_to(player: PacketPlayer, target_x: float) -> void:
 	var direction: StringName = &"move_right" if target_x >= player.global_position.x else &"move_left"
 	Input.action_press(direction)
 	await pilot.wait_until(
-		func() -> bool: return (direction == &"move_right" and player.global_position.x >= target_x)
-			or (direction == &"move_left" and player.global_position.x <= target_x), 600)
+		func() -> bool: return (direction == &"move_right" and player.global_position.x >= target_x) or (direction == &"move_left" and player.global_position.x <= target_x), 600)
 	Input.action_release(direction)
 	await pilot.frames(2)
 
@@ -266,7 +271,7 @@ func _fight_router() -> bool:
 func _router_victory_to_map() -> bool:
 	# La pantalla de victoria aparece en pausa; pulsa "Continuar al mapa".
 	await pilot.frames(4)
-	pilot.confirm()
+	await pilot.confirm()
 	var reached: bool = await pilot.wait_until(
 		func() -> bool: return tree.current_scene is NetworkMap, 400)
 	tree.paused = false
@@ -286,17 +291,13 @@ func _map_to_world2() -> bool:
 		func() -> bool: return int(map.get(&"selected_world")) == 2, 120)
 	if not selected2:
 		# Intenta desplazar la selección con derecha (igual que el jugador).
-		var right_event := InputEventAction.new()
-		right_event.action = &"move_right"
-		right_event.pressed = true
-		Input.parse_input_event(right_event)
-		await tree.process_frame
+		await pilot.tap(&"move_right")
 		selected2 = await pilot.wait_until(
 			func() -> bool: return int(map.get(&"selected_world")) == 2, 120)
 	check(selected2, "el mapa no permite elegir Wi-Fi")
 	if not selected2:
 		return false
-	pilot.confirm()
+	await pilot.confirm()
 	var entered: bool = await _await_scene_change()
 	check(entered and tree.current_scene is World2Level1, "Entrar no carga el nivel 2-1")
 	return entered and tree.current_scene is World2Level1

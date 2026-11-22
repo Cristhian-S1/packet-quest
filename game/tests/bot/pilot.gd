@@ -9,7 +9,7 @@ extends RefCounted
 
 const ACTIONS: Array[StringName] = [
 	&"move_left", &"move_right", &"aim_up", &"aim_down", &"jump",
-	&"shoot", &"dash", &"shield", &"lock_aim", &"interact", &"swap_weapon",
+	&"shoot", &"dash", &"shield", &"lock_aim", &"interact", &"swap_weapon", &"ui_accept",
 ]
 
 var tree: SceneTree
@@ -83,16 +83,7 @@ func wait_until_or(condition: Callable, abort: Callable, max_frames: int) -> boo
 
 ## Activa el botón enfocado como pulsar Enter/Espacio (ui_accept).
 func confirm() -> void:
-	var press_event := InputEventAction.new()
-	press_event.action = &"ui_accept"
-	press_event.pressed = true
-	Input.parse_input_event(press_event)
-	await tree.process_frame
-	var release_event := InputEventAction.new()
-	release_event.action = &"ui_accept"
-	release_event.pressed = false
-	Input.parse_input_event(release_event)
-	await tree.process_frame
+	await tap(&"ui_accept")
 
 # --- Movimiento ----------------------------------------------------------
 
