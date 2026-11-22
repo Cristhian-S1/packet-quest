@@ -46,14 +46,14 @@ func run(scene_tree: SceneTree) -> PackedStringArray:
 	check(target.health.current == 0, "disparo horizontal no alcanza Pop-up desde suelo")
 	target.queue_free()
 	for bullet: Projectile in byte.pool.player_bullets: bullet.deactivate()
-	byte.weapon = byte.weapon.duplicate() as WeaponData
-	byte.weapon.bullet_speed = 0
+	byte.weapon_slots[0] = byte.weapon_slots[0].duplicate() as WeaponData
+	byte.weapon_slots[0].bullet_speed = 0
 	byte.shoot_wait = 0
 	Input.action_press("shoot")
 	await frames(120)
 	Input.action_release("shoot")
 	check(_count_active(byte.pool.player_bullets) == 16, "cadencia no mantiene 8/s durante 2 s")
-	byte.weapon.bullet_speed = 480
+	byte.weapon_slots[0].bullet_speed = 480
 	for bullet: Projectile in byte.pool.player_bullets: bullet.deactivate()
 	var start: Vector2 = byte.global_position
 	Input.action_press("dash")

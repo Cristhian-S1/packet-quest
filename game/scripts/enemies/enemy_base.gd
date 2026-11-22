@@ -15,9 +15,11 @@ var pool: ProjectilePool
 var age: float = 0.0
 var flash: float = 0.0
 var on_screen: bool = false
+var marked: bool = false
 
 func _ready() -> void:
 	add_to_group("enemies")
+	add_to_group("homing_target")
 	collision_layer = 4
 	collision_mask = 8
 	add_child(PQStyle.box_shape(Vector2(20, 16)))

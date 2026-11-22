@@ -1,0 +1,638 @@
+{
+  "game/tools/validate.ps1": {
+    "mtime": 1795325145.5109274,
+    "seen": 1795335050.015292,
+    "ast_hash": "94713ab3b5db6193db6e253375a71184",
+    "semantic_hash": "94713ab3b5db6193db6e253375a71184"
+  },
+  "contexto.md": {
+    "mtime": 1795323172.642339,
+    "seen": 1795335050.0153012,
+    "ast_hash": "975908b00dd6d5395521b473a7fa38c7",
+    "semantic_hash": "975908b00dd6d5395521b473a7fa38c7"
+  },
+  "docs/00-evaluacion-contexto.md": {
+    "mtime": 1795324032.215362,
+    "seen": 1795335050.0153046,
+    "ast_hash": "4c8762a225ae9ba8068a0f70b782bb11",
+    "semantic_hash": "4c8762a225ae9ba8068a0f70b782bb11"
+  },
+  "docs/01-gdd.md": {
+    "mtime": 1795333769.2235086,
+    "seen": 1795335050.0153062,
+    "ast_hash": "810999f6af7a15de75f1fd5d333071aa",
+    "semantic_hash": "810999f6af7a15de75f1fd5d333071aa"
+  },
+  "docs/02-plan-desarrollo.md": {
+    "mtime": 1795323663.5600471,
+    "seen": 1795335050.0153077,
+    "ast_hash": "648a7bbfb8367205f566a5d925d1334c",
+    "semantic_hash": "648a7bbfb8367205f566a5d925d1334c"
+  },
+  "docs/03-mecanicas.md": {
+    "mtime": 1795323998.927824,
+    "seen": 1795335050.015309,
+    "ast_hash": "99b44c18bbfe46853157493174e9fe9b",
+    "semantic_hash": "99b44c18bbfe46853157493174e9fe9b"
+  },
+  "docs/04-niveles.md": {
+    "mtime": 1795324006.7104514,
+    "seen": 1795335050.0153108,
+    "ast_hash": "4072df276ad92de45a36342bf831997b",
+    "semantic_hash": "4072df276ad92de45a36342bf831997b"
+  },
+  "docs/05-enemigos-y-jefes.md": {
+    "mtime": 1795324013.1640995,
+    "seen": 1795335050.0153124,
+    "ast_hash": "7b1a4439310197450660e3d4ae20d673",
+    "semantic_hash": "7b1a4439310197450660e3d4ae20d673"
+  },
+  "docs/06-puzles.md": {
+    "mtime": 1795323579.548424,
+    "seen": 1795335050.0153136,
+    "ast_hash": "e51e4970062442f44031cfebb310ed48",
+    "semantic_hash": "e51e4970062442f44031cfebb310ed48"
+  },
+  "docs/07-modelos.md": {
+    "mtime": 1795323609.0042753,
+    "seen": 1795335050.0153146,
+    "ast_hash": "0c11b15f9d54b4e062a7127a9519ed3d",
+    "semantic_hash": "0c11b15f9d54b4e062a7127a9519ed3d"
+  },
+  "docs/08-arquitectura-tecnica.md": {
+    "mtime": 1795324014.9141335,
+    "seen": 1795335050.0153162,
+    "ast_hash": "455d8cfb8c019f1eb985ff5a303664ec",
+    "semantic_hash": "455d8cfb8c019f1eb985ff5a303664ec"
+  },
+  "docs/09-arte-y-audio.md": {
+    "mtime": 1795323635.2372098,
+    "seen": 1795335050.0153177,
+    "ast_hash": "b9f1d13bb292fa87be5ee241922f820e",
+    "semantic_hash": "b9f1d13bb292fa87be5ee241922f820e"
+  },
+  "docs/10-qa-y-pruebas.md": {
+    "mtime": 1795323643.4337895,
+    "seen": 1795335050.015319,
+    "ast_hash": "e620ea964f233196f4ee2d2251ecbf5f",
+    "semantic_hash": "e620ea964f233196f4ee2d2251ecbf5f"
+  },
+  "docs/11-investigacion.md": {
+    "mtime": 1795324016.5739353,
+    "seen": 1795335050.0153205,
+    "ast_hash": "939843041840ecbccb530cf68db48043",
+    "semantic_hash": "939843041840ecbccb530cf68db48043"
+  },
+  "docs/12-herramientas.md": {
+    "mtime": 1795333765.3537562,
+    "seen": 1795335050.0153222,
+    "ast_hash": "cda73623bf2ee478ca981e1d0296c3c1",
+    "semantic_hash": "cda73623bf2ee478ca981e1d0296c3c1"
+  },
+  "docs/prompts/codex-astra-fixes-1.md": {
+    "mtime": 1795325277.2806544,
+    "seen": 1795335050.0153234,
+    "ast_hash": "a5ec0b4e0529358e54e2b1ecadb081de",
+    "semantic_hash": "a5ec0b4e0529358e54e2b1ecadb081de"
+  },
+  "docs/prompts/codex-astra-m0-m6.md": {
+    "mtime": 1795323693.2670538,
+    "seen": 1795335050.0153246,
+    "ast_hash": "0624f53bbb817038a26268c052892675",
+    "semantic_hash": "0624f53bbb817038a26268c052892675"
+  },
+  "docs/superpowers/plans/2026-11-22-m7-taller-mejoras.md": {
+    "mtime": 1795332604.8923604,
+    "seen": 1795335050.0153258,
+    "ast_hash": "74bec5c5fa5f5dc6a1e62931e916ecac",
+    "semantic_hash": "74bec5c5fa5f5dc6a1e62931e916ecac"
+  },
+  "game/IMPLEMENTACION.md": {
+    "mtime": 1795326921.437855,
+    "seen": 1795335050.015327,
+    "ast_hash": "8477fb499871e5e6e5a620f247cb8e82",
+    "semantic_hash": "8477fb499871e5e6e5a620f247cb8e82"
+  },
+  "game/README.md": {
+    "mtime": 1795333675.2873268,
+    "seen": 1795335050.015328,
+    "ast_hash": "e73d2c93e76791d597e635e3bf433005",
+    "semantic_hash": "e73d2c93e76791d597e635e3bf433005"
+  },
+  "game/project.godot": {
+    "mtime": 1795324859.5631227,
+    "seen": 1795335050.0153294,
+    "ast_hash": "f5a1733298aef3e57c1b7470aac5e38c",
+    "semantic_hash": "f5a1733298aef3e57c1b7470aac5e38c"
+  },
+  "game/resources/phases/router_overload.tres": {
+    "mtime": 1795324369.6699502,
+    "seen": 1795335050.0153306,
+    "ast_hash": "ea9921e3deafd18327b96aaf01e78dc5",
+    "semantic_hash": "ea9921e3deafd18327b96aaf01e78dc5"
+  },
+  "game/resources/phases/router_stable.tres": {
+    "mtime": 1795324369.6699502,
+    "seen": 1795335050.0153325,
+    "ast_hash": "d95de1cd3c7303fff324704c78f4653b",
+    "semantic_hash": "d95de1cd3c7303fff324704c78f4653b"
+  },
+  "game/resources/upgrades/long_dash.tres": {
+    "mtime": 1795333158.607426,
+    "seen": 1795335050.0153337,
+    "ast_hash": "2430d24cae6da13bc4c984d0c1a8e854",
+    "semantic_hash": "2430d24cae6da13bc4c984d0c1a8e854"
+  },
+  "game/resources/upgrades/marker.tres": {
+    "mtime": 1795333158.6926153,
+    "seen": 1795335050.015335,
+    "ast_hash": "3f8172e1ab3cb3efdf5893b11e1b52a7",
+    "semantic_hash": "3f8172e1ab3cb3efdf5893b11e1b52a7"
+  },
+  "game/resources/upgrades/more_health.tres": {
+    "mtime": 1795333158.4956455,
+    "seen": 1795335050.0153365,
+    "ast_hash": "f9f4d4130957511ace6922d2f7af81fb",
+    "semantic_hash": "f9f4d4130957511ace6922d2f7af81fb"
+  },
+  "game/resources/upgrades/ping.tres": {
+    "mtime": 1795333158.5670433,
+    "seen": 1795335050.0153375,
+    "ast_hash": "77bc9cb24e152cc09879aac9176f2a65",
+    "semantic_hash": "77bc9cb24e152cc09879aac9176f2a65"
+  },
+  "game/resources/upgrades/slowdown.tres": {
+    "mtime": 1795333158.7288725,
+    "seen": 1795335050.015339,
+    "ast_hash": "deb2fcd22c1828df5ba43587917cf03a",
+    "semantic_hash": "deb2fcd22c1828df5ba43587917cf03a"
+  },
+  "game/resources/upgrades/strong_firewall.tres": {
+    "mtime": 1795333158.6502483,
+    "seen": 1795335050.01534,
+    "ast_hash": "d5a70c47bf0746082b1249d90815d797",
+    "semantic_hash": "d5a70c47bf0746082b1249d90815d797"
+  },
+  "game/resources/upgrades/triple.tres": {
+    "mtime": 1795333158.529931,
+    "seen": 1795335050.0153413,
+    "ast_hash": "41ff95b71a587d45f0f43f09d3585e80",
+    "semantic_hash": "41ff95b71a587d45f0f43f09d3585e80"
+  },
+  "game/resources/weapons/packet.tres": {
+    "mtime": 1795324369.6679866,
+    "seen": 1795335050.0153425,
+    "ast_hash": "91b9beaad4edc6a03f93ff886594e411",
+    "semantic_hash": "91b9beaad4edc6a03f93ff886594e411"
+  },
+  "game/resources/weapons/ping.tres": {
+    "mtime": 1795333158.4618804,
+    "seen": 1795335050.0153437,
+    "ast_hash": "25f4346245e5bc6ef379d5fd8c7ea725",
+    "semantic_hash": "25f4346245e5bc6ef379d5fd8c7ea725"
+  },
+  "game/resources/weapons/triple.tres": {
+    "mtime": 1795333158.428921,
+    "seen": 1795335050.0153449,
+    "ast_hash": "6b695722dae97f3e01eacf2bb4b4b434",
+    "semantic_hash": "6b695722dae97f3e01eacf2bb4b4b434"
+  },
+  "game/scenes/bosses/RouterBoss.tscn": {
+    "mtime": 1795324371.5495684,
+    "seen": 1795335050.0153463,
+    "ast_hash": "1b1da1bbd28cdfbc4cf060234f9fd49a",
+    "semantic_hash": "1b1da1bbd28cdfbc4cf060234f9fd49a"
+  },
+  "game/scenes/enemies/EnemyBullet.tscn": {
+    "mtime": 1795324371.542749,
+    "seen": 1795335050.0153475,
+    "ast_hash": "1b3f3a9b390badc434de21e301547d84",
+    "semantic_hash": "1b3f3a9b390badc434de21e301547d84"
+  },
+  "game/scenes/enemies/NetworkWorm.tscn": {
+    "mtime": 1795324371.5452805,
+    "seen": 1795335050.0153484,
+    "ast_hash": "0c3deb7d3dd4f3852c3f968744d6bc2f",
+    "semantic_hash": "0c3deb7d3dd4f3852c3f968744d6bc2f"
+  },
+  "game/scenes/enemies/PopUp.tscn": {
+    "mtime": 1795324371.5442545,
+    "seen": 1795335050.0153499,
+    "ast_hash": "a8ce5534ab02ea99a10915eb7deb53ff",
+    "semantic_hash": "a8ce5534ab02ea99a10915eb7deb53ff"
+  },
+  "game/scenes/levels/World1Level1.tscn": {
+    "mtime": 1795324371.5472806,
+    "seen": 1795335050.015351,
+    "ast_hash": "259f900efb014afb3686295703afe7e1",
+    "semantic_hash": "259f900efb014afb3686295703afe7e1"
+  },
+  "game/scenes/main/Main.tscn": {
+    "mtime": 1795324371.5388255,
+    "seen": 1795335050.0153522,
+    "ast_hash": "3b7f3615347497152623ba02d3fb086e",
+    "semantic_hash": "3b7f3615347497152623ba02d3fb086e"
+  },
+  "game/scenes/main/NetworkMap.tscn": {
+    "mtime": 1795333601.1397407,
+    "seen": 1795335050.0153534,
+    "ast_hash": "4f34620262a2671732aa021e2e77ce48",
+    "semantic_hash": "4f34620262a2671732aa021e2e77ce48"
+  },
+  "game/scenes/objects/Checkpoint.tscn": {
+    "mtime": 1795324371.5581145,
+    "seen": 1795335050.0153546,
+    "ast_hash": "376408591fcafab4c6faf7597737c9c0",
+    "semantic_hash": "376408591fcafab4c6faf7597737c9c0"
+  },
+  "game/scenes/objects/DataCore.tscn": {
+    "mtime": 1795324371.5606298,
+    "seen": 1795335050.0153558,
+    "ast_hash": "2d2da75098e0540d0b04eb94b24b69a4",
+    "semantic_hash": "2d2da75098e0540d0b04eb94b24b69a4"
+  },
+  "game/scenes/objects/Door.tscn": {
+    "mtime": 1795324371.5550928,
+    "seen": 1795335050.015357,
+    "ast_hash": "c3d6030cd30ca71d7b2afc9348bd654b",
+    "semantic_hash": "c3d6030cd30ca71d7b2afc9348bd654b"
+  },
+  "game/scenes/objects/NetworkNode.tscn": {
+    "mtime": 1795324371.5627625,
+    "seen": 1795335050.015359,
+    "ast_hash": "9821478b249e874c4a022df1f47fa7ce",
+    "semantic_hash": "9821478b249e874c4a022df1f47fa7ce"
+  },
+  "game/scenes/player/Player.tscn": {
+    "mtime": 1795324371.5402348,
+    "seen": 1795335050.0153604,
+    "ast_hash": "53b2c03c3b07d25eb765d8b74e6b3a08",
+    "semantic_hash": "53b2c03c3b07d25eb765d8b74e6b3a08"
+  },
+  "game/scenes/player/PlayerBullet.tscn": {
+    "mtime": 1795324371.5417502,
+    "seen": 1795335050.0153615,
+    "ast_hash": "f7af9b3e9d3524d2a3b702fc97707050",
+    "semantic_hash": "f7af9b3e9d3524d2a3b702fc97707050"
+  },
+  "game/scenes/puzzles/PuzzleNode.tscn": {
+    "mtime": 1795324371.5529003,
+    "seen": 1795335050.0153627,
+    "ast_hash": "a5ff438af9c10f846d227840fb61a99f",
+    "semantic_hash": "a5ff438af9c10f846d227840fb61a99f"
+  },
+  "game/scenes/puzzles/RoutePuzzle.tscn": {
+    "mtime": 1795324371.5508487,
+    "seen": 1795335050.0153642,
+    "ast_hash": "5c0db0bc8063675c77f04435c5b1f63c",
+    "semantic_hash": "5c0db0bc8063675c77f04435c5b1f63c"
+  },
+  "game/scenes/ui/DeathScreen.tscn": {
+    "mtime": 1795324371.570515,
+    "seen": 1795335050.0153654,
+    "ast_hash": "7311af7b6edd554dd5060d8d01a46e7b",
+    "semantic_hash": "7311af7b6edd554dd5060d8d01a46e7b"
+  },
+  "game/scenes/ui/HUD.tscn": {
+    "mtime": 1795324371.5669904,
+    "seen": 1795335050.0153663,
+    "ast_hash": "4d170a5d67d5a8ef00239ffdfa39613f",
+    "semantic_hash": "4d170a5d67d5a8ef00239ffdfa39613f"
+  },
+  "game/scenes/ui/PauseMenu.tscn": {
+    "mtime": 1795324371.5725148,
+    "seen": 1795335050.0153677,
+    "ast_hash": "2b0a1cf3267ab9954080359b23122cf7",
+    "semantic_hash": "2b0a1cf3267ab9954080359b23122cf7"
+  },
+  "game/scenes/ui/VictoryScreen.tscn": {
+    "mtime": 1795324371.5780265,
+    "seen": 1795335050.015369,
+    "ast_hash": "f7fc756290b77d2d8edca7860a93732c",
+    "semantic_hash": "f7fc756290b77d2d8edca7860a93732c"
+  },
+  "game/scenes/ui/Workshop.tscn": {
+    "mtime": 1795333601.1397407,
+    "seen": 1795335050.01537,
+    "ast_hash": "121f16e6e0033e666e3d1a07eb051d6d",
+    "semantic_hash": "121f16e6e0033e666e3d1a07eb051d6d"
+  },
+  "game/scripts/autoload/audio_manager.gd": {
+    "mtime": 1795323872.1804688,
+    "seen": 1795335050.0153713,
+    "ast_hash": "dd902283fa00585bb1cede3c335740eb",
+    "semantic_hash": "dd902283fa00585bb1cede3c335740eb"
+  },
+  "game/scripts/autoload/events.gd": {
+    "mtime": 1795323872.1614666,
+    "seen": 1795335050.0153725,
+    "ast_hash": "feeb50484292e12b11464e41918260f1",
+    "semantic_hash": "feeb50484292e12b11464e41918260f1"
+  },
+  "game/scripts/autoload/game_state.gd": {
+    "mtime": 1795333577.935644,
+    "seen": 1795335050.0153737,
+    "ast_hash": "882c29b468c4af751644e04629dbbed6",
+    "semantic_hash": "882c29b468c4af751644e04629dbbed6"
+  },
+  "game/scripts/autoload/save_manager.gd": {
+    "mtime": 1795324859.5691235,
+    "seen": 1795335050.015375,
+    "ast_hash": "8552d4d5fcc74de9ab50f7073dae105c",
+    "semantic_hash": "8552d4d5fcc74de9ab50f7073dae105c"
+  },
+  "game/scripts/bosses/router_boss.gd": {
+    "mtime": 1795333298.0531852,
+    "seen": 1795335050.015376,
+    "ast_hash": "df8524f5aa1b02940fe2173222872eb0",
+    "semantic_hash": "df8524f5aa1b02940fe2173222872eb0"
+  },
+  "game/scripts/components/health_component.gd": {
+    "mtime": 1795323872.1604667,
+    "seen": 1795335050.0153775,
+    "ast_hash": "c2bd8561784a6bbad983236f23d293e0",
+    "semantic_hash": "c2bd8561784a6bbad983236f23d293e0"
+  },
+  "game/scripts/components/hitbox.gd": {
+    "mtime": 1795323872.1604667,
+    "seen": 1795335050.0153787,
+    "ast_hash": "a2d85d1824cd713fb80fdbf13b8efd0e",
+    "semantic_hash": "a2d85d1824cd713fb80fdbf13b8efd0e"
+  },
+  "game/scripts/components/hurtbox.gd": {
+    "mtime": 1795333293.1510785,
+    "seen": 1795335050.0153801,
+    "ast_hash": "c7c32da9a822b66e733b1693a5e2f748",
+    "semantic_hash": "c7c32da9a822b66e733b1693a5e2f748"
+  },
+  "game/scripts/components/projectile_pool.gd": {
+    "mtime": 1795323988.6012995,
+    "seen": 1795335050.0153816,
+    "ast_hash": "b9deda8bc23e99a9eec96f8a4f670c4e",
+    "semantic_hash": "b9deda8bc23e99a9eec96f8a4f670c4e"
+  },
+  "game/scripts/components/style.gd": {
+    "mtime": 1795324859.5671234,
+    "seen": 1795335050.0153828,
+    "ast_hash": "ff077e290043e00c4c742ebdb7739c03",
+    "semantic_hash": "ff077e290043e00c4c742ebdb7739c03"
+  },
+  "game/scripts/data/boss_phase_data.gd": {
+    "mtime": 1795323872.1826658,
+    "seen": 1795335050.015384,
+    "ast_hash": "acf925558f447271b0fa9dfa366c30cd",
+    "semantic_hash": "acf925558f447271b0fa9dfa366c30cd"
+  },
+  "game/scripts/data/catalog.gd": {
+    "mtime": 1795333164.5417368,
+    "seen": 1795335050.0153854,
+    "ast_hash": "9984ddac804460b610de637042085283",
+    "semantic_hash": "9984ddac804460b610de637042085283"
+  },
+  "game/scripts/data/level_data.gd": {
+    "mtime": 1795323872.1836665,
+    "seen": 1795335050.0153866,
+    "ast_hash": "2e833652311f98c2ab22ee15d91928e8",
+    "semantic_hash": "2e833652311f98c2ab22ee15d91928e8"
+  },
+  "game/scripts/data/upgrade_data.gd": {
+    "mtime": 1795323872.181645,
+    "seen": 1795335050.015388,
+    "ast_hash": "792518b9da253af9416f8ce68b8e9609",
+    "semantic_hash": "792518b9da253af9416f8ce68b8e9609"
+  },
+  "game/scripts/data/weapon_data.gd": {
+    "mtime": 1795323872.181645,
+    "seen": 1795335050.0153892,
+    "ast_hash": "dc7b385b72ef2a89fc9d033538f0382f",
+    "semantic_hash": "dc7b385b72ef2a89fc9d033538f0382f"
+  },
+  "game/scripts/enemies/enemy_base.gd": {
+    "mtime": 1795333291.0948656,
+    "seen": 1795335050.0153906,
+    "ast_hash": "12a0dd46bed240559d576056a31db87c",
+    "semantic_hash": "12a0dd46bed240559d576056a31db87c"
+  },
+  "game/scripts/enemies/enemy_bullet.gd": {
+    "mtime": 1795323988.6007135,
+    "seen": 1795335050.015396,
+    "ast_hash": "0f2518ba890430e1a34057be3d680169",
+    "semantic_hash": "0f2518ba890430e1a34057be3d680169"
+  },
+  "game/scripts/enemies/network_worm.gd": {
+    "mtime": 1795324117.5248685,
+    "seen": 1795335050.0153973,
+    "ast_hash": "5387d83ca3b5b42a188c7938e174233d",
+    "semantic_hash": "5387d83ca3b5b42a188c7938e174233d"
+  },
+  "game/scripts/enemies/pop_up.gd": {
+    "mtime": 1795324117.52387,
+    "seen": 1795335050.015399,
+    "ast_hash": "c489956bfda7e35c1ddc6ee0cb6f8913",
+    "semantic_hash": "c489956bfda7e35c1ddc6ee0cb6f8913"
+  },
+  "game/scripts/levels/circuit_background.gd": {
+    "mtime": 1795324256.08663,
+    "seen": 1795335050.0154,
+    "ast_hash": "4f58fdba4e11edc235d46fa2b1afa8c8",
+    "semantic_hash": "4f58fdba4e11edc235d46fa2b1afa8c8"
+  },
+  "game/scripts/levels/stage_builder.gd": {
+    "mtime": 1795326644.9590702,
+    "seen": 1795335050.0154011,
+    "ast_hash": "7898d19358b847b66635a559c903277d",
+    "semantic_hash": "7898d19358b847b66635a559c903277d"
+  },
+  "game/scripts/levels/world1_level1.gd": {
+    "mtime": 1795326638.865595,
+    "seen": 1795335050.0154026,
+    "ast_hash": "d176bfdaf7c1f074dfb8d886bb3f11d1",
+    "semantic_hash": "d176bfdaf7c1f074dfb8d886bb3f11d1"
+  },
+  "game/scripts/main/main.gd": {
+    "mtime": 1795333601.18136,
+    "seen": 1795335050.0154037,
+    "ast_hash": "8604360fade98b7e3042ca2a52c4ad38",
+    "semantic_hash": "8604360fade98b7e3042ca2a52c4ad38"
+  },
+  "game/scripts/main/network_map.gd": {
+    "mtime": 1795333597.5764334,
+    "seen": 1795335050.015405,
+    "ast_hash": "43a2fd24ff6b45be2374a755c1a25bd6",
+    "semantic_hash": "43a2fd24ff6b45be2374a755c1a25bd6"
+  },
+  "game/scripts/objects/checkpoint.gd": {
+    "mtime": 1795324117.5273173,
+    "seen": 1795335050.0154066,
+    "ast_hash": "29c86a27c801258d0bfd7f6e0dd19461",
+    "semantic_hash": "29c86a27c801258d0bfd7f6e0dd19461"
+  },
+  "game/scripts/objects/data_core.gd": {
+    "mtime": 1795324117.5273173,
+    "seen": 1795335050.015408,
+    "ast_hash": "8c49d0bf9017bc71d5e5459cee12515c",
+    "semantic_hash": "8c49d0bf9017bc71d5e5459cee12515c"
+  },
+  "game/scripts/objects/door.gd": {
+    "mtime": 1795324117.5263166,
+    "seen": 1795335050.0154095,
+    "ast_hash": "cf1b00f64dec5626548a17ad3280fd0c",
+    "semantic_hash": "cf1b00f64dec5626548a17ad3280fd0c"
+  },
+  "game/scripts/objects/network_node.gd": {
+    "mtime": 1795324117.5283186,
+    "seen": 1795335050.0154107,
+    "ast_hash": "5b56f68188352b896ff113dc6993ff00",
+    "semantic_hash": "5b56f68188352b896ff113dc6993ff00"
+  },
+  "game/scripts/objects/platform.gd": {
+    "mtime": 1795324117.5263166,
+    "seen": 1795335050.0154116,
+    "ast_hash": "2c291a85044de886af522374639eb5ec",
+    "semantic_hash": "2c291a85044de886af522374639eb5ec"
+  },
+  "game/scripts/player/player.gd": {
+    "mtime": 1795334237.324504,
+    "seen": 1795335050.015413,
+    "ast_hash": "3b4f441d2997d85330d0206c92aecba4",
+    "semantic_hash": "3b4f441d2997d85330d0206c92aecba4"
+  },
+  "game/scripts/player/player_bullet.gd": {
+    "mtime": 1795323988.5997076,
+    "seen": 1795335050.0154142,
+    "ast_hash": "3d8782697f9d2412e9ad8cfdafdc1626",
+    "semantic_hash": "3d8782697f9d2412e9ad8cfdafdc1626"
+  },
+  "game/scripts/player/projectile.gd": {
+    "mtime": 1795333289.2621236,
+    "seen": 1795335050.0154157,
+    "ast_hash": "3aad0a5ac350e90b057165ef70e75f02",
+    "semantic_hash": "3aad0a5ac350e90b057165ef70e75f02"
+  },
+  "game/scripts/progression/progression.gd": {
+    "mtime": 1795333220.9946928,
+    "seen": 1795335050.0154169,
+    "ast_hash": "ab1ccefb5bfd48e93fbc6b8dcbfebd0c",
+    "semantic_hash": "ab1ccefb5bfd48e93fbc6b8dcbfebd0c"
+  },
+  "game/scripts/puzzles/puzzle_node.gd": {
+    "mtime": 1795324117.5283186,
+    "seen": 1795335050.0154197,
+    "ast_hash": "13eac847875e253221fa627ee090ee02",
+    "semantic_hash": "13eac847875e253221fa627ee090ee02"
+  },
+  "game/scripts/puzzles/route_puzzle.gd": {
+    "mtime": 1795324859.5651252,
+    "seen": 1795335050.015421,
+    "ast_hash": "5a3bfe222a1590d103276076bf33fcd3",
+    "semantic_hash": "5a3bfe222a1590d103276076bf33fcd3"
+  },
+  "game/scripts/ui/death_screen.gd": {
+    "mtime": 1795324859.5681243,
+    "seen": 1795335050.015422,
+    "ast_hash": "6ed3f8b68a5ba6bfc4e85243e194c3f6",
+    "semantic_hash": "6ed3f8b68a5ba6bfc4e85243e194c3f6"
+  },
+  "game/scripts/ui/hud.gd": {
+    "mtime": 1795333494.0278027,
+    "seen": 1795335050.0154235,
+    "ast_hash": "1f267677cfe78aecb03ac65a12637a0f",
+    "semantic_hash": "1f267677cfe78aecb03ac65a12637a0f"
+  },
+  "game/scripts/ui/pause_menu.gd": {
+    "mtime": 1795324369.662187,
+    "seen": 1795335050.015425,
+    "ast_hash": "f193243ec0d68fbf253ff41fa11cfc06",
+    "semantic_hash": "f193243ec0d68fbf253ff41fa11cfc06"
+  },
+  "game/scripts/ui/screen_base.gd": {
+    "mtime": 1795324369.6441388,
+    "seen": 1795335050.0154264,
+    "ast_hash": "5f23cb0b418dafb3914b4be66710e998",
+    "semantic_hash": "5f23cb0b418dafb3914b4be66710e998"
+  },
+  "game/scripts/ui/victory_screen.gd": {
+    "mtime": 1795333607.2364335,
+    "seen": 1795335050.0154276,
+    "ast_hash": "213fdf1a8e0192f2476a7e16d86fd9e0",
+    "semantic_hash": "213fdf1a8e0192f2476a7e16d86fd9e0"
+  },
+  "game/scripts/ui/workshop.gd": {
+    "mtime": 1795333589.0423703,
+    "seen": 1795335050.0154288,
+    "ast_hash": "0600a67f0ff6d3815cfe7318d0ad5da2",
+    "semantic_hash": "0600a67f0ff6d3815cfe7318d0ad5da2"
+  },
+  "game/tests/capture_preview.gd": {
+    "mtime": 1795324578.1396606,
+    "seen": 1795335050.0154302,
+    "ast_hash": "a2628b872f565cece352352c04839303",
+    "semantic_hash": "a2628b872f565cece352352c04839303"
+  },
+  "game/tests/integration_suite.gd": {
+    "mtime": 1795333501.6525526,
+    "seen": 1795335050.0154314,
+    "ast_hash": "f31af0fa4c691468f2419e99048e7a30",
+    "semantic_hash": "f31af0fa4c691468f2419e99048e7a30"
+  },
+  "game/tests/preview_suite.gd": {
+    "mtime": 1795324578.1396606,
+    "seen": 1795335050.0154326,
+    "ast_hash": "dd35cf00e98d7cd61ff8149e650fe5e8",
+    "semantic_hash": "dd35cf00e98d7cd61ff8149e650fe5e8"
+  },
+  "game/tests/test_boss_phases.gd": {
+    "mtime": 1795324436.895705,
+    "seen": 1795335050.015434,
+    "ast_hash": "8a87be746db890517ce744473b319660",
+    "semantic_hash": "8a87be746db890517ce744473b319660"
+  },
+  "game/tests/test_health_component.gd": {
+    "mtime": 1795324436.895705,
+    "seen": 1795335050.015435,
+    "ast_hash": "e875c159929ff69fa9026d597b81eb95",
+    "semantic_hash": "e875c159929ff69fa9026d597b81eb95"
+  },
+  "game/tests/test_integration.gd": {
+    "mtime": 1795324578.13766,
+    "seen": 1795335050.0154362,
+    "ast_hash": "01896abb56a42736eecb4a17da129c91",
+    "semantic_hash": "01896abb56a42736eecb4a17da129c91"
+  },
+  "game/tests/test_progression.gd": {
+    "mtime": 1795333612.3868747,
+    "seen": 1795335050.0154378,
+    "ast_hash": "f7a55da73e00857a337df1bab314cdc2",
+    "semantic_hash": "f7a55da73e00857a337df1bab314cdc2"
+  },
+  "game/tests/test_route_puzzle.gd": {
+    "mtime": 1795324436.895705,
+    "seen": 1795335050.0154388,
+    "ast_hash": "dfaeb9e2818172171f82565a6abfdbd2",
+    "semantic_hash": "dfaeb9e2818172171f82565a6abfdbd2"
+  },
+  "game/tests/test_runner.gd": {
+    "mtime": 1795333494.0427985,
+    "seen": 1795335050.0154405,
+    "ast_hash": "cf03210bc568dee21af640e9de4cc66c",
+    "semantic_hash": "cf03210bc568dee21af640e9de4cc66c"
+  },
+  "game/tests/test_save_manager.gd": {
+    "mtime": 1795324932.1009514,
+    "seen": 1795335050.0154417,
+    "ast_hash": "325f78a9e164327c33f9f60b56984bc3",
+    "semantic_hash": "325f78a9e164327c33f9f60b56984bc3"
+  },
+  "game/tests/test_scenes_load.gd": {
+    "mtime": 1795333554.564841,
+    "seen": 1795335050.0154428,
+    "ast_hash": "587982a469427940e1a7b8558e47499e",
+    "semantic_hash": "587982a469427940e1a7b8558e47499e"
+  },
+  "game/tests/test_weapons.gd": {
+    "mtime": 1795334220.339608,
+    "seen": 1795335050.0154445,
+    "ast_hash": "351b22f34046aa99725799280d7879c9",
+    "semantic_hash": "351b22f34046aa99725799280d7879c9"
+  }
+}

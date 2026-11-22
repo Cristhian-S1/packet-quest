@@ -61,6 +61,7 @@ func _ready() -> void:
 	add_child(health)
 	body = Hurtbox.new()
 	body.name = "Boss"
+	body.homing_target = true
 	body.position = Vector2(320, 176)
 	body.collision_layer = 4
 	body.collision_mask = 8

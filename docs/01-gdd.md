@@ -82,3 +82,5 @@ Detalle en `04-niveles.md`.
 | `09-arte-y-audio.md` | Dirección de arte, paleta y audio |
 | `10-qa-y-pruebas.md` | Plan de pruebas y métricas |
 | `11-investigacion.md` | Fuentes consultadas |
+| `12-herramientas.md` | Herramientas de arte/audio, MCP, skills y plugins recomendados (¿hace falta Blender?) |
+| `superpowers/plans/` | Planes de implementación por hito (M7 en adelante) |
