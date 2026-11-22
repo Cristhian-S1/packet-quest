@@ -1,0 +1,7 @@
+game/.godot/
+game/validation/
+logs/
+.beads/
+docs/capturas/
+*.uid
+*.import

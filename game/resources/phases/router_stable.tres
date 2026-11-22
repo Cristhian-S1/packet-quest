@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="BossPhaseData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/boss_phase_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+name = "Señal estable"
+health_threshold = 1.0
+attack_sequence = Array[StringName]([&"A", &"B"])
+recovery_multiplier = 1.0

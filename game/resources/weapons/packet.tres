@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/weapon_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"packet"
+display_name = "Paquete"
+damage = 1.0
+fire_rate = 8.0
+bullet_speed = 480.0
