@@ -32,7 +32,10 @@ func _entered(body: Node2D) -> void:
 	queue_free()
 
 func _draw() -> void:
+	draw_core(self, age, PQStyle.GREEN if cache_fragment else PQStyle.AMBER)
+
+static func draw_core(canvas: CanvasItem, age: float, color: Color) -> void:
 	var offset: Vector2 = Vector2(0, sin(age * 3) * 3)
-	var color: Color = PQStyle.GREEN if cache_fragment else PQStyle.AMBER
-	draw_polyline(PackedVector2Array([offset + Vector2(0, -10), offset + Vector2(8, 0), offset + Vector2(0, 10), offset + Vector2(-8, 0), offset + Vector2(0, -10)]), color, 2)
-	draw_rect(Rect2(offset - Vector2(3, 3), Vector2(6, 6)), color)
+	canvas.draw_polyline(PackedVector2Array([offset + Vector2(0, -10), offset + Vector2(8, 0),
+		offset + Vector2(0, 10), offset + Vector2(-8, 0), offset + Vector2(0, -10)]), color, 2)
+	canvas.draw_rect(Rect2(offset - Vector2(3, 3), Vector2(6, 6)), color)
