@@ -122,6 +122,16 @@ func show_credits() -> void:
 	playing = false
 	change_scene(CREDITS)
 
+func new_game() -> Error:
+	var fresh: Dictionary = SaveManager.defaults()
+	var settings: Dictionary = data.get("settings", fresh["settings"])
+	fresh["settings"] = settings.duplicate(true)
+	save_error = SaveManager.save_game(fresh)
+	if save_error == OK:
+		data = fresh
+		start_run()
+	return save_error
+
 func menu() -> void:
 	playing = false
 	change_scene("res://scenes/main/Main.tscn")

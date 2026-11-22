@@ -219,8 +219,44 @@ func _test_malwarex(tree: SceneTree) -> void:
 	check(bool(GameState.data.get("finished", false)) and "w5_boss" in GameState.data["completed_levels"]
 		and not GameState.is_world_unlocked(GameState.data, 6) and GameState.data["collected_cores"].is_empty(),
 		"la derrota completa la partida sin núcleo ni sexto mundo")
+	await _test_credits(tree, boss)
 	boss.queue_free()
 	await tree.process_frame
+
+func _test_credits(tree: SceneTree, boss: Node2D) -> void:
+	var scene: PackedScene = require_scene(GameState.CREDITS)
+	if scene == null:
+		return
+	GameState.data["data_cores"] = 7
+	GameState.data["stats"] = {"deaths": {"nivel_5_1": 2, "malwarex": 3}, "play_time_s": 65.9}
+	GameState.data["settings"]["reduce_flashes"] = true
+	boss.call(&"_physics_process", 0.8)
+	await tree.scene_changed
+	var credits: PacketScreen = tree.current_scene as PacketScreen
+	check(credits != null and credits.scene_file_path == GameState.CREDITS and not GameState.playing,
+		"la derrota lleva a los créditos sin pasar por el mapa")
+	if credits == null or credits.scene_file_path != GameState.CREDITS:
+		return
+	var script: Script = credits.get_script() as Script
+	check(script.call(&"format_time", 65.0) == "01:05"
+		and script.call(&"format_time", 3600.0) == "60:00", "formato de minutos y segundos")
+	var texts: Array[String] = []
+	var buttons: Dictionary[String, Button] = {}
+	for child: Node in credits.panel.get_children():
+		if child is Label:
+			texts.append((child as Label).text)
+		elif child is Button:
+			buttons[(child as Button).text] = child as Button
+	for title: String in ["INTERNET RESTAURADA", "Núcleos de datos: 7/10", "Muertes: 5", "Tiempo: 01:05"]:
+		check(title in texts, "los créditos muestran " + title)
+	check(buttons.has("Menú principal") and buttons.has("Nueva partida"), "los créditos ofrecen menú y nueva partida")
+	if buttons.has("Nueva partida"):
+		buttons["Nueva partida"].pressed.emit()
+		await tree.scene_changed
+		var fresh: Dictionary = SaveManager.load_game()
+		check(GameState.current_world == 1 and tree.current_scene is World1Level1
+			and not bool(fresh["finished"]) and int(fresh["data_cores"]) == 0 and fresh["stats"]["deaths"].is_empty()
+			and bool(fresh["settings"]["reduce_flashes"]), "nueva partida vuelve a Red Local con ajustes y progreso nuevo")
 
 func require_scene(path: String) -> PackedScene:
 	if not ResourceLoader.exists(path, "PackedScene"):
