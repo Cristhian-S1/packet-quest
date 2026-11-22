@@ -5,6 +5,7 @@ const SCENES: Array[String] = [
 	"res://scenes/levels/World2Level1.tscn", "res://scenes/bosses/WifiQueenBoss.tscn",
 	"res://scenes/levels/World3Level1.tscn", "res://scenes/bosses/FirewallBoss.tscn",
 	"res://scenes/levels/World4Level1.tscn", "res://scenes/bosses/TrojanBoss.tscn",
+	"res://scenes/levels/World5Level1.tscn", "res://scenes/bosses/MalwarexBoss.tscn", "res://scenes/ui/CreditsScreen.tscn",
 	"res://scenes/main/NetworkMap.tscn", "res://scenes/ui/Workshop.tscn", "res://scenes/main/Main.tscn",
 ]
 const ACTIONS: Array[StringName] = [&"move_left", &"move_right", &"jump", &"dash", &"shoot", &"shield", &"aim_up", &"aim_down", &"lock_aim", &"swap_weapon", &"interact", &"pause"]
