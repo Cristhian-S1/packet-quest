@@ -10,6 +10,7 @@ func run(tree: SceneTree) -> PackedStringArray:
 	_test_spread_directions()
 	_test_steer_without_target()
 	_test_steer_limits_turn()
+	_test_weapon_sfx()
 	_test_dead_enemy_leaves_homing(tree)
 	await _test_player(tree)
 	check(player_checked, "prueba del jugador abortada por un error de script")
@@ -64,6 +65,7 @@ func _test_player(tree: SceneTree) -> void:
 	for bullet: Projectile in pool.player_bullets:
 		bullet.deactivate()
 	player.shoot()
+	check(AudioManager.last_sfx == &"triple", "disparo usa el sfx del arma equipada")
 	var active: int = 0
 	for bullet: Projectile in pool.player_bullets:
 		if bullet.active:
@@ -94,6 +96,18 @@ func _test_dead_enemy_leaves_homing(tree: SceneTree) -> void:
 	enemy._die()
 	check(not enemy.is_in_group("homing_target"), "enemigo muerto sale de homing_target")
 	enemy.queue_free()
+
+func _test_weapon_sfx() -> void:
+	check(Catalog.weapon(&"packet").sfx == &"packet", "sfx: packet por defecto")
+	check(Catalog.weapon(&"triple").sfx == &"triple", "sfx: triple propio")
+	check(Catalog.weapon(&"ping").sfx == &"ping", "sfx: ping propio")
+	check(Catalog.weapon(&"triple").sfx != Catalog.weapon(&"packet").sfx
+		and Catalog.weapon(&"ping").sfx != Catalog.weapon(&"packet").sfx
+		and Catalog.weapon(&"triple").sfx != Catalog.weapon(&"ping").sfx, "sfx: cada arma un sonido")
+	AudioManager.play_sfx(&"packet")
+	var packet_pitch: float = AudioManager.last_pitch
+	AudioManager.play_sfx(&"ping")
+	check(AudioManager.last_pitch != packet_pitch, "sfx: variación de tono por arma")
 
 func _test_spread_directions() -> void:
 	var dirs: Array[Vector2] = Projectile.spread_directions(Vector2.RIGHT, 3, 12.0)
