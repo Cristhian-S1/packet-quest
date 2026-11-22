@@ -93,7 +93,9 @@ Debe eliminarse **antes** que sus Pop-ups: su peligro crece con el tiempo.
   `portal.activate()`, que añade 2 `PopUp` (3 PV cada uno) en las posiciones de `spawn_offsets`.
 - `static func spawn_offsets() -> Array[Vector2]` = `[Vector2(-28, 0), Vector2(28, 0)]`
   (a ambos lados del portal, a ras de suelo).
-- El portal persiste y genera 2 Pop-ups más cada 5 s mientras el Troyano viva. Al morir
+- El portal persiste y genera 2 Pop-ups más cada 5 s mientras el Troyano viva, con un **máximo de
+  4 Pop-ups vivos por portal** (si hay 4, ese ciclo no genera; evita acumular enemigos sin fin).
+  Función pura: `static func spawn_count(alive: int) -> int` = `clampi(4 - alive, 0, 2)`. Al morir
   (`_die()`), el Troyano cierra su portal (`portal.close()`): deja de generar; los Pop-ups ya
   creados siguen vivos.
 - `TrojanPortal` (`scripts/enemies/trojan_portal.gd`, `Node2D`): anillo/rendija que crece
@@ -126,7 +128,10 @@ escena aparte. Concepto real: **autenticación** (y por qué las contraseñas ob
   - `static func triangle_before_square(code: Array) -> bool` = `index_of(TRIANGLE) < index_of(SQUARE)`.
   - `static func circle_not_first(code: Array) -> bool` = `index_of(CIRCLE) != 0`.
   - `static func star_not_last(code: Array) -> bool` = `index_of(STAR) != 3`.
-  - `static func is_solution(code: Array) -> bool` = las cuatro restricciones a la vez.
+  - `static func is_permutation(code: Array) -> bool`: los 4 símbolos aparecen **exactamente una vez**.
+    Como cada ranura cicla por separado, el panel puede mostrar repetidos; sin esta regla `■ ● ★ ■`
+    cumpliría las 4 pistas (`index_of(TRIANGLE) == -1 < 0`).
+  - `static func is_solution(code: Array) -> bool` = `is_permutation(code)` **y** las cuatro restricciones.
 - Escena: `PasswordPuzzle` con 4 `PasswordSlot` (área `interactable`) + 4 pósteres + `PacketDoor`
   + `NetworkNode` ↺ de reinicio. Al resolverse: emite `solved`, sonido de conexión, abre la
   `PacketDoor` y muestra el dato: "Dato: la autenticación comprueba que eres quien dices ser;
@@ -236,13 +241,15 @@ Nuevo `tests/test_world4.gd` registrado en `test_runner.gd` (con el patrón `fin
    `[CIRCLE, TRIANGLE, STAR, SQUARE]`, `[TRIANGLE, CIRCLE, SQUARE, STAR]` y
    `[STAR, TRIANGLE, CIRCLE, SQUARE]`; al recorrer las 24 permutaciones, exactamente 1 es
    `true`; `cycle(TRIANGLE) == CIRCLE`, `cycle(SQUARE) == TRIANGLE` (cierra el ciclo);
-   cada predicado de pista coincide con la pista correspondiente.
+   cada predicado de pista coincide con la pista correspondiente; `is_solution([SQUARE, CIRCLE, STAR, SQUARE]) == false`
+   (repetidos) y, recorriendo las 4⁴ = 256 combinaciones con repetición, exactamente 1 es `true`.
 2. `AirVent.state_at`: 0,0 → active, 1,9 → active, 2,2 → inactive, 2,6 → warning, 3,1 → active.
 3. `AirVent.lift_velocity`: `(0.0, 240) → −240`, `(−330, 240) → −330`, `(100, 240) → −240`.
 4. `DataElevator.top_y`: `(280, 64, 3.2, 0.0) → 280`, `(280, 64, 3.2, 1.6) → 216`,
    `(280, 64, 3.2, 3.2) → 280`; y `304 − 280 = 24` y `216 − 176 = 40` (ambos ≤ 60).
 5. `Trojan`: instanciado con un Byte lejano, al pasar 1,0 s de aviso y disparar, hay 2 Pop-ups
-   nuevos en `spawn_offsets`; al matar el Troyano, el portal deja de generar.
+   nuevos en `spawn_offsets`; al matar el Troyano, el portal deja de generar; `spawn_count(0) == 2`,
+   `spawn_count(3) == 1`, `spawn_count(4) == 0`.
 6. Troyano Real: `phase_for(1.0) == 1`, `phase_for(0.69) == 2`, `phase_for(0.39) == 3`;
    `open_window(1, 0) == 1.5`, `open_window(2, 1) == 2.0`, `open_window(2, 4) == 3.0`,
    `open_window(3, 2) == 2.5`; `true_chest` devuelve solo 0/1/2 para índices 0–20 y cicla de
