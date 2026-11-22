@@ -114,6 +114,15 @@ func _test_queen(tree: SceneTree) -> void:
 		var lanes: Array[int] = script.call(&"interference_lanes", seed_index)
 		check(lanes.size() == 2 and mini(lanes[0], lanes[1]) >= 0 and maxi(lanes[0], lanes[1]) <= 3
 			and absi(lanes[1] - lanes[0]) > 1, "Reina: franjas válidas y separadas para %d" % seed_index)
+	# Ondas justas: Byte de pie ocupa y 290–304 (hurtbox 10×14) y una bala mide 6 px de alto.
+	var lanes_y: Array = script.get(&"WAVE_LANES") if script.get(&"WAVE_LANES") != null else []
+	if lanes_y.size() == 3:
+		check(lanes_y[0] + 3.0 > 290.0, "Reina: el carril bajo alcanza a Byte de pie")
+		check(lanes_y[1] + 3.0 < 290.0 and lanes_y[2] + 3.0 < 290.0, "Reina: los carriles medio y alto no alcanzan a Byte de pie")
+		check(lanes_y[2] + 3.0 < 304.0 - 60.0 - 14.0, "Reina: el carril alto queda sobre el pico del salto")
+	for wave_index: int in range(12):
+		var pair: Array[int] = script.call(&"wave_lanes", wave_index)
+		check(pair.size() == 2 and not (0 in pair and 1 in pair), "Reina: ondas %d nunca usan a la vez los carriles bajo y medio" % wave_index)
 	tree.root.add_child(boss)
 	var player: PacketPlayer = boss.get("player") as PacketPlayer
 	var pool: ProjectilePool = boss.get("pool") as ProjectilePool
@@ -203,8 +212,17 @@ func _test_route_to_queen(tree: SceneTree) -> void:
 	check(puzzle.is_solved and puzzle.door.opened and GameState.puzzle_complete, "siete disparos reales abren la compuerta")
 	if not puzzle.is_solved:
 		return
-	player.position = Vector2(World2Level1.WIDTH, 296)
-	await tree.scene_changed
+	# Byte llega caminando a la salida (en M1 un muro la hacía inalcanzable).
+	player.position = Vector2(World2Level1.WIDTH - 80, 296)
+	player.velocity = Vector2.ZERO
+	Input.action_press(&"move_right")
+	for _frame: int in range(90):
+		await tree.physics_frame
+		if tree.current_scene is WifiQueenBoss:
+			break
+	Input.action_release(&"move_right")
+	if not (tree.current_scene is WifiQueenBoss):
+		await tree.process_frame
 	var queen: WifiQueenBoss = tree.current_scene as WifiQueenBoss
 	check(queen != null and GameState.current_world == 2 and GameState.in_boss, "la compuerta abre la arena de la Reina")
 	if queen == null:

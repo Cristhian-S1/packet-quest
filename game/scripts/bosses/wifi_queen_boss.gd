@@ -13,7 +13,9 @@ const PHASE_THREE: float = 0.4
 const PHASE_NAMES: Array[String] = ["Señal estable", "Itinerancia", "Interferencia"]
 const PHASE_COLORS: Array[Color] = [PQStyle.CYAN, PQStyle.MAGENTA, PQStyle.AMBER]
 const ANTENNAS: Array[Vector2] = [Vector2(160, 112), Vector2(320, 88), Vector2(480, 112)]
-const WAVE_LANES: Array[float] = [280.0, 232.0, 184.0]
+# Byte de pie ocupa y 290–304: el carril bajo obliga a saltar, el medio solo alcanza en el aire
+# y el alto queda sobre el pico del salto (~60 px). Ver wave_lanes().
+const WAVE_LANES: Array[float] = [296.0, 256.0, 216.0]
 const SIGNAL_PATTERN: Array[Attack] = [Attack.WAVES, Attack.PING]
 const ROAMING_PATTERN: Array[Attack] = [Attack.SPIRAL, Attack.TELEPORT, Attack.WAVES, Attack.TELEPORT,
 	Attack.SPIRAL, Attack.TELEPORT, Attack.PING, Attack.TELEPORT]
@@ -37,7 +39,6 @@ var attack: Attack = Attack.WAVES
 
 var _sequence_index: int = 0
 var _wave_index: int = 0
-var _wave_first_lane: int = 0
 var _ping_x: float = 320.0
 var _spiral_sent: int = 0
 var _antenna: int = 1
@@ -54,6 +55,14 @@ static func phase_for(hp_ratio: float) -> int:
 	if hp_ratio <= PHASE_THREE:
 		return 3
 	return 2 if hp_ratio <= PHASE_TWO else 1
+
+# Alterna "salta" (bajo + alto) y "quédate en el suelo" (medio + alto) cada dos oleadas, para que
+# no coincida siempre con el lado de salida. Nunca bajo y medio a la vez: no habría hueco seguro.
+static func wave_lanes(index: int) -> Array[int]:
+	var lanes: Array[int] = [0, 2]
+	if (index >> 1) & 1 == 1:
+		lanes = [1, 2]
+	return lanes
 
 static func interference_lanes(seed_index: int) -> Array[int]:
 	match posmod(seed_index, 3):
@@ -150,7 +159,7 @@ func _begin_attack(next: Attack) -> void:
 	timer = WARNINGS[attack]
 	match attack:
 		Attack.WAVES:
-			_wave_first_lane = _wave_index % WAVE_LANES.size()
+			pass
 		Attack.PING:
 			_ping_x = clampf(player.global_position.x, 68.0, 572.0)
 		Attack.TELEPORT:
@@ -177,7 +186,7 @@ func _fire_attack() -> void:
 
 func _fire_waves() -> void:
 	for index: int in range(2):
-		var y: float = WAVE_LANES[(_wave_first_lane + index) % WAVE_LANES.size()]
+		var y: float = WAVE_LANES[wave_lanes(_wave_index)[index]]
 		if phase == 2 or _wave_index % 2 == 0:
 			_wave_row(y, 1.0)
 		if phase == 2 or _wave_index % 2 == 1:
@@ -323,7 +332,7 @@ func _draw_warning() -> void:
 	match attack:
 		Attack.WAVES:
 			for index: int in range(2):
-				var y: float = WAVE_LANES[(_wave_first_lane + index) % WAVE_LANES.size()]
+				var y: float = WAVE_LANES[wave_lanes(_wave_index)[index]]
 				draw_dashed_line(Vector2(0, y), Vector2(640, y), PQStyle.AMBER, 1, 8.0)
 				if phase == 2 or _wave_index % 2 == 0:
 					_draw_wave_arrow(Vector2(18, y), 1.0)
