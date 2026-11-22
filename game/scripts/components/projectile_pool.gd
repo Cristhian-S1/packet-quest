@@ -1,7 +1,7 @@
 class_name ProjectilePool
 extends Node2D
 
-@export var player_capacity: int = 24
+@export var player_capacity: int = 32
 @export var enemy_capacity: int = 128
 var player_bullets: Array[Projectile] = []
 var enemy_bullets: Array[Projectile] = []

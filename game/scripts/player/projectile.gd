@@ -5,6 +5,10 @@ extends Area2D
 @export var damage: float = 1.0
 @export var rolling_floor_y: float = 300.0
 const MARK_BONUS: float = 1.25
+## Margen de la vista para desactivar balas fuera de pantalla.
+const VIEW_HALF: Vector2 = Vector2(348, 208)
+const VIEW_SIZE: Vector2 = Vector2(696, 416)
+const DEFAULT_CENTER: Vector2 = Vector2(320, 180)
 ## Multiplica el delta de las balas enemigas (mejora Ralentizador).
 static var enemy_time_scale: float = 1.0
 var homing_turn_rad: float = 0.0
@@ -17,6 +21,9 @@ var rolling: bool = false
 var can_hop: bool = false
 var hopped: bool = false
 var horizontal_bounces: int = 0
+## Reutilizados en _physics_process para no asignar memoria por frame.
+var ray: PhysicsRayQueryParameters2D
+var cull_rect: Rect2 = Rect2()
 
 func _ready() -> void:
 	collision_layer = 16 if enemy else 8
@@ -24,9 +31,11 @@ func _ready() -> void:
 	monitoring = false
 	monitorable = false
 	add_child(PQStyle.box_shape(Vector2(8, 6)))
-	var notifier: VisibleOnScreenNotifier2D = VisibleOnScreenNotifier2D.new()
-	notifier.rect = Rect2(-5, -5, 10, 10)
-	add_child(notifier)
+	ray = PhysicsRayQueryParameters2D.new()
+	ray.collision_mask = collision_mask
+	ray.collide_with_areas = not enemy
+	ray.hit_from_inside = true
+	cull_rect.size = VIEW_SIZE
 	deactivate()
 
 func launch(at: Vector2, speed: Vector2, amount: float, gravity_vector: Vector2 = Vector2.ZERO) -> void:
@@ -70,9 +79,8 @@ func _physics_process(delta: float) -> void:
 	if rolling and next.y > rolling_floor_y:
 		next.y = rolling_floor_y
 		velocity.y = 0.0
-	var ray: PhysicsRayQueryParameters2D = PhysicsRayQueryParameters2D.create(global_position, next, collision_mask)
-	ray.collide_with_areas = not enemy
-	ray.hit_from_inside = true
+	ray.from = global_position
+	ray.to = next
 	var hit: Dictionary = get_world_2d().direct_space_state.intersect_ray(ray)
 	if not enemy:
 		hit = _skip_passive_interactables(ray, hit)
@@ -98,8 +106,8 @@ func _physics_process(delta: float) -> void:
 		return
 	global_position = next
 	var camera: Camera2D = get_viewport().get_camera_2d()
-	var center: Vector2 = camera.get_screen_center_position() if camera != null else Vector2(320, 180)
-	if age > 12.0 or not Rect2(center - Vector2(348, 208), Vector2(696, 416)).has_point(global_position):
+	cull_rect.position = (camera.get_screen_center_position() if camera != null else DEFAULT_CENTER) - VIEW_HALF
+	if age > 12.0 or not cull_rect.has_point(global_position):
 		deactivate()
 
 func _skip_passive_interactables(ray: PhysicsRayQueryParameters2D, hit: Dictionary) -> Dictionary:
