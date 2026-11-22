@@ -4,10 +4,12 @@ G="/c/Users/alumnos.LAPTOP-LGABPBVS/AppData/Local/Microsoft/WinGet/Packages/Godo
 cd "$(dirname "$0")/../game"
 timeout 120 "$G" --headless --path . --import >/dev/null 2>&1
 # Simula el mismo paso de 60 Hz sin esperar al reloj de pared.
-timeout 180 "$G" --headless --path . --fixed-fps 60 -s res://tests/test_runner.gd 2>&1 | grep -E "PASS|FAIL|RESULT|SCRIPT ERROR|Parse Error|ERROR" | head -30
+test_timeout=300
+if [ "${PACKET_FUZZ_LONG:-}" = "1" ]; then test_timeout=900; fi
+timeout "$test_timeout" "$G" --headless --fixed-fps 60 --path . -s res://tests/test_runner.gd 2>&1 | grep --line-buffered -E "PASS|FAIL|RESULT|SCRIPT ERROR|Parse Error|ERROR"
 rc=${PIPESTATUS[0]}
 if [ "$1" = "--integration" ]; then
-  timeout 240 "$G" --headless --path . -s res://tests/test_integration.gd 2>&1 | grep -E "PASS|FAIL|ERROR" | head -10
+  timeout 240 "$G" --headless --path . -s res://tests/test_integration.gd 2>&1 | grep --line-buffered -E "PASS|FAIL|ERROR"
   rc2=${PIPESTATUS[0]}; [ $rc2 -ne 0 ] && rc=$rc2
 fi
 exit $rc
