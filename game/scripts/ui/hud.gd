@@ -61,8 +61,8 @@ func _death() -> void:
 	if death_shown:
 		return
 	death_shown = true
-	if is_instance_valid(player) and GameState.current_level == GameState.LEVEL:
-		GameState.boss_progress = clampf(player.global_position.x / 2720, 0, 1)
+	if is_instance_valid(player) and not GameState.in_boss:
+		GameState.boss_progress = clampf(player.global_position.x / player.camera_width, 0, 1)
 	get_tree().paused = true
 	add_child(preload("res://scenes/ui/DeathScreen.tscn").instantiate())
 
