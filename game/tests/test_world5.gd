@@ -12,6 +12,7 @@ func run(tree: SceneTree) -> PackedStringArray:
 	await _test_bot(tree)
 	await _test_qos(tree)
 	await _test_malwarex(tree)
+	await _test_level(tree)
 	finished = true
 	return errors
 
@@ -257,6 +258,164 @@ func _test_credits(tree: SceneTree, boss: Node2D) -> void:
 		check(GameState.current_world == 1 and tree.current_scene is World1Level1
 			and not bool(fresh["finished"]) and int(fresh["data_cores"]) == 0 and fresh["stats"]["deaths"].is_empty()
 			and bool(fresh["settings"]["reduce_flashes"]), "nueva partida vuelve a Red Local con ajustes y progreso nuevo")
+
+func _test_level(tree: SceneTree) -> void:
+	if require_scene(LEVEL) == null:
+		return
+	GameState.data = SaveManager.defaults()
+	GameState.data["unlocked_worlds"].assign([1, 2, 3, 4])
+	GameState.current_world = 4
+	GameState.win()
+	if not GameState.is_world_playable(GameState.data, 5):
+		check(false, "Centro de datos recibe su nivel y su jefe")
+		return
+	GameState.open_map()
+	await tree.scene_changed
+	var map: Node = tree.current_scene
+	var event: InputEventAction = InputEventAction.new()
+	event.action = &"ui_right"
+	event.pressed = true
+	Input.parse_input_event(event)
+	await tree.process_frame
+	event = InputEventAction.new()
+	event.action = &"ui_right"
+	Input.parse_input_event(event)
+	var enter: Button = map.get(&"enter_button") as Button
+	check("Centro de datos" in enter.text, "desde Servidor, el mapa permite elegir Centro de datos")
+	if not "Centro de datos" in enter.text:
+		return
+	enter.pressed.emit()
+	await tree.scene_changed
+	var level: Node2D = tree.current_scene as Node2D
+	check(level != null and level.scene_file_path == LEVEL, "Entrar abre 5-1")
+	if level == null or level.scene_file_path != LEVEL:
+		return
+	var player: PacketPlayer = level.get(&"player") as PacketPlayer
+	player.invulnerability = 90.0
+	var landing: ChipPlatform = level.get_node("VentLanding") as ChipPlatform
+	var height: float = 304.0 - landing.position.y
+	check(height > 60.0 and height <= 152.0, "S1 exige el ventilador para alcanzar su repisa")
+	await _walk_to(tree, player, 168.0)
+	for _frame: int in range(180):
+		await tree.physics_frame
+		if player.is_on_floor() and absf(player.position.y + 7.0 - landing.position.y) < 1.0:
+			break
+	check(player.is_on_floor() and absf(player.position.y + 7.0 - landing.position.y) < 1.0,
+		"Byte alcanza la repisa con la corriente (Byte %s)" % player.position)
+
+	await _walk_to(tree, player, 779.0)
+	await _jump_to(tree, player, 827.0)
+	await _walk_to(tree, player, 1065.0)
+	check(player.position.x >= 1065.0 and player.state != PacketPlayer.State.DEAD,
+		"Byte cruza el foso de cobertura por sus cuatro apoyos (Byte %s)" % player.position)
+	if player.state == PacketPlayer.State.DEAD:
+		return
+	await _walk_to(tree, player, 1587.0)
+	Input.action_press(&"move_right")
+	Input.action_press(&"jump")
+	await _frames(tree, 16)
+	Input.action_press(&"dash")
+	await _frames(tree, 1)
+	Input.action_release(&"dash")
+	await _frames(tree, 40)
+	Input.action_release(&"jump")
+	Input.action_release(&"move_right")
+	check(player.position.x > 1696.0 and "w5_core_a" in GameState.data["collected_cores"],
+		"salto y dash cruzan 96 px y alcanzan el núcleo de S3 (Byte %s)" % player.position)
+	if player.state == PacketPlayer.State.DEAD:
+		return
+	await _walk_to(tree, player, 2629.0)
+	check(GameState.checkpoint == Vector2(2560, 296), "Byte activa el checkpoint de S5")
+	var clouds: Array = level.get(&"clouds")
+	check(clouds.size() == 3, "el foso de S5 tiene tres nubes")
+	if clouds.size() != 3:
+		return
+	var start_cloud: StaticBody2D = clouds[0] as StaticBody2D
+	for _frame: int in range(240):
+		if fposmod(float(start_cloud.get(&"_age")), 4.0) < 0.12:
+			break
+		await tree.physics_frame
+	for cloud: StaticBody2D in clouds:
+		await _jump_to(tree, player, cloud.global_position.x)
+		check(player.is_on_floor() and absf(player.position.x - cloud.global_position.x) < 20.0,
+			"Byte aterriza en la nube de x = %.0f (Byte %s)" % [cloud.global_position.x, player.position])
+		if player.state == PacketPlayer.State.DEAD:
+			return
+	await _jump_to(tree, player, 2938.0)
+	check(player.position.x >= 2920.0 and "w5_core_b" in GameState.data["collected_cores"],
+		"el último apoyo revela el núcleo oculto y deja llegar al otro lado (Byte %s)" % player.position)
+	if player.state == PacketPlayer.State.DEAD:
+		return
+	await _walk_to(tree, player, 3070.0)
+	check(GameState.checkpoint == Vector2(3040, 296), "Byte activa el checkpoint de entrada a QoS")
+	var puzzle: QosRoom = level.get(&"puzzle") as QosRoom
+	for id: StringName in QosPuzzle.PRIORITY:
+		for node: QosNode in puzzle.nodes:
+			if StringName(node.traffic_id) == id:
+				await _walk_to(tree, player, node.global_position.x)
+				Input.action_press(&"interact")
+				await _frames(tree, 2)
+				Input.action_release(&"interact")
+				await _frames(tree, 2)
+				break
+	check(puzzle.is_solved and puzzle.door.opened and puzzle.door.global_position.x == 3600.0,
+		"interactuar abre la compuerta del centro de datos")
+	Input.action_press(&"move_right")
+	for _frame: int in range(210):
+		await tree.physics_frame
+		if tree.current_scene is MalwarexBoss:
+			break
+	Input.action_release(&"move_right")
+	check(tree.current_scene is MalwarexBoss and GameState.in_boss,
+		"caminar desde el último interruptor cruza la salida y entra a Malwarex")
+	var boss: MalwarexBoss = tree.current_scene as MalwarexBoss
+	if boss != null:
+		await _test_combat_route(tree, boss)
+
+func _test_combat_route(tree: SceneTree, boss: MalwarexBoss) -> void:
+	boss.set_physics_process(false)
+	boss._physics_process(1.2)
+	for _phase: int in range(2):
+		boss.body.take_damage(50.0, Vector2.ZERO)
+		boss._physics_process(2.4)
+	var player: PacketPlayer = boss.player
+	player.invulnerability = 16.0
+	for node: NetworkNode in boss.network_nodes:
+		await _walk_to(tree, player, node.position.x)
+		if node.position.y == 240.0:
+			await _jump_to(tree, player, node.position.x)
+			check(player.is_on_floor() and absf(player.position.y + 7.0 - 256.0) < 1.0,
+				"Byte alcanza la plataforma del nodo elevado (Byte %s)" % player.position)
+		Input.action_press(&"interact")
+		await _frames(tree, 2)
+		Input.action_release(&"interact")
+		await _frames(tree, 2)
+		check(node.accent == PQStyle.CYAN, "Byte conecta con E el nodo de x = %.0f" % node.position.x)
+	check(not boss.body.invulnerable, "caminar y saltar permiten retirar los tres escudos")
+
+func _walk_to(tree: SceneTree, player: PacketPlayer, x: float) -> void:
+	var right: bool = player.position.x < x
+	var action: StringName = &"move_right" if right else &"move_left"
+	Input.action_press(action)
+	for _frame: int in range(380):
+		await tree.physics_frame
+		if (player.position.x >= x if right else player.position.x <= x) or player.state == PacketPlayer.State.DEAD:
+			break
+	Input.action_release(action)
+
+func _jump_to(tree: SceneTree, player: PacketPlayer, x: float) -> void:
+	Input.action_press(&"jump")
+	await _walk_to(tree, player, x)
+	for _frame: int in range(40):
+		await tree.physics_frame
+		if player.is_on_floor() or player.state == PacketPlayer.State.DEAD:
+			break
+	Input.action_release(&"jump")
+	await tree.physics_frame
+
+func _frames(tree: SceneTree, count: int) -> void:
+	for _frame: int in range(count):
+		await tree.physics_frame
 
 func require_scene(path: String) -> PackedScene:
 	if not ResourceLoader.exists(path, "PackedScene"):
