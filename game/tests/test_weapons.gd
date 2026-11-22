@@ -10,6 +10,7 @@ func run(tree: SceneTree) -> PackedStringArray:
 	_test_spread_directions()
 	_test_steer_without_target()
 	_test_steer_limits_turn()
+	_test_dead_enemy_leaves_homing(tree)
 	await _test_player(tree)
 	check(player_checked, "prueba del jugador abortada por un error de script")
 	finished = true
@@ -85,6 +86,14 @@ func _test_player(tree: SceneTree) -> void:
 func check(condition: bool, message: String) -> void:
 	if not condition:
 		errors.append(message)
+
+func _test_dead_enemy_leaves_homing(tree: SceneTree) -> void:
+	var enemy: EnemyBase = EnemyBase.new()
+	tree.root.add_child(enemy)
+	check(enemy.is_in_group("homing_target"), "enemigo vivo está en homing_target")
+	enemy._die()
+	check(not enemy.is_in_group("homing_target"), "enemigo muerto sale de homing_target")
+	enemy.queue_free()
 
 func _test_spread_directions() -> void:
 	var dirs: Array[Vector2] = Projectile.spread_directions(Vector2.RIGHT, 3, 12.0)
