@@ -10,6 +10,7 @@ func run(tree: SceneTree) -> PackedStringArray:
 	_test_wave()
 	_test_coverage()
 	await _test_spyware(tree)
+	_test_cable_grid()
 	finished = true
 	return errors
 
@@ -77,6 +78,26 @@ func _test_spyware(tree: SceneTree) -> void:
 		"tras el aviso Spyware salta hacia Byte")
 	stage.queue_free()
 	await tree.process_frame
+
+func _test_cable_grid() -> void:
+	var cable: Script = _require_script("res://scripts/puzzles/cable_grid.gd")
+	if cable == null:
+		return
+	var grid: RefCounted = cable.new() as RefCounted
+	var entry: Vector2i = Vector2i(0, 1)
+	var corner: Vector2i = Vector2i(1, 1)
+	var mask: int = int(grid.call(&"openings", corner))
+	for turn: int in range(4):
+		grid.call(&"rotate_cell", corner)
+	check(int(grid.call(&"openings", corner)) == mask, "cuatro giros restauran las aberturas")
+	check(not bool(grid.call(&"is_solved")), "el cable comienza sin resolver")
+	grid.call(&"rotate_cell", entry)
+	check(grid.call(&"connected_cells") == [entry], "un conector sin abertura enfrentada corta la ruta")
+	var solution: Array[Vector2i] = [corner, corner, Vector2i(1, 0), Vector2i(1, 0), Vector2i(2, 0), Vector2i(3, 0)]
+	for cell: Vector2i in solution:
+		grid.call(&"rotate_cell", cell)
+	check(bool(grid.call(&"is_solved")), "la ruta especificada conecta la antena al router")
+	check(1 + solution.size() <= 10, "la solución se alcanza con diez disparos o menos")
 
 func _require_scene(path: String) -> PackedScene:
 	if not ResourceLoader.exists(path):

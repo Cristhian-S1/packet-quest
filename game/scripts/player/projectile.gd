@@ -19,7 +19,7 @@ var hopped: bool = false
 
 func _ready() -> void:
 	collision_layer = 16 if enemy else 8
-	collision_mask = 131 if enemy else 5
+	collision_mask = 131 if enemy else 37
 	monitoring = false
 	monitorable = false
 	add_child(PQStyle.box_shape(Vector2(8, 6)))
@@ -72,6 +72,8 @@ func _physics_process(delta: float) -> void:
 	ray.collide_with_areas = not enemy
 	ray.hit_from_inside = true
 	var hit: Dictionary = get_world_2d().direct_space_state.intersect_ray(ray)
+	if not enemy:
+		hit = _skip_passive_interactables(ray, hit)
 	if not hit.is_empty():
 		var target: Object = hit["collider"] as Object
 		var amount: float = damage
@@ -90,6 +92,24 @@ func _physics_process(delta: float) -> void:
 	var center: Vector2 = camera.get_screen_center_position() if camera != null else Vector2(320, 180)
 	if age > 12.0 or not Rect2(center - Vector2(348, 208), Vector2(696, 416)).has_point(global_position):
 		deactivate()
+
+func _skip_passive_interactables(ray: PhysicsRayQueryParameters2D, hit: Dictionary) -> Dictionary:
+	if hit.is_empty():
+		return hit
+	var target: Area2D = hit["collider"] as Area2D
+	if target == null or target.collision_layer != 32 or target.has_method(&"receive_projectile"):
+		return hit
+	var excluded: Array[RID] = [target.get_rid()]
+	while true:
+		ray.exclude = excluded
+		hit = get_world_2d().direct_space_state.intersect_ray(ray)
+		if hit.is_empty():
+			return hit
+		target = hit["collider"] as Area2D
+		if target == null or target.collision_layer != 32 or target.has_method(&"receive_projectile"):
+			return hit
+		excluded.append(target.get_rid())
+	return hit
 
 ## Direcciones de un abanico de `count` balas entre -angle_deg y +angle_deg.
 static func spread_directions(aim: Vector2, count: int, angle_deg: float) -> Array[Vector2]:
