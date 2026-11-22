@@ -3,6 +3,7 @@ extends PacketScreen
 signal retry
 const ROUTER_THRESHOLDS: Array[float] = [0.5]
 const WIFI_THRESHOLDS: Array[float] = [0.3, 0.6]
+const MALWAREX_THRESHOLDS: Array[float] = [0.25, 0.5, 0.75]
 
 func _ready() -> void:
 	super._ready()
@@ -18,6 +19,8 @@ func _ready() -> void:
 	panel.add_child(progress)
 	if GameState.in_boss:
 		var thresholds: Array[float] = ROUTER_THRESHOLDS if GameState.current_world == 1 else WIFI_THRESHOLDS
+		if GameState.current_world == 5:
+			thresholds = MALWAREX_THRESHOLDS
 		for threshold: float in thresholds:
 			var marker: ColorRect = ColorRect.new()
 			marker.color = Color.WHITE

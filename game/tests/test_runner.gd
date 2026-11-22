@@ -1,6 +1,6 @@
 extends SceneTree
 
-const TESTS: Array[String] = ["performance", "health_component", "route_puzzle", "boss_phases", "save_manager", "scenes_load", "progression", "weapons", "world2", "world3", "world4", "fuzz"]
+const TESTS: Array[String] = ["components_objects", "state_edges", "save_edge", "player_edges", "performance", "health_component", "route_puzzle", "boss_phases", "save_manager", "scenes_load", "progression", "weapons", "world2", "world3", "world4", "world5", "fuzz"]
 
 # Cuenta los errores del motor y de GDScript mientras corre cada prueba: un error de script
 # dentro de una subfunción solo aborta esa subfunción y la prueba seguía como PASS.
