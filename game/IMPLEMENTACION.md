@@ -49,3 +49,13 @@ Las cinco pruebas obligatorias y la integración han pasado antes de la validaci
 No se certifican pruebas con cinco personas ni rendimiento de GPU en hardware objetivo.
 
 Validación final: import, inicio, cinco pruebas y 300 frames: exit=0, sin errores ni advertencias. Integración adicional: PASS, exit=0. Salidas en validation/*.log. Capturas renderizadas y revisadas con Compatibility.
+
+## Decisiones M8
+
+- **Ciclo de onda.** La tabla de pruebas de la especificación fija un ciclo de 3 s. La onda empuja de 0 a 2 s, queda inactiva de 2 a 2,5 s y avisa de 2,5 a 3 s.
+- **Cobertura y foso.** S4 tiene un segundo router porque queda fuera del alcance de 160 px del router de S2. El foso letal de 2-1 agota la vida de Byte al caer. Los ataques conservan el daño de 1 PV y Red Local conserva su recuperación al caer.
+- **Guardado.** La victoria registra `w<N>_boss`. Para el Router también se conserva `w1_l1`, el identificador que usaban las partidas del Mundo 1. Los mundos desbloqueados sin escenas aparecen en ámbar como PRÓXIMAMENTE.
+- **Reparar cables.** La disposición requiere siete giros para la ruta indicada. Las piezas dejan de interceptar disparos al resolver el tablero y el reinicio las reactiva. El sonido de conexión se sintetiza con tres notas.
+- **Jefe.** Al cruzar cada umbral se cancela el ataque en curso y se limpia el pool enemigo. La recuperación de Itinerancia sigue al teletransporte. El ping se desplaza lo necesario cerca de las paredes para conservar las cinco marcas separadas 32 px.
+- **Interferencia.** El reloj de 4 s es independiente de los proyectiles. El ping y la espiral se alternan al terminar las franjas activas. La espiral puede coincidir con el aviso del ciclo siguiente.
+- **Repetidores.** Los seis segundos de recarga empiezan al cerrarse la cúpula. La victoria devuelve al mapa tras mostrar la tarjeta de segmento restaurado durante 0,8 s.

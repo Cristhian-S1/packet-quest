@@ -32,9 +32,11 @@ enum State { IDLE, RUN, JUMP, FALL, DASH, SHIELD, HURT, DEAD }
 @export var shield_break_duration: float = 2.0
 @export var interact_range: float = 24.0
 @export var camera_width: int = 2720
+@export var fatal_pits: bool = false
 @export var weapon: WeaponData = preload("res://resources/weapons/packet.tres")
 
 var state: State = State.IDLE
+var external_push: Vector2 = Vector2.ZERO
 var health: HealthComponent
 var camera: Camera2D
 var hurtbox: Hurtbox
@@ -176,6 +178,7 @@ func _physics_process(delta: float) -> void:
 	animation_time += delta
 	queue_redraw()
 	if state == State.DEAD:
+		external_push = Vector2.ZERO
 		return
 	cooldown = maxf(0, cooldown - delta)
 	invulnerability = maxf(0, invulnerability - delta)
@@ -237,7 +240,13 @@ func _physics_process(delta: float) -> void:
 		state = State.SHIELD if shield_active else (State.RUN if absf(velocity.x) > 1 else State.IDLE)
 		if not is_on_floor():
 			state = State.JUMP if velocity.y < 0 else State.FALL
+	var push_x: float = external_push.x
+	external_push = Vector2.ZERO
+	velocity.x += push_x
+	var combined_speed: float = velocity.x
 	move_and_slide()
+	if is_equal_approx(velocity.x, combined_speed):
+		velocity.x -= push_x
 	if global_position.y > 388:
 		pit_respawn()
 	if Input.is_action_pressed("shoot") and not shield_active and shoot_wait <= 0 and state != State.DEAD and hurt_left <= 0:
@@ -305,6 +314,9 @@ func take_damage(amount: float, origin: Vector2) -> void:
 	health.damage(amount)
 
 func pit_respawn() -> void:
+	if fatal_pits:
+		health.damage(health.current)
+		return
 	# A pit always costs one HP, including during damage i-frames.
 	health.damage(1)
 	if state == State.DEAD:
@@ -329,15 +341,20 @@ func shoot() -> void:
 
 func interact() -> void:
 	var nearest: Node2D = null
-	var distance: float = interact_range + 0.01
+	var distance: float = INF
 	for candidate: Node in get_tree().get_nodes_in_group("interactable"):
 		var node: Node2D = candidate as Node2D
+		if node == null or not node.has_method(&"interact"):
+			continue
+		var radius: float = interact_range
+		if node.has_method(&"interaction_radius"):
+			radius = float(node.call(&"interaction_radius"))
 		var current_distance: float = global_position.distance_to(node.global_position)
-		if current_distance < distance:
+		if current_distance <= radius and current_distance < distance:
 			nearest = node
 			distance = current_distance
-	if nearest != null and nearest.has_method("interact"):
-		nearest.call("interact")
+	if nearest != null:
+		nearest.call(&"interact")
 
 func _die() -> void:
 	state = State.DEAD

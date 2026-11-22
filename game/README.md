@@ -1,6 +1,6 @@
 # Packet Quest: La Red Rota
 
-Prototipo vertical jugable M0–M6 en **Godot 4.7.2**, con GDScript tipado y renderer Compatibility. Gráficos procedurales, sin recursos externos ni complementos. Resolución lógica 640×360, ventana 1280×720, escala entera y filtro nearest.
+Prototipo vertical jugable M0–M8 en **Godot 4.7.2**, con GDScript tipado y renderer Compatibility. Gráficos procedurales, sin recursos externos ni complementos. Resolución lógica 640×360, ventana 1280×720, escala entera y filtro nearest.
 
 ## Jugar
 
@@ -49,12 +49,12 @@ En el puzle, E gira la flecha del nodo más cercano. El terminal verde **REINICI
 ```text
 game/
   project.godot
-  scenes/       18 escenas mínimas; los hijos se construyen en _ready
+  scenes/       24 escenas; los hijos se construyen en _ready
   scripts/      autoload, components, data, player, enemies, levels,
                 objects, puzzles, bosses, ui, main
   resources/    arma Paquete y dos fases del Router en .tres
   assets/       directorios vacíos; fuente incorporada de Godot
-  tests/        runner obligatorio, cinco pruebas y suite de integración
+  tests/        runner de ocho pruebas, suite de integración y capturas
   validation/   logs y capturas generadas por el propio motor (.gdignore)
   IMPLEMENTACION.md
 ```
@@ -94,12 +94,37 @@ El nivel 1-1 mide **2720 px** (suelo y=304, alineado a la rejilla de 16 px); el 
 
 Se han elegido los tiempos no fijados por el diseño: láser activo 0,45 s; estampida activa 0,84 s, paquetes cada 0,21 s; recuperación base 0,20 s, reducida un 20 % en F2. En F1 el anillo respeta tres segundos entre emisiones dentro de la precisión de un tick físico; F2 mantiene la secuencia A/C/B y sus avisos completos. Al cruzar 50 % durante ACTIVE se termina ese ataque antes de la transición.
 
-El Gusano usa un Area2D raíz con Path2D/PathFollow2D internos. Las siluetas y animaciones se dibujan por código; no hay sprite sheets ni fotogramas de arte final. Audio deliberadamente silencioso, con llamadas seguras ante streams ausentes. El mapa, taller, otras armas/mundos, interfaz de remapeo, menú de accesibilidad y exportaciones pertenecen a hitos posteriores. Las opciones `screen_shake`, `reduce_flashes` y `assist_mode` del guardado ya se respetan.
+El Gusano usa un Area2D raíz con Path2D/PathFollow2D internos. Las siluetas y animaciones se dibujan por código. Las opciones `screen_shake`, `reduce_flashes` y `assist_mode` del guardado ya se respetan.
 
 No se ha hecho el playtest con cinco personas ni se certifican 60 FPS gráficos con 100 balas en hardware objetivo. Las pruebas automáticas y las capturas no sustituyen esa evaluación de dificultad y rendimiento.
 
 ## M7 · Taller de Mejoras y Mapa de la red
 
-- **Menú → Mapa de la red:** seis segmentos; de momento solo se puede entrar en el Mundo 1 (Red Local).
+- **Menú → Mapa de la red** muestra los seis segmentos y el progreso de la partida.
 - **Taller:** gasta núcleos de datos en 7 mejoras (`resources/upgrades/*.tres`). Las armas (Ráfaga triple, Ping) se equipan en 2 ranuras; las pasivas (Firewall reforzado, Marcador, Ralentizador) en 1 ranura; Más vida y Dash extendido son permanentes.
 - La lógica está en `scripts/progression/progression.gd` (pura, probada en `tests/test_progression.gd`) y los datos en `scripts/data/catalog.gd`.
+
+## M8 · Mundo 2 Wi-Fi
+
+Vence al Router Furioso y recoge su núcleo para desbloquear Wi-Fi. En el mapa, usa **← / →** con el foco en **Entrar** para elegir un mundo disponible. Usa **↓** para pasar a Taller y Menú.
+
+- **Zona de cobertura (2-1).** Las ondas empujan a Byte. Salta entre plataformas sin salir del alcance del router y busca los dos núcleos de datos. El foso es letal y el recorrido tiene dos puntos de restauración.
+- **Spyware.** Se camufla como núcleo, se revela cuando te acercas y avisa antes de saltar. Puedes dispararle desde que se revela.
+- **Reparar cables.** Dispara a las piezas para girarlas. Ponte debajo de una pieza y salta para acertar en las filas superiores. Interactúa con **↻ Reiniciar** para restaurar la disposición original.
+- **Reina Wi-Fi.** Tiene 90 PV y tres fases. Acércate a un repetidor y pulsa **E** (o **Y / Triángulo**) para activar una cúpula durante tres segundos. Al vencer a la Reina, el mapa muestra Firewall como desbloqueado y **PRÓXIMAMENTE**.
+
+Desde la raíz del repositorio, ejecuta la suite completa y las pruebas de 300 frames:
+
+```powershell
+bash tools/run-tests.sh --integration
+& $godot --headless --path game --fixed-fps 60 --quit-after 300 res://scenes/levels/World2Level1.tscn
+& $godot --headless --path game --fixed-fps 60 --quit-after 300 res://scenes/bosses/WifiQueenBoss.tscn
+```
+
+Regenera ambas capturas con el renderer Compatibility:
+
+```powershell
+& $godot --path game -s res://tests/capture_preview.gd -- --m8
+```
+
+[Zona de cobertura](../docs/capturas/level2.png) · [Reina Wi-Fi](../docs/capturas/boss2.png)

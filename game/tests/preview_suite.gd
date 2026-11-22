@@ -2,10 +2,10 @@ extends RefCounted
 
 var tree: SceneTree
 
-func snap(file: String) -> void:
+func snap(file: String, directory: String = "res://validation") -> Error:
 	await tree.process_frame
 	await RenderingServer.frame_post_draw
-	tree.root.get_texture().get_image().save_png("res://validation/" + file + ".png")
+	return tree.root.get_texture().get_image().save_png(directory.path_join(file + ".png"))
 
 func capture(scene_tree: SceneTree) -> void:
 	tree = scene_tree
@@ -36,3 +36,37 @@ func capture(scene_tree: SceneTree) -> void:
 	boss.queue_free()
 	await tree.process_frame
 	tree.quit()
+
+func capture_m8(scene_tree: SceneTree) -> void:
+	tree = scene_tree
+	var state: Node = tree.root.get_node("GameState")
+	var manager: Node = tree.root.get_node("SaveManager")
+	manager.set("save_path", "res://validation/preview_m8_session.json")
+	state.set("data", manager.call("defaults"))
+	state.set("checkpoint", Vector2(899, 241))
+	var directory: String = ProjectSettings.globalize_path("res://../docs/capturas").simplify_path()
+	var world: World2Level1 = preload("res://scenes/levels/World2Level1.tscn").instantiate() as World2Level1
+	tree.root.add_child(world)
+	var level_result: Error = await snap("level2", directory)
+	world.queue_free()
+	await tree.process_frame
+
+	var queen: WifiQueenBoss = preload("res://scenes/bosses/WifiQueenBoss.tscn").instantiate() as WifiQueenBoss
+	tree.root.add_child(queen)
+	queen.set_physics_process(false)
+	queen.player.set_physics_process(false)
+	queen._physics_process(1.2)
+	queen.take_damage(27.0, Vector2.ZERO)
+	queen._physics_process(2.4)
+	queen.take_damage(27.0, Vector2.ZERO)
+	queen._physics_process(2.4)
+	queen.player.position = Vector2(96, 296)
+	queen.player.interact()
+	queen._physics_process(0.55)
+	var boss_result: Error = await snap("boss2", directory)
+	if level_result != OK or boss_result != OK:
+		push_error("Error al guardar las capturas M8 (%d, %d)" % [level_result, boss_result])
+		tree.quit(1)
+	else:
+		print("CAPTURAS M8: level2.png y boss2.png")
+		tree.quit()

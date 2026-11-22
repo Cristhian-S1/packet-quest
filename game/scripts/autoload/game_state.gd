@@ -1,12 +1,18 @@
 extends Node
 
-const LEVEL: String = "res://scenes/levels/World1Level1.tscn"
-const BOSS: String = "res://scenes/bosses/RouterBoss.tscn"
+const WORLDS: Array[Dictionary] = [
+	{"level": "res://scenes/levels/World1Level1.tscn", "boss": "res://scenes/bosses/RouterBoss.tscn"},
+	{"level": "res://scenes/levels/World2Level1.tscn", "boss": "res://scenes/bosses/WifiQueenBoss.tscn"},
+]
 const MAP: String = "res://scenes/main/NetworkMap.tscn"
 const WORKSHOP: String = "res://scenes/ui/Workshop.tscn"
 var data: Dictionary = {}
 var checkpoint: Vector2 = Vector2(48, 296)
-var current_level: String = LEVEL
+var current_world: int = 1
+var in_boss: bool = false
+var current_level: String:
+	get:
+		return String(WORLDS[current_world - 1]["boss" if in_boss else "level"])
 var boss_progress: float = 0.0
 var puzzle_complete: bool = false
 var playing: bool = false
@@ -23,13 +29,24 @@ func _process(delta: float) -> void:
 	if playing and not data.is_empty():
 		data["stats"]["play_time_s"] = float(data["stats"]["play_time_s"]) + delta
 
-func start_run() -> void:
+static func is_world_unlocked(progress: Dictionary, world: int) -> bool:
+	var unlocked: Array = progress.get("unlocked_worlds", [])
+	# JSON carga los mundos como números de punto flotante.
+	return world in unlocked or float(world) in unlocked
+
+static func is_world_playable(progress: Dictionary, world: int) -> bool:
+	return world >= 1 and world <= WORLDS.size() and is_world_unlocked(progress, world)
+
+func start_run(world: int = 1) -> void:
+	if not is_world_playable(data, world):
+		return
+	current_world = world
+	in_boss = false
 	checkpoint = Vector2(48, 296)
-	current_level = LEVEL
 	puzzle_complete = false
 	boss_progress = 0.0
 	playing = true
-	change_scene(LEVEL)
+	change_scene(current_level)
 
 func retry() -> void:
 	playing = true
@@ -37,10 +54,10 @@ func retry() -> void:
 	change_scene(current_level)
 
 func enter_boss() -> void:
-	current_level = BOSS
+	in_boss = true
 	checkpoint = Vector2(64, 296)
 	Events.checkpoint_reached.emit(checkpoint)
-	change_scene(BOSS)
+	change_scene(current_level)
 
 func change_scene(path: String) -> void:
 	get_tree().paused = false
@@ -66,11 +83,15 @@ func record_death() -> void:
 func win() -> void:
 	playing = false
 	var completed: Array = data["completed_levels"]
-	if "w1_l1" not in completed:
+	# Conserva el identificador que ya registraba la victoria del Router.
+	if current_world == 1 and "w1_l1" not in completed:
 		completed.append("w1_l1")
-	var worlds: Array = data["unlocked_worlds"]
-	if 2 not in worlds:
-		worlds.append(2)
+	var boss_id: String = "w%d_boss" % current_world
+	if boss_id not in completed:
+		completed.append(boss_id)
+	var next_world: int = current_world + 1
+	if not is_world_unlocked(data, next_world):
+		data["unlocked_worlds"].append(next_world)
 	save_error = SaveManager.save_game(data)
 
 func save() -> Error:

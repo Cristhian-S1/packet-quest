@@ -1,6 +1,8 @@
 class_name StageBuilder
 extends RefCounted
 
+const BOSS_TRANSITION_TIME: float = 2.4
+
 static func background(parent: Node) -> void:
 	var layer: CanvasLayer = CanvasLayer.new()
 	layer.layer = -10
@@ -25,3 +27,20 @@ static func player(parent: Node, pos: Vector2, width: int = 2720) -> PacketPlaye
 
 static func hud(parent: Node) -> void:
 	parent.add_child(preload("res://scenes/ui/HUD.tscn").instantiate())
+
+static func boss_card(parent: Node, boss_name: String, opening: String, title_center: Vector2 = Vector2(320, 52)) -> Label:
+	var layer: CanvasLayer = CanvasLayer.new()
+	layer.layer = 12
+	parent.add_child(layer)
+	var heading: Label = PQStyle.label_at(layer, boss_name, title_center - Vector2(80, 0), 13, PQStyle.MAGENTA)
+	heading.size.x = 160
+	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var card: Label = PQStyle.label_at(layer, opening, Vector2(128, 104), 24, PQStyle.CYAN)
+	card.size = Vector2(384, 72)
+	card.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	return card
+
+static func show_boss_phase(card: Label, phase_number: int, phase_name: String, color: Color) -> void:
+	card.text = "FASE %02d\n%s" % [phase_number, phase_name.to_upper()]
+	card.modulate = color
+	card.show()
