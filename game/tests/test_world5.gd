@@ -10,6 +10,7 @@ func run(tree: SceneTree) -> PackedStringArray:
 	_test_progress()
 	await _test_cloud(tree)
 	await _test_bot(tree)
+	await _test_qos(tree)
 	finished = true
 	return errors
 
@@ -99,6 +100,51 @@ func _test_bot(tree: SceneTree) -> void:
 	bot.fire()
 	check(not pool.enemy_bullets[0].active, "el Bot DDoS no dispara fuera de pantalla")
 	stage.queue_free()
+	await tree.process_frame
+
+func _test_qos(tree: SceneTree) -> void:
+	var logic: Script = require_script("res://scripts/puzzles/qos_puzzle.gd")
+	var scene: PackedScene = require_scene("res://scenes/puzzles/QoSPuzzle.tscn")
+	if logic == null or scene == null:
+		return
+	var correct: Array[StringName] = [&"voz", &"video", &"correo", &"descarga"]
+	var wrong: Array[StringName] = [&"video", &"voz", &"correo", &"descarga"]
+	var empty: Array[StringName] = []
+	var partial: Array[StringName] = [&"voz", &"video"]
+	check(not bool(logic.call(&"is_correct_order", empty))
+		and bool(logic.call(&"is_correct_order", correct))
+		and not bool(logic.call(&"is_correct_order", wrong)), "QoS exige las cuatro prioridades en orden")
+	for index: int in range(correct.size()):
+		check(int(logic.call(&"urgency", correct[index])) == 4 - index, "urgencia de %s" % correct[index])
+	check(logic.call(&"next_expected", partial) == &"correo", "la pista espera el correo después del vídeo")
+
+	GameState.puzzle_complete = false
+	GameState.current_world = 5
+	var puzzle: Node2D = scene.instantiate() as Node2D
+	tree.root.add_child(puzzle)
+	var nodes: Dictionary[StringName, Area2D] = {}
+	for node: Area2D in puzzle.get(&"nodes"):
+		nodes[StringName(node.get(&"traffic_id"))] = node
+	check(nodes.size() == 4, "la sala tiene cuatro interruptores QoS")
+	if nodes.size() == 4:
+		var door: PacketDoor = puzzle.get(&"door") as PacketDoor
+		var reset: NetworkNode = puzzle.get(&"reset_node") as NetworkNode
+		var solved: Array[bool] = []
+		puzzle.connect(&"solved", func() -> void: solved.append(true))
+		for id: StringName in wrong:
+			nodes[id].call(&"interact")
+		check(Array(puzzle.get(&"activated")).is_empty() and not door.opened and solved.is_empty(),
+			"la secuencia incorrecta derriba los puentes y permite reintentar")
+		nodes[&"voz"].call(&"interact")
+		nodes[&"voz"].call(&"interact")
+		check(Array(puzzle.get(&"activated")).size() == 1, "cada interruptor cuenta una vez")
+		reset.interact()
+		check(Array(puzzle.get(&"activated")).is_empty(), "el nodo de reinicio vacía la secuencia")
+		for id: StringName in correct:
+			nodes[id].call(&"interact")
+		check(door.opened and GameState.puzzle_complete and solved.size() == 1
+			and AudioManager.last_sfx == &"cable_connected", "QoS abre la puerta y emite la conexión")
+	puzzle.queue_free()
 	await tree.process_frame
 
 func require_scene(path: String) -> PackedScene:
