@@ -1,6 +1,6 @@
 # Packet Quest: La Red Rota
 
-Prototipo vertical jugable M0–M10 en **Godot 4.7.2**, con GDScript tipado y renderer Compatibility. Gráficos procedurales, sin recursos externos ni complementos. Resolución lógica 640×360, ventana 1280×720, escala entera y filtro nearest.
+Juego de cinco mundos (M0–M11) en **Godot 4.7.2**, con GDScript tipado y renderer Compatibility. Gráficos procedurales, sin recursos externos ni complementos. Resolución lógica 640×360, ventana 1280×720, escala entera y filtro nearest.
 
 ## Jugar
 
@@ -49,12 +49,12 @@ En el puzle, E gira la flecha del nodo más cercano. El terminal verde **REINICI
 ```text
 game/
   project.godot
-  scenes/       34 escenas con hijos construidos en _ready
+  scenes/       40 escenas con hijos construidos en _ready
   scripts/      autoload, components, data, player, enemies, levels,
                 objects, puzzles, bosses, ui, main
   resources/    arma Paquete y dos fases del Router en .tres
   assets/       directorios vacíos; fuente incorporada de Godot
-  tests/        runner de once pruebas, suite de integración y capturas
+  tests/        runner de doce pruebas, suite de integración y capturas
   validation/   logs y capturas generadas por el propio motor (.gdignore)
   IMPLEMENTACION.md
 ```
@@ -100,7 +100,7 @@ No se ha hecho el playtest con cinco personas ni se certifican 60 FPS gráficos 
 
 ## M7 · Taller de Mejoras y Mapa de la red
 
-- **Menú → Mapa de la red** muestra los cinco segmentos y el progreso de la partida.
+- **Menú → Mapa de la red** muestra Red Local, Wi-Fi, Firewall, Servidor y Centro de datos. Cada victoria desbloquea el mundo siguiente hasta llegar al centro de datos.
 - **Taller:** gasta núcleos de datos en 7 mejoras (`resources/upgrades/*.tres`). Las armas (Ráfaga triple, Ping) se equipan en 2 ranuras; las pasivas (Firewall reforzado, Marcador, Ralentizador) en 1 ranura; Más vida y Dash extendido son permanentes.
 - La lógica está en `scripts/progression/progression.gd` (pura, probada en `tests/test_progression.gd`) y los datos en `scripts/data/catalog.gd`.
 
@@ -153,7 +153,7 @@ Vence al Firewall Corrupto, selecciona **Servidor** con **← / →** en el mapa
 - **Sala de servidores (4-1).** Las corrientes de aire elevan a Byte. Salta a los ascensores cuando bajen y espera a que suban para alcanzar los racks. Cruza el foso con salto y dash. Hay dos núcleos de datos y dos puntos de restauración.
 - **Troyano.** Sus portales generan Pop-ups mientras siga vivo. Acaba primero con el Troyano para cerrar el portal.
 - **Contraseñas lógicas.** Busca los cuatro pósteres y pulsa **E** (o **Y / Triángulo**) en cada ranura para cambiar su símbolo. Usa cada símbolo una vez. Cuando se abra la compuerta, sigue caminando hacia la derecha.
-- **Troyano Real.** Tiene 150 PV y tres fases. Dispara cuando el cofre esté abierto. En la segunda fase, elimina a los Pop-ups para extender la apertura. En la tercera, el destello cian identifica al cofre real al inicio del ciclo. La victoria desbloquea **Centro de datos**, marcado **PRÓXIMAMENTE** en el mapa.
+- **Troyano Real.** Tiene 150 PV y tres fases. Dispara cuando el cofre esté abierto. En la segunda fase, elimina a los Pop-ups para extender la apertura. En la tercera, el destello cian identifica al cofre real al inicio del ciclo. La victoria desbloquea **Centro de datos** en el mapa.
 
 ```powershell
 bash tools/run-tests.sh --integration
@@ -163,3 +163,22 @@ bash tools/run-tests.sh --integration
 ```
 
 [Sala de servidores](../docs/capturas/level4.png) · [Troyano Real](../docs/capturas/boss4.png)
+
+## M11 · Mundo 5 Centro de datos
+
+Vence al Troyano Real, selecciona **Centro de datos** en el mapa y pulsa **Entrar**.
+
+- **Centro de datos (5-1).** Usa las corrientes de aire para alcanzar la repisa alta. Cruza los apoyos de cobertura cerca del router, combina salto y dash entre los puertos y espera a que las nubes vuelvan a solidificarse. Busca un núcleo tras el hueco de los puertos y el otro sobre la última nube.
+- **Bot DDoS.** Cuando su carcasa se ilumina en ámbar, aléjate del abanico que apunta a Byte.
+- **Prioridad de tráfico.** Pulsa **E** (o **Y / Triángulo**) en los interruptores de mayor a menor urgencia. Puedes usar **↺** para reiniciar. Cuando se abra la compuerta, camina hacia el extremo derecho.
+- **Malwarex.** Tiene 200 PV y cambia de fase al 75 %, 50 % y 25 %. Esquiva por los huecos de los cables y de la regla. En la tercera fase, conecta tres nodos para quitar los escudos. En la última, el suelo seguro queda a la izquierda.
+- **Final.** La victoria abre el epílogo y los créditos con el saldo de núcleos, las muertes y el tiempo de partida. **Nueva partida** inicia Red Local con los ajustes actuales.
+
+~~~powershell
+bash tools/run-tests.sh --integration
+& $godot --headless --path game --fixed-fps 60 --quit-after 300 res://scenes/levels/World5Level1.tscn
+& $godot --headless --path game --fixed-fps 60 --quit-after 300 res://scenes/bosses/MalwarexBoss.tscn
+& $godot --path game -s res://tests/capture_preview.gd -- --m11
+~~~
+
+[Centro de datos](../docs/capturas/level5.png) · [Malwarex](../docs/capturas/boss5.png) · [Créditos](../docs/capturas/credits.png)

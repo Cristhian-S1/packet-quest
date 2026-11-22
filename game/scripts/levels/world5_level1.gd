@@ -135,7 +135,7 @@ func _spawn_enemies() -> void:
 func _signs() -> void:
 	_sign("05-1  /  CENTRO DE DATOS", Vector2(38, 87), 22, PQStyle.CYAN)
 	_sign("Ondas y corrientes de aire", Vector2(40, 121), 14, PQStyle.AMBER)
-	_sign("Mantente cerca del router", Vector2(610, 111), 16, PQStyle.CYAN)
+	_sign("Mantente cerca del router", Vector2(650, 111), 16, PQStyle.CYAN)
 	_sign("Los puertos se abren y se cierran", Vector2(1284, 111), 15, PQStyle.AMBER)
 	_sign("Salto + dash →", Vector2(1470, 233), 13, PQStyle.AMBER)
 	_sign("Las nubes parpadean antes de caer", Vector2(2578, 115), 14, PQStyle.CYAN)

@@ -2,6 +2,7 @@ class_name CreditsScreen
 extends PacketScreen
 
 const TOTAL_DATA_CORES: int = 10
+const SECONDARY_TEXT: Color = Color("9db4cd")
 
 var _save_status: Label
 
@@ -21,16 +22,16 @@ func _ready() -> void:
 		total_deaths += int(count)
 	_centered("PACKET QUEST  /  LA RED ROTA", 0, 38, 640, 11, PQStyle.CYAN)
 	title("INTERNET RESTAURADA", PQStyle.GREEN)
-	subtitle("Byte detuvo a Malwarex en el centro de datos.
-De la red local al último servidor, los paquetes vuelven a llegar.", 119)
-	_divider(159)
-	_centered("ESTADÍSTICAS", 0, 171, 640, 11, PQStyle.EDGE)
+	_centered("Byte detuvo a Malwarex en el centro de datos.\nDe la red local al último servidor, los paquetes vuelven a llegar.",
+		0, 119, 640, 13, SECONDARY_TEXT)
+	_divider(163)
+	_centered("ESTADÍSTICAS", 0, 171, 640, 11, SECONDARY_TEXT)
 	_centered("Núcleos de datos: %d/%d" % [int(GameState.data.get("data_cores", 0)), TOTAL_DATA_CORES],
 		60, 191, 188, 14, PQStyle.AMBER)
 	_centered("Muertes: %d" % total_deaths, 250, 191, 140, 14, Color.WHITE)
 	_centered("Tiempo: %s" % format_time(float(stats.get("play_time_s", 0.0))), 392, 191, 188, 14, Color.WHITE)
 	_divider(222)
-	_centered("CRÉDITOS", 0, 232, 640, 11, PQStyle.EDGE)
+	_centered("CRÉDITOS", 0, 232, 640, 11, SECONDARY_TEXT)
 	_centered("Diseño, programación y arte procedural · Equipo de Packet Quest", 0, 250, 640, 12, Color.WHITE)
 	PQStyle.button(panel, "Menú principal", Vector2(128, 280), GameState.menu, 180).grab_focus()
 	PQStyle.button(panel, "Nueva partida", Vector2(332, 280), _new_game, 180)

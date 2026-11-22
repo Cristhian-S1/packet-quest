@@ -140,3 +140,45 @@ func capture_m10(scene_tree: SceneTree) -> void:
 	else:
 		print("CAPTURAS M10: level4.png y boss4.png")
 		tree.quit()
+
+func capture_m11(scene_tree: SceneTree) -> void:
+	tree = scene_tree
+	SaveManager.save_path = "res://.godot/preview_m11_session.json"
+	GameState.data = SaveManager.defaults()
+	GameState.checkpoint = Vector2(168, 296)
+	var directory: String = ProjectSettings.globalize_path("res://../docs/capturas").simplify_path()
+	var stage: World5Level1 = preload("res://scenes/levels/World5Level1.tscn").instantiate() as World5Level1
+	tree.root.add_child(stage)
+	await tree.create_timer(0.65).timeout
+	var level_result: Error = await snap("level5", directory)
+	stage.queue_free()
+	await tree.process_frame
+
+	var boss: MalwarexBoss = preload("res://scenes/bosses/MalwarexBoss.tscn").instantiate() as MalwarexBoss
+	tree.root.add_child(boss)
+	boss.set_physics_process(false)
+	boss.player.set_physics_process(false)
+	boss.player.position = Vector2(285, 249)
+	boss.player.reset_physics_interpolation()
+	boss._physics_process(1.2)
+	for _phase: int in range(2):
+		boss.body.take_damage(50.0, Vector2.ZERO)
+		boss._physics_process(StageBuilder.BOSS_TRANSITION_TIME)
+	boss.network_nodes[0].interact()
+	boss._physics_process(0.7)
+	await tree.create_timer(1.15).timeout
+	var boss_result: Error = await snap("boss5", directory)
+	boss.queue_free()
+	await tree.process_frame
+
+	GameState.data["data_cores"] = 8
+	GameState.data["stats"] = {"deaths": {"nivel_5_1": 2, "malwarex": 3}, "play_time_s": 1273.0}
+	var credits: CreditsScreen = preload("res://scenes/ui/CreditsScreen.tscn").instantiate() as CreditsScreen
+	tree.root.add_child(credits)
+	var credits_result: Error = await snap("credits", directory)
+	if level_result != OK or boss_result != OK or credits_result != OK:
+		push_error("Error al guardar las capturas M11 (%d, %d, %d)" % [level_result, boss_result, credits_result])
+		tree.quit(1)
+	else:
+		print("CAPTURAS M11: level5.png, boss5.png y credits.png")
+		tree.quit()
