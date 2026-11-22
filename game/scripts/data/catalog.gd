@@ -32,4 +32,4 @@ static func upgrade(id: StringName) -> UpgradeData:
 	return null
 
 static func upgrades() -> Array[UpgradeData]:
-	return UPGRADES
+	return UPGRADES.duplicate()
