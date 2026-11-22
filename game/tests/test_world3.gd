@@ -219,10 +219,25 @@ func _test_boss(tree: SceneTree) -> void:
 	for _frame: int in range(12):
 		await tree.physics_frame
 	check(health.current == 120.0, "el mundo absorbe las balas fuera del puerto")
-	pool.fire(false, Vector2(450, 176), Vector2.RIGHT * 480.0)
-	for _frame: int in range(12):
+	player.position = Vector2(322, 249)
+	player.set_physics_process(true)
+	for _frame: int in range(3):
 		await tree.physics_frame
-	check(health.current == 119.0, "la bala del pool atraviesa el puerto abierto y alcanza el núcleo")
+	Input.action_press(&"jump")
+	for _frame: int in range(30):
+		await tree.physics_frame
+		if player.position.y <= 194.0:
+			break
+	Input.action_press(&"shoot")
+	await tree.physics_frame
+	await tree.physics_frame
+	Input.action_release(&"shoot")
+	Input.action_release(&"jump")
+	for _frame: int in range(30):
+		await tree.physics_frame
+	check(health.current == 119.0, "Byte salta desde el chip y su disparo horizontal acierta por el puerto central")
+	player.set_physics_process(false)
+	player.position = Vector2(64, 296)
 
 	var shot: Projectile = pool.fire(true, Vector2(340, 140), Vector2.LEFT * 100)
 	core.take_damage(35.0, Vector2.ZERO)
@@ -315,6 +330,7 @@ func _test_level_route(tree: SceneTree) -> void:
 	Input.action_release(&"jump")
 	Input.action_release(&"move_right")
 	check(player.position.x > pit_right and player.is_on_floor(), "Byte cruza el foso con salto y dash (posición %s)" % player.position)
+	await _cross_rule_lanes(tree, stage, player)
 
 	player.position = Vector2(2380, 296)
 	player.velocity = Vector2.ZERO
@@ -373,6 +389,33 @@ func _test_level_route(tree: SceneTree) -> void:
 	check("w3_boss" in data["completed_levels"] and "w3_firewall_boss" in data["collected_cores"]
 		and GameState.is_world_unlocked(data, 4) and not GameState.is_world_playable(data, 4),
 		"la victoria se guarda y desbloquea Servidor como próximo destino")
+
+func _cross_rule_lanes(tree: SceneTree, stage: Node2D, player: PacketPlayer) -> void:
+	var bar: RuleBar
+	for child: Node in stage.get_children():
+		if child is RuleBar:
+			bar = child as RuleBar
+		elif child is EnemyBase:
+			child.set_physics_process(false)
+	if bar == null:
+		errors.append("falta la barra de S4")
+		return
+	for lane: int in range(RuleBar.LANES_Y.size()):
+		bar.set(&"_age", lane * RuleBar.LANE_TIME + 0.05)
+		player.position = Vector2(bar.position.x - 43.0, 296.0 if lane == 0 else 249.0)
+		player.velocity = Vector2.ZERO
+		for _frame: int in range(4):
+			await tree.physics_frame
+		var hp: float = player.health.current
+		Input.action_press(&"move_right")
+		if lane == 2:
+			Input.action_press(&"jump")
+		for _frame: int in range(34):
+			await tree.physics_frame
+		Input.action_release(&"jump")
+		Input.action_release(&"move_right")
+		check(player.position.x > bar.position.x + 13 and player.health.current == hp,
+			"Byte cruza a salvo el carril %d de S4 (posición %s)" % [lane, player.position])
 
 func _walk_to(tree: SceneTree, player: PacketPlayer, x: float) -> void:
 	if absf(x - player.position.x) <= 5.0:

@@ -10,7 +10,7 @@ const COLOR_NAMES: Array[String] = ["ROJO", "VERDE", "AZUL"]
 const SHAPE_NAMES: Array[String] = ["CÍRCULO", "TRIÁNGULO", "CUADRADO"]
 const FACT: String = "Dato: un firewall deja pasar o bloquea cada paquete según sus reglas."
 
-@export var seed: int = 0
+@export var sequence_seed: int = 0
 
 var pass_node: NetworkNode
 var block_node: NetworkNode
@@ -31,7 +31,7 @@ var _reduce_flashes: bool = false
 var _player: PacketPlayer
 
 func _ready() -> void:
-	_packets = FirewallFilter.generate_sequence(seed)
+	_packets = FirewallFilter.generate_sequence(sequence_seed)
 	_player = get_tree().get_first_node_in_group(&"player") as PacketPlayer
 	_reduce_flashes = bool(GameState.data.get("settings", {}).get("reduce_flashes", false))
 	reset_node = _create_node(64.0, "↺ REINICIAR", PQStyle.AMBER, reset_puzzle)

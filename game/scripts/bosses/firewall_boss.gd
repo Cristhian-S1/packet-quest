@@ -15,6 +15,7 @@ const PORT_COLORS: Array[Color] = [PQStyle.RED, PQStyle.GREEN, PQStyle.BLUE]
 const FLOOR: float = 304.0
 const CENTER_PORT: float = 176.0
 const PORT_SIZE: float = 48.0
+const PORT_NAMES: Array[String] = ["ALTO", "MEDIO", "BAJO"]
 const PORT_TIME: float = 1.2
 const PORT_CYCLE: float = 2.8
 const PORT_WARNING: float = 0.4
@@ -322,8 +323,7 @@ func _draw_health() -> void:
 
 func _draw_ports() -> void:
 	var front: float = _wall.position.x
-	var port_names: Array[String] = ["ALTO", "MEDIO", "BAJO"]
-	for index: int in range(port_names.size()):
+	for index: int in range(PORT_NAMES.size()):
 		var y: float = CENTER_PORT if phase != 2 and index == 0 else RuleBar.LANES_Y[2 - index]
 		var active: bool = y == _port_y
 		var tint: Color = PORT_COLORS[index] if phase == 2 else PQStyle.AMBER
@@ -331,12 +331,13 @@ func _draw_ports() -> void:
 			tint = Color(tint, 0.42)
 		if index == 0 and _port_warning and (_reduce_flashes or int(_phase_age * 18.0) % 2 == 0):
 			tint = Color.WHITE
-		var mouth: Rect2 = Rect2(front, y - PORT_SIZE / 2.0, WALL_DEPTH, minf(PORT_SIZE, FLOOR - y + PORT_SIZE / 2.0))
+		var height: float = minf(PORT_SIZE, FLOOR - y + PORT_SIZE / 2.0)
+		var mouth: Rect2 = Rect2(front + CORE_DEPTH - PORT_SIZE / 2.0, y - PORT_SIZE / 2.0, PORT_SIZE, height)
 		if active:
-			draw_rect(mouth, Color(PQStyle.NIGHT, 0.75))
+			draw_rect(Rect2(front, mouth.position.y, WALL_DEPTH, height), Color(PQStyle.NIGHT, 0.75))
 			_draw_core(Vector2(front + CORE_DEPTH, y), tint)
 		draw_rect(mouth, tint, false, 1.0)
-		var port_name: String = "CENTRAL" if phase != 2 and index == 0 else port_names[index]
+		var port_name: String = "CENTRAL" if phase != 2 and index == 0 else PORT_NAMES[index]
 		draw_string(ThemeDB.fallback_font, Vector2(front + 73, y + 4), port_name, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, tint)
 	draw_rect(Rect2(front + 80, 86, 62, 40), PQStyle.NIGHT)
 	draw_rect(Rect2(front + 80, 86, 62, 40), PQStyle.RED, false)

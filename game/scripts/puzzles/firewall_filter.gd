@@ -14,13 +14,13 @@ const DEMO: Array[Vector2i] = [
 static func is_allowed(shape: int, color: int, allowed_shape: int, blocked_color: int) -> bool:
 	return shape == allowed_shape and color != blocked_color
 
-static func generate_sequence(seed: int) -> Array[Dictionary]:
+static func generate_sequence(sequence_seed: int) -> Array[Dictionary]:
 	var sequence: Array[Dictionary] = []
 	for packet: Vector2i in DEMO:
 		sequence.append({"shape": packet.x, "color": packet.y})
-	if seed != 0:
+	if sequence_seed != 0:
 		var rng: RandomNumberGenerator = RandomNumberGenerator.new()
-		rng.seed = seed
+		rng.seed = sequence_seed
 		for index: int in range(sequence.size() - 1, 0, -1):
 			var swap: int = rng.randi_range(0, index)
 			var packet: Dictionary = sequence[index]
