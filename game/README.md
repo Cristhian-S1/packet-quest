@@ -100,7 +100,7 @@ No se ha hecho el playtest con cinco personas ni se certifican 60 FPS gráficos 
 
 ## M7 · Taller de Mejoras y Mapa de la red
 
-- **Menú → Mapa de la red** muestra los seis segmentos y el progreso de la partida.
+- **Menú → Mapa de la red** muestra los cinco segmentos y el progreso de la partida.
 - **Taller:** gasta núcleos de datos en 7 mejoras (`resources/upgrades/*.tres`). Las armas (Ráfaga triple, Ping) se equipan en 2 ranuras; las pasivas (Firewall reforzado, Marcador, Ralentizador) en 1 ranura; Más vida y Dash extendido son permanentes.
 - La lógica está en `scripts/progression/progression.gd` (pura, probada en `tests/test_progression.gd`) y los datos en `scripts/data/catalog.gd`.
 

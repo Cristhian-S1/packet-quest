@@ -42,7 +42,7 @@ Mapa de la red ─► Nivel run & gun ─► Zona de puzle ─► Jefe por fases
 
 - **Micro (segundos):** moverse, saltar, disparar, esquivar avisos.
 - **Medio (minutos):** superar una sección, resolver un puzle, aprender una fase del jefe.
-- **Macro (horas):** reparar los 6 segmentos de la red y mejorar a Byte.
+- **Macro (horas):** reparar los 5 segmentos de la red y mejorar a Byte.
 
 ## Proporción de gameplay
 
@@ -61,8 +61,7 @@ Mapa de la red ─► Nivel run & gun ─► Zona de puzle ─► Jefe por fases
 | 2 | Wi-Fi | Reina Wi-Fi | Ondas, interferencia, repetidores |
 | 3 | Firewall | Firewall Corrupto | Reglas de filtrado, puertos |
 | 4 | Servidor | Troyano Real | Procesos, permisos, puertas traseras |
-| 5 | Nube | Botnet Nimbus | Tráfico masivo (DDoS), balanceo de carga |
-| 6 | Centro de datos | Malwarex | Todo lo anterior combinado |
+| 5 | Centro de datos | Malwarex | Tráfico masivo (DDoS), balanceo de carga y todo lo anterior |
 
 Detalle en `04-niveles.md`.
 
@@ -84,5 +83,7 @@ Detalle en `04-niveles.md`.
 | `11-investigacion.md` | Fuentes consultadas |
 | `12-herramientas.md` | Herramientas de arte/audio, MCP, skills y plugins recomendados (¿hace falta Blender?) |
 | `13-m8-mundo-wifi.md` | Especificación de implementación del Mundo 2 Wi-Fi (M8) |
-| `14-m9-mundo-firewall.md` | Especificación de implementación del Mundo 3 Firewall (M9) |
+| `14-m9-mundo-firewall.md` | Especificación del Mundo 3 Firewall (M9) |
+| `15-m10-mundo-servidor.md` | Especificación del Mundo 4 Servidor (M10) |
+| `16-m11-centro-de-datos.md` | Especificación del Mundo 5 Centro de datos, nivel final (M11) |
 | `superpowers/plans/` | Planes de implementación por hito (M7 en adelante) |

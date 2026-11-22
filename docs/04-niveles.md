@@ -17,8 +17,7 @@ mapa de la red con el siguiente nodo desbloqueado.
 | 2 Wi-Fi | Spyware | Reparar cables | Reina Wi-Fi | 3 | Esquivar ondas, usar repetidores |
 | 3 Firewall | — (variantes blindadas) | Firewall (filtrar paquetes) | Firewall Corrupto | 3 | Escudo, leer huecos |
 | 4 Servidor | Troyano | Contraseñas lógicas | Troyano Real | 3 | Priorizar objetivos |
-| 5 Nube | Bot DDoS | Prioridad de tráfico | Botnet Nimbus | 3 | Gestionar el caos, plataformas móviles |
-| 6 Centro de datos | Todos | Mezcla | Malwarex | 4 | Todo |
+| 5 Centro de datos | Bot DDoS y todos los anteriores | Prioridad de tráfico y mezcla | Malwarex | 4 | Gestionar el caos, plataformas que se desvanecen |
 
 ## Mundo 1 · Red Local (nivel del prototipo)
 
@@ -69,15 +68,12 @@ Racks verticales, ascensores de datos y ventiladores que empujan hacia arriba (c
 de aire). Los Troyanos abren portales de enemigos y deben eliminarse primero.
 Puzle: contraseñas lógicas con pistas visuales. Jefe: Troyano Real.
 
-## Mundo 5 · Nube
-
-Plataformas de nube que se desvanecen y caché que aparece y desaparece. Bots DDoS en oleadas.
-Puzle: prioridad de tráfico (orden de interruptores). Jefe: Botnet Nimbus.
-
-## Mundo 6 · Centro de datos
+## Mundo 5 · Centro de datos
 
 Pasillos fríos (azul) y calientes (rojo) alternos. Remezcla de todos los peligros
-anteriores. Sin puzle propio: el puzle forma parte del combate contra Malwarex.
+anteriores. Plataformas de nube que se desvanecen y caché que aparece y desaparece.
+Bots DDoS en oleadas. Puzle: prioridad de tráfico (orden de interruptores); además, el
+puzle en combate forma parte del enfrentamiento contra Malwarex.
 
 ## Reglas de construcción de niveles
 
