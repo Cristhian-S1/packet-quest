@@ -127,6 +127,17 @@ func _test_queen(tree: SceneTree) -> void:
 		await tree.physics_frame
 	check(not bullet.active, "la cúpula activa intercepta la bala del pool")
 	check(is_equal_approx(player.health.current, player.health.max_health), "la cúpula protege a Byte")
+	var wave: Projectile = pool.fire(true, Vector2(636, 232), Vector2(160, 0))
+	wave.horizontal_bounces = 1
+	for frame: int in range(6):
+		await tree.physics_frame
+	check(wave.active and wave.velocity.x < 0.0 and wave.horizontal_bounces == 0, "la onda rebota en la primera pared")
+	wave.global_position.x = 4.0
+	for frame: int in range(6):
+		await tree.physics_frame
+	check(not wave.active, "la segunda pared desactiva la onda")
+	wave = pool.fire(true, Vector2(600, 232), Vector2(160, 0))
+	check(wave.horizontal_bounces == 0, "el pool no conserva rebotes de una activación anterior")
 	boss.queue_free()
 	await tree.process_frame
 
@@ -161,6 +172,7 @@ func _test_route_to_queen(tree: SceneTree) -> void:
 	for frame: int in range(12):
 		await tree.physics_frame
 	check(player.position.x > 250.0 and player.position.x < 260.0, "el empuje real mueve a Byte sin acumular velocidad")
+	await _cross_coverage_pit(tree, player)
 	player.position = Vector2(2400, 296)
 	player.velocity = Vector2.ZERO
 	for frame: int in range(3):
@@ -228,6 +240,29 @@ func _test_route_to_queen(tree: SceneTree) -> void:
 	check(tree.current_scene.scene_file_path == GameState.MAP, "la victoria vuelve al mapa")
 	check("w2_boss" in saved["completed_levels"] and GameState.is_world_unlocked(saved, 3)
 		and not GameState.is_world_playable(saved, 3), "la victoria guardada desbloquea Firewall como próximo mundo")
+
+func _cross_coverage_pit(tree: SceneTree, player: PacketPlayer) -> void:
+	player.position = Vector2(766, 296)
+	player.velocity = Vector2.ZERO
+	var landings: Array[Vector2] = [Vector2(810, 267), Vector2(880, 241), Vector2(950, 217), Vector2(1020, 249)]
+	for landing: Vector2 in landings:
+		for frame: int in range(3):
+			await tree.physics_frame
+		Input.action_press(&"move_right")
+		Input.action_press(&"jump")
+		var landed: bool = false
+		for frame: int in range(55):
+			await tree.physics_frame
+			if player.position.x >= landing.x:
+				Input.action_release(&"move_right")
+			if player.is_on_floor() and player.position.distance_to(landing) < 25.0:
+				landed = true
+				break
+		Input.action_release(&"move_right")
+		Input.action_release(&"jump")
+		check(landed, "Byte alcanza la plataforma de cobertura en x=%d (posición %s)" % [landing.x, player.position])
+		if not landed:
+			return
 
 func _shoot_cable_cell(tree: SceneTree, player: PacketPlayer, piece: CableCell) -> void:
 	player.position = Vector2(piece.global_position.x, 296)
