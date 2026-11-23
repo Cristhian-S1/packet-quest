@@ -111,3 +111,15 @@ Validación final: import, inicio, cinco pruebas y 300 frames: exit=0, sin error
 - **Fondos.** Wi-Fi, Firewall, Servidor y Centro de datos conservan sus fondos temáticos y añaden cuadrícula y LEDs a velocidades distintas. Las tres capas quedan detrás del escenario. Red Local ya tenía tres planos.
 - **Celebración.** Los núcleos y los jefes emiten partículas en el lugar de la recogida o de la derrota. Reducir destellos elimina el anillo y atenúa las partículas. La sacudida de 150 ms funciona aunque Byte deje de moverse, y se cancela al desactivar el ajuste.
 - **Muestras.** `game/tools/export_audio.gd` genera cuatro temas y seis SFX en `docs/audio/` para revisión del equipo.
+
+## Decisiones M14
+
+- **Controles.** Opciones abre Controles desde el menú y desde la pausa. Cada fila captura
+  una tecla física o un botón, conserva las alternativas y mantiene los ejes del mando.
+  Cuando la entrada está ocupada, se intercambia la asignación correspondiente. Si el
+  apuntado aún tiene solo un eje, puede recibir un botón ocupado y el control anterior
+  queda sin ese botón. Escape cancela y Mayús + Escape lo asigna a Pausa. Si el intercambio
+  sacaría Escape de Pausa, se pide una tecla libre.
+- **Ajustes y letreros.** El guardado registra en `settings.bindings` las acciones que difieren
+  de fábrica. Una partida antigua o con remapeo inválido usa los controles de fábrica y
+  conserva el progreso. Los letreros de tutorial y el HUD muestran la tecla primaria vigente.

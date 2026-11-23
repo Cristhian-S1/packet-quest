@@ -47,6 +47,7 @@ func _ready() -> void:
 
 func restore() -> void:
 	data = SaveManager.load_game()
+	InputBindings.apply(settings["bindings"])
 	restore_speed()
 	settings_changed.emit("")
 
@@ -60,6 +61,8 @@ func update_setting(key: String, value: Variant) -> Error:
 		return result
 	if key == "assist_mode":
 		restore_speed()
+	elif key == "bindings":
+		InputBindings.apply(value)
 	settings_changed.emit(key)
 	return OK
 

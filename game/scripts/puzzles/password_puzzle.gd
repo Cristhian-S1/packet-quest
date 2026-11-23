@@ -4,7 +4,7 @@ extends Node2D
 signal solved
 
 const FACT: String = "Dato: la autenticación comprueba que eres quien dices ser; por eso una contraseña obvia es un riesgo."
-const INSTRUCTION: String = "Acércate a los pósteres y pulsa E en las ranuras para cambiar sus símbolos."
+const INSTRUCTION: String = "Acércate a los pósteres y pulsa %s en las ranuras para cambiar sus símbolos."
 const CLUES: Array[String] = ["● va justo antes que ★", "▲ va antes que ■", "● no va primero", "★ no va al final"]
 const POSTERS: Array[Vector2] = [Vector2(22, 195), Vector2(172, 223), Vector2(322, 195), Vector2(472, 223)]
 
@@ -20,7 +20,8 @@ var _player: PacketPlayer
 func _ready() -> void:
 	_player = get_tree().get_first_node_in_group(&"player") as PacketPlayer
 	PQStyle.label_at(self, "CONTRASEÑAS LÓGICAS", Vector2(24, 85), 22, PQStyle.CYAN)
-	_caption = PQStyle.label_at(self, INSTRUCTION, Vector2(24, 122), 13, PQStyle.EDGE)
+	_caption = PQStyle.label_at(self, "", Vector2(24, 122), 13, PQStyle.EDGE)
+	GameState.settings_changed.connect(_settings_changed)
 	_caption.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_caption.size.x = 575
 	for index: int in range(CLUES.size()):
@@ -71,12 +72,16 @@ func reset_puzzle() -> void:
 	_code.assign(PasswordLogic.INITIAL)
 	_refresh()
 
+func _settings_changed(key: String) -> void:
+	if key.is_empty() or key == "bindings":
+		_caption.text = FACT if is_solved else INSTRUCTION % InputLabels.for_action(&"interact")
+
 func _refresh() -> void:
 	is_solved = PasswordLogic.is_solution(_code)
 	if GameState.current_world == 4:
 		GameState.puzzle_complete = is_solved
 	door.set_open(is_solved)
-	_caption.text = FACT if is_solved else INSTRUCTION
+	_settings_changed("bindings")
 	_caption.add_theme_color_override("font_color", PQStyle.GREEN if is_solved else PQStyle.EDGE)
 	for index: int in range(slots.size()):
 		slots[index].symbol = _code[index]

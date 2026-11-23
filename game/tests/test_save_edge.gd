@@ -23,6 +23,8 @@ func run(tree: SceneTree) -> PackedStringArray:
 	for section: String in ["equipped", "settings", "stats"]:
 		var data: Dictionary = manager.call("defaults")
 		for key: String in data[section].keys():
+			if section == "settings" and key == "bindings":
+				continue # Es opcional en partidas antiguas; test_controls comprueba la migración.
 			var incomplete: Dictionary = data.duplicate(true)
 			incomplete[section].erase(key)
 			manager.call("save_game", incomplete, PATH)

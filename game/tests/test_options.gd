@@ -164,10 +164,10 @@ func _close_options(tree: SceneTree, menu: Node, opener: Button, source: String)
 		var focus: Button = _focused(tree) as Button
 		errors.append("Opciones no se abrió desde %s; foco %s" % [source, focus.text if focus != null else str(_focused(tree))])
 		return
-	for index: int in range(5):
+	for index: int in range(6):
 		await _tap(tree, &"ui_down")
 	var back: Button = _focused(tree) as Button
-	_check(back != null and back.text == "Volver", "Volver debe tener foco tras los cinco ajustes")
+	_check(back != null and back.text == "Volver", "Volver debe tener foco tras los ajustes y Controles")
 	await _tap(tree, &"ui_accept")
 	_check(not is_instance_valid(menu) and _focused(tree) == opener, "Volver debe cerrar Opciones y restaurar el foco")
 

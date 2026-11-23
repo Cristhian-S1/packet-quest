@@ -10,6 +10,7 @@ var notice_time: float = 0.0
 var hit_stop_frames: int = 0
 var death_shown: bool = false
 var _stopping: bool = false
+var _pause_key: String
 
 func _ready() -> void:
 	layer = 10
@@ -26,11 +27,14 @@ func _ready() -> void:
 	Events.checkpoint_reached.connect(_checkpoint)
 	Events.core_collected.connect(_core)
 	Events.impact.connect(_impact)
+	GameState.settings_changed.connect(_settings_changed)
+	_settings_changed("")
 
 func _process(delta: float) -> void:
 	canvas.queue_redraw()
 	var weapon_name: String = player.current_weapon().display_name.to_upper() if is_instance_valid(player) else "PAQUETE"
-	info.text = "%s   ·   NÚCLEOS %02d   ·   ESC pausa" % [weapon_name, int(GameState.data.get("data_cores", 0))]
+	info.text = "%s   ·   NÚCLEOS %02d   ·   %s pausa" % [
+		weapon_name, int(GameState.data.get("data_cores", 0)), _pause_key]
 	notice_time = maxf(0, notice_time - delta)
 	notice.visible = notice_time > 0
 	if hit_stop_frames > 0:
@@ -38,6 +42,10 @@ func _process(delta: float) -> void:
 	if _stopping and hit_stop_frames == 0:
 		_stopping = false
 		GameState.restore_speed()
+
+func _settings_changed(key: String) -> void:
+	if key.is_empty() or key == "bindings":
+		_pause_key = InputLabels.for_action(&"pause")
 
 func _draw_hud() -> void:
 	canvas.draw_rect(Rect2(0, 0, 640, 42), Color(PQStyle.NIGHT, 0.96))
