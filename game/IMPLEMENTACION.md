@@ -132,3 +132,7 @@ Validación final: import, inicio, cinco pruebas y 300 frames: exit=0, sin error
   el contorno fijo. En Cable señala la primera pieza que falta orientar desde la antena
   por la ruta de solución. En Contraseña señala la primera ranura incorrecta. El reinicio
   vuelve a contar desde cero.
+- **Economía y créditos.** Se conservan los nueve núcleos de nivel y las tres recompensas
+  de jefe. Los créditos cuentan los identificadores únicos recogidos sobre 12. El Taller
+  descuenta compras del saldo. El tema compartido de los cinco jefes sigue documentado
+  como el audio vigente para la parte A de M14.
