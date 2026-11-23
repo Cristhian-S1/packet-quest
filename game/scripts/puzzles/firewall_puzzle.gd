@@ -27,13 +27,12 @@ var _feedback: Label
 var _slide: float = 0.0
 var _waiting: float = 0.0
 var _hint: bool = false
-var _reduce_flashes: bool = false
 var _player: PacketPlayer
 
 func _ready() -> void:
+	GameState.settings_changed.connect(_settings_changed)
 	_packets = FirewallFilter.generate_sequence(sequence_seed)
 	_player = get_tree().get_first_node_in_group(&"player") as PacketPlayer
-	_reduce_flashes = bool(GameState.data.get("settings", {}).get("reduce_flashes", false))
 	reset_node = _create_node(64.0, "↺ REINICIAR", PQStyle.AMBER, reset_puzzle)
 	pass_node = _create_node(200.0, "PASAR", PQStyle.GREEN, _decide.bind(true))
 	block_node = _create_node(288.0, "BLOQUEAR", PQStyle.RED, _decide.bind(false))
@@ -54,6 +53,10 @@ func _ready() -> void:
 		door.set_open()
 		_feedback.text = FACT
 	_update_display()
+
+func _settings_changed(key: String) -> void:
+	if key.is_empty() or key == "reduce_flashes":
+		queue_redraw()
 
 func _create_node(x: float, title: String, color: Color, action: Callable) -> NetworkNode:
 	var node: NetworkNode = NetworkNode.new()
@@ -83,7 +86,6 @@ func _decide(pass_packet: bool) -> void:
 			GameState.puzzle_complete = true
 			door.set_open()
 			_feedback.text = FACT
-			AudioManager.play_sfx(&"firewall_connected")
 			solved.emit()
 			Events.puzzle_solved.emit(&"w3_firewall")
 		else:
@@ -125,7 +127,7 @@ func _process(delta: float) -> void:
 	if is_instance_valid(_player) and _player.global_position.x >= global_position.x:
 		_waiting += delta
 	var hint: bool = _waiting >= 60.0 and fposmod(_waiting - 60.0, 10.0) < 1.0
-	if hint != _hint or hint and not _reduce_flashes:
+	if hint != _hint or hint and not GameState.reduce_flashes:
 		_hint = hint
 		queue_redraw()
 
@@ -139,7 +141,7 @@ func _draw() -> void:
 	draw_polyline(PackedVector2Array([Vector2(200, 206), Vector2(200, 239), Vector2(288, 239)]), rail_color, 1.0)
 	if packet_index < _packets.size():
 		_draw_packet(_packets[packet_index], Vector2(140.0 - 86.0 * _slide, 176))
-		if _hint and (_reduce_flashes or int(_waiting * 6.0) % 2 == 0):
+		if _hint and (GameState.reduce_flashes or int(_waiting * 6.0) % 2 == 0):
 			var target: NetworkNode = pass_node if _packet_allowed() else block_node
 			draw_arc(target.position, 17.0, 0.0, TAU, 16, Color.WHITE, 1.0)
 

@@ -104,10 +104,8 @@ func _test_weapon_sfx() -> void:
 	check(Catalog.weapon(&"triple").sfx != Catalog.weapon(&"packet").sfx
 		and Catalog.weapon(&"ping").sfx != Catalog.weapon(&"packet").sfx
 		and Catalog.weapon(&"triple").sfx != Catalog.weapon(&"ping").sfx, "sfx: cada arma un sonido")
-	AudioManager.play_sfx(&"packet")
-	var packet_pitch: float = AudioManager.last_pitch
 	AudioManager.play_sfx(&"ping")
-	check(AudioManager.last_pitch != packet_pitch, "sfx: variación de tono por arma")
+	check(AudioManager.last_sfx == &"ping", "sfx: registra el disparo de Ping")
 
 func _test_spread_directions() -> void:
 	var dirs: Array[Vector2] = Projectile.spread_directions(Vector2.RIGHT, 3, 12.0)

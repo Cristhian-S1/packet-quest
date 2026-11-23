@@ -11,7 +11,6 @@ const WARNING_START: float = 2.5
 
 var _age: float = 0.0
 var _player: PacketPlayer
-var _reduce_flashes: bool = false
 
 static func state_at(t: float) -> StringName:
 	var phase_time: float = fposmod(t, PERIOD)
@@ -31,7 +30,6 @@ func _ready() -> void:
 	body_entered.connect(_on_body_entered)
 	body_exited.connect(_on_body_exited)
 	_age = phase_offset
-	_reduce_flashes = bool(GameState.data.get("settings", {}).get("reduce_flashes", false))
 
 func _on_body_entered(body: Node2D) -> void:
 	if body is PacketPlayer:
@@ -55,7 +53,7 @@ func _draw() -> void:
 	draw_line(Vector2(-size.x / 2.0, grate_y), Vector2(size.x / 2.0, grate_y), color, 2.0)
 	for x: int in range(8, int(size.x), 8):
 		draw_line(Vector2(x - size.x / 2.0, grate_y - 5.0), Vector2(x - size.x / 2.0, grate_y - 2.0), PQStyle.EDGE)
-	if phase_state == &"inactive" or (phase_state == &"warning" and not _reduce_flashes and int(_age * 12.0) % 2 != 0):
+	if phase_state == &"inactive" or (phase_state == &"warning" and not GameState.reduce_flashes and int(_age * 12.0) % 2 != 0):
 		return
 	draw_rect(Rect2(-size / 2.0, size), Color(color, 0.07))
 	for index: int in range(16):

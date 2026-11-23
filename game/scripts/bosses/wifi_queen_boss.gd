@@ -19,6 +19,7 @@ const WAVE_LANES: Array[float] = [296.0, 256.0, 216.0]
 const SIGNAL_PATTERN: Array[Attack] = [Attack.WAVES, Attack.PING]
 const ROAMING_PATTERN: Array[Attack] = [Attack.SPIRAL, Attack.TELEPORT, Attack.WAVES, Attack.TELEPORT,
 	Attack.SPIRAL, Attack.TELEPORT, Attack.PING, Attack.TELEPORT]
+const ATTACK_SFX: Array[StringName] = [&"wifi_waves", &"wifi_ping", &"wifi_spiral", &"wifi_teleport"]
 const WARNINGS: Array[float] = [0.6, 0.8, 0.5, 0.4]
 const SPIRAL_TIME: float = 1.2
 const SPIRAL_COUNT: int = 16
@@ -49,7 +50,6 @@ var _lanes: Array[int] = []
 var _interference_hit: bool = false
 var _age: float = 0.0
 var _flash: float = 0.0
-var _reduce_flashes: bool = false
 
 static func phase_for(hp_ratio: float) -> int:
 	if hp_ratio <= PHASE_THREE:
@@ -71,11 +71,11 @@ static func interference_lanes(seed_index: int) -> Array[int]:
 		_: return [0, 3]
 
 func _ready() -> void:
+	AudioManager.play_music(&"boss")
 	GameState.current_world = 2
 	GameState.in_boss = true
 	GameState.death_cause = "reina_wifi"
 	GameState.boss_progress = 0.0
-	_reduce_flashes = bool(GameState.data.get("settings", {}).get("reduce_flashes", false))
 	add_child(WifiBackdrop.new())
 	pool = ProjectilePool.new()
 	add_child(pool)
@@ -134,6 +134,8 @@ func _advance(delta: float) -> void:
 			body.invulnerable = false
 			card.hide()
 			state = State.WAIT
+			if phase == 3:
+				AudioManager.play_warning(&"wifi_interference")
 		State.TELEGRAPH:
 			_fire_attack()
 		State.ACTIVE:
@@ -157,6 +159,7 @@ func _begin_attack(next: Attack) -> void:
 	attack = next
 	state = State.TELEGRAPH
 	timer = WARNINGS[attack]
+	AudioManager.play_warning(ATTACK_SFX[attack])
 	match attack:
 		Attack.WAVES:
 			pass
@@ -216,6 +219,7 @@ func _tick_interference(delta: float) -> void:
 		_interference_index += 1
 		_lanes = interference_lanes(_interference_index)
 		_interference_hit = false
+		AudioManager.play_warning(&"wifi_interference")
 	if previous < INTERFERENCE_END and _interference_age >= INTERFERENCE_END and state == State.WAIT:
 		_begin_attack(Attack.PING if _interference_index % 2 == 0 else Attack.SPIRAL)
 	if _interference_age < INTERFERENCE_WARNING or _interference_age >= INTERFERENCE_END or _interference_hit:
@@ -268,6 +272,7 @@ func _defeat() -> void:
 	card.show()
 	GameState.win()
 	defeated.emit()
+	CelebrationBurst.spawn(self, body.global_position, true)
 	Events.boss_defeated.emit(&"wifi_queen")
 
 func _draw() -> void:
@@ -310,7 +315,7 @@ func _draw_antennas(color: Color) -> void:
 			draw_arc(center, 31 + ring * 10, 0.25, PI - 0.25, 16, tint, 1.0)
 
 func _draw_queen(center: Vector2, color: Color) -> void:
-	var casing: Color = Color.WHITE if _flash > 0.0 and not _reduce_flashes else Color("223756")
+	var casing: Color = Color.WHITE if _flash > 0.0 and not GameState.reduce_flashes else Color("223756")
 	for side: float in [-1.0, 1.0]:
 		var wing: PackedVector2Array = PackedVector2Array([center + Vector2(side * 17, -8),
 			center + Vector2(side * 46, -19), center + Vector2(side * 42, 6), center + Vector2(side * 19, 17)])

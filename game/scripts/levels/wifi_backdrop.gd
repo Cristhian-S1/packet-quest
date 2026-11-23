@@ -6,14 +6,17 @@ const HORIZON: Color = Color("18314a")
 const TOWER: Color = Color("233d59")
 
 var width: int = 640
+var draw_base: bool = true
 
 func _ready() -> void:
 	z_index = -10
 
 func _draw() -> void:
-	draw_rect(Rect2(0, 0, width, 360), SKY)
+	if draw_base:
+		draw_rect(Rect2(0, 0, width, 360), SKY)
 	for strip: int in range(8):
-		draw_rect(Rect2(0, 64 + strip * 34, width, 34), SKY.lerp(HORIZON, float(strip) / 9.0))
+		var haze: Color = SKY.lerp(HORIZON, float(strip) / 9.0)
+		draw_rect(Rect2(0, 64 + strip * 34, width, 34), Color(haze, 1.0 if draw_base else 0.34))
 	var index: int = 0
 	for x: int in range(9, width, 15):
 		var point: Vector2 = Vector2(x, 48 + (index * 47) % 140)

@@ -102,6 +102,8 @@ func _physics_process(delta: float) -> void:
 			if bool(target.get("marked")):
 				amount *= MARK_BONUS
 			target.set("marked", true)
+		if not enemy:
+			AudioManager.play_sfx(&"impact")
 		if target.has_method("receive_projectile"):
 			target.call("receive_projectile", amount, global_position, velocity)
 		elif target.has_method("take_damage"):
@@ -114,7 +116,7 @@ func _physics_process(delta: float) -> void:
 	if age > 12.0 or not cull_rect.has_point(global_position):
 		deactivate()
 
-func _skip_passive_interactables(ray: PhysicsRayQueryParameters2D, hit: Dictionary) -> Dictionary:
+func _skip_passive_interactables(query: PhysicsRayQueryParameters2D, hit: Dictionary) -> Dictionary:
 	if hit.is_empty():
 		return hit
 	var target: Area2D = hit["collider"] as Area2D
@@ -122,8 +124,8 @@ func _skip_passive_interactables(ray: PhysicsRayQueryParameters2D, hit: Dictiona
 		return hit
 	var excluded: Array[RID] = [target.get_rid()]
 	while true:
-		ray.exclude = excluded
-		hit = get_world_2d().direct_space_state.intersect_ray(ray)
+		query.exclude = excluded
+		hit = get_world_2d().direct_space_state.intersect_ray(query)
 		if hit.is_empty():
 			return hit
 		target = hit["collider"] as Area2D
@@ -143,12 +145,12 @@ static func spread_directions(aim: Vector2, count: int, angle_deg: float) -> Arr
 		result.append(aim.rotated(lerpf(-spread, spread, float(index) / float(count - 1))))
 	return result
 
-## Gira `velocity` hacia `to_target` como máximo `max_turn_rad`, conservando el módulo.
-static func steer(velocity: Vector2, to_target: Vector2, max_turn_rad: float) -> Vector2:
-	if to_target == Vector2.ZERO or velocity == Vector2.ZERO:
-		return velocity
-	var turn: float = clampf(velocity.angle_to(to_target), -max_turn_rad, max_turn_rad)
-	return velocity.rotated(turn)
+## Gira `current_velocity` hacia `to_target` como máximo `max_turn_rad`, conservando el módulo.
+static func steer(current_velocity: Vector2, to_target: Vector2, max_turn_rad: float) -> Vector2:
+	if to_target == Vector2.ZERO or current_velocity == Vector2.ZERO:
+		return current_velocity
+	var turn: float = clampf(current_velocity.angle_to(to_target), -max_turn_rad, max_turn_rad)
+	return current_velocity.rotated(turn)
 
 func _nearest_target() -> Node2D:
 	var camera: Camera2D = get_viewport().get_camera_2d()

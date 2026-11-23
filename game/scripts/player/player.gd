@@ -63,6 +63,8 @@ var animation_time: float = 0.0
 var trails: Array[Vector2] = []
 var shake_left: float = 0.0
 var shake_power: float = 0.0
+var _shake_tween: Tween
+const SHAKE_TIME: float = 0.15
 var weapon_slots: Array[WeaponData] = []
 var weapon_index: int = 0
 var marker_active: bool = false
@@ -76,7 +78,7 @@ func _ready() -> void:
 	collision_mask = 1
 	add_child(PQStyle.box_shape(Vector2(10, 14)))
 	health = HealthComponent.new()
-	health.max_health = max_hp + (1.0 if bool(GameState.data.get("settings", {}).get("assist_mode", false)) else 0.0)
+	health.max_health = max_hp
 	health.changed.connect(func(cur: float, maximum: float) -> void: health_changed.emit(cur, maximum))
 	health.depleted.connect(_die)
 	add_child(health)
@@ -120,6 +122,7 @@ func _ready() -> void:
 	Events.impact.connect(_impact)
 	health.changed.connect(_check_slowdown)
 	apply_progression(GameState.data)
+	GameState.settings_changed.connect(_settings_changed)
 
 ## Configura armas y mejoras desde save.json. Idempotente: parte siempre de los
 ## valores base del Inspector. Se llama al empezar el nivel, así que llena la vida.
@@ -213,6 +216,7 @@ func _physics_process(delta: float) -> void:
 		invulnerability = maxf(invulnerability, dash_iframes)
 		state = State.DASH
 		trails.clear()
+		AudioManager.play_sfx(&"dash")
 	shield_active = Input.is_action_pressed("shield") and shield_broken <= 0 and shield_meter > 0 and dash_left <= 0 and hurt_left <= 0
 	_update_shield(delta)
 	if dash_left > 0:
@@ -235,6 +239,7 @@ func _physics_process(delta: float) -> void:
 			velocity.y = jump_speed
 			buffered_jump = 0
 			coyote = 0
+			AudioManager.play_sfx(&"jump")
 		if Input.is_action_just_released("jump") and velocity.y < 0:
 			velocity.y *= jump_cut
 		state = State.SHIELD if shield_active else (State.RUN if absf(velocity.x) > 1 else State.IDLE)
@@ -255,11 +260,6 @@ func _physics_process(delta: float) -> void:
 		interact()
 	if Input.is_action_just_pressed("swap_weapon"):
 		swap_weapon()
-	if shake_left > 0:
-		shake_left -= delta
-		camera.offset = Vector2(sin(animation_time * 120), cos(animation_time * 99)) * shake_power
-	else:
-		camera.offset = Vector2.ZERO
 
 func _update_aim(horizontal: float, vertical: float, locked: bool) -> void:
 	if absf(horizontal) > 0.2:
@@ -310,6 +310,8 @@ func take_damage(amount: float, origin: Vector2) -> void:
 	shield_active = false
 	velocity = Vector2((-1.0 if origin.x >= global_position.x else 1.0) * knockback, -90)
 	state = State.HURT
+	if amount > 0.0:
+		AudioManager.play_sfx(&"byte_hurt")
 	Events.impact.emit(0.05, 2.0)
 	health.damage(amount)
 
@@ -318,6 +320,7 @@ func pit_respawn() -> void:
 		health.damage(health.current)
 		return
 	# A pit always costs one HP, including during damage i-frames.
+	AudioManager.play_sfx(&"byte_hurt")
 	health.damage(1)
 	if state == State.DEAD:
 		return
@@ -364,14 +367,40 @@ func _die() -> void:
 	Events.player_died.emit()
 
 func _impact(_duration: float, power: float) -> void:
-	if bool(GameState.data.get("settings", {}).get("screen_shake", true)):
-		shake_left = 0.15
-		shake_power = power
+	if not GameState.screen_shake or power <= 0.0:
+		return
+	if _shake_tween != null:
+		_shake_tween.kill()
+	shake_left = SHAKE_TIME
+	shake_power = power
+	_shake_tween = create_tween().set_ignore_time_scale(true).set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	_shake_tween.tween_method(_update_shake, SHAKE_TIME, 0.0, SHAKE_TIME)
+
+func _update_shake(remaining: float) -> void:
+	shake_left = remaining
+	var elapsed: float = SHAKE_TIME - remaining
+	var amplitude: float = shake_power * remaining / SHAKE_TIME
+	camera.offset = Vector2(sin(elapsed * 120.0), cos(elapsed * 99.0)) * amplitude
+
+func _settings_changed(key: String) -> void:
+	if (key.is_empty() or key == "screen_shake") and not GameState.screen_shake:
+		if _shake_tween != null:
+			_shake_tween.kill()
+		shake_left = 0.0
+		camera.offset = Vector2.ZERO
+	if key.is_empty() or key == "assist_mode":
+		var base_health: float = float(_base["hp"]) + (1.0 if Progression.has_effect(GameState.data, &"more_health") else 0.0)
+		var maximum: float = base_health + (1.0 if GameState.assist_mode else 0.0)
+		if health.max_health != maximum:
+			var bonus: float = maxf(0.0, maximum - health.max_health) if health.current > 0.0 else 0.0
+			health.max_health = maximum
+			health.current = minf(maximum, health.current + bonus)
+			health.changed.emit(health.current, maximum)
 
 func _draw() -> void:
 	for index: int in range(trails.size()):
 		draw_rect(Rect2(to_local(trails[index]) - Vector2(8, 8), Vector2(16, 16)), Color(PQStyle.CYAN, 0.12 * (3 - index)))
-	if invulnerability > 0 and not bool(GameState.data.get("settings", {}).get("reduce_flashes", false)) and int(animation_time * 14) % 2 == 0:
+	if invulnerability > 0 and not GameState.reduce_flashes and int(animation_time * 14) % 2 == 0:
 		return
 	draw_rect(Rect2(-9, -9, 18, 18), Color("0b1a2e"))
 	draw_rect(Rect2(-8, -8, 16, 16), PQStyle.CYAN)

@@ -1,6 +1,6 @@
 extends SceneTree
 
-const TESTS: Array[String] = ["components_objects", "state_edges", "save_edge", "player_edges", "performance", "health_component", "route_puzzle", "boss_phases", "save_manager", "scenes_load", "progression", "weapons", "world2", "world3", "world4", "world5", "fuzz"]
+const TESTS: Array[String] = ["components_objects", "state_edges", "save_edge", "player_edges", "performance", "health_component", "route_puzzle", "boss_phases", "save_manager", "scenes_load", "progression", "weapons", "world2", "world3", "world4", "world5", "options", "audio", "visual_polish", "fuzz"]
 
 # Cuenta los errores del motor y de GDScript mientras corre cada prueba: un error de script
 # dentro de una subfunción solo aborta esa subfunción y la prueba seguía como PASS.
@@ -30,7 +30,12 @@ func run_all() -> void:
 	manager.set("save_path", "user://test_session.json")
 	state.set("data", manager.call("defaults"))
 	var failures: int = 0
-	for test_name: String in TESTS:
+	var selected: PackedStringArray = OS.get_cmdline_user_args()
+	var tests: Array[String] = TESTS
+	if not selected.is_empty():
+		tests = []
+		tests.assign(Array(selected))
+	for test_name: String in tests:
 		var path: String = "res://tests/test_%s.gd" % test_name
 		if not ResourceLoader.exists(path):
 			print("FAIL test_%s: implementación pendiente" % test_name)
@@ -60,7 +65,7 @@ func run_all() -> void:
 		else:
 			failures += 1
 			print("FAIL test_%s: %s" % [test_name, "; ".join(errors)])
-	print("RESULTADO: %d/%d PASS" % [TESTS.size() - failures, TESTS.size()])
+	print("RESULTADO: %d/%d PASS" % [tests.size() - failures, tests.size()])
 	if FileAccess.file_exists("user://test_session.json"):
 		DirAccess.remove_absolute("user://test_session.json")
 	quit(0 if failures == 0 else 1)

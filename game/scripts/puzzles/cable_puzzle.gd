@@ -48,7 +48,6 @@ func _rotate(cell: Vector2i) -> void:
 	grid.rotate_cell(cell)
 	_refresh()
 	if is_solved:
-		AudioManager.play_sfx(&"cable_connected")
 		Events.puzzle_solved.emit(&"w2_cable")
 		solved.emit()
 

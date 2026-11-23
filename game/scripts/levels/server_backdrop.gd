@@ -5,6 +5,7 @@ const RACK_SPACING: int = 96
 const RACK_START: int = 24
 
 @export var width: int = 640
+var draw_base: bool = true
 
 func _ready() -> void:
 	z_index = -10
@@ -13,7 +14,8 @@ func _ready() -> void:
 	add_child(leds)
 
 func _draw() -> void:
-	draw_rect(Rect2(0, 0, width, 360), PQStyle.NIGHT)
+	if draw_base:
+		draw_rect(Rect2(0, 0, width, 360), PQStyle.NIGHT)
 	draw_rect(Rect2(0, 62, width, 13), PQStyle.CHIP)
 	draw_rect(Rect2(0, 282, width, 24), PQStyle.CHIP)
 	for y: float in [66.0, 71.0, 287.0, 294.0]:
@@ -36,7 +38,12 @@ class RackLeds extends Node2D:
 	var _tick: int = 0
 
 	func _ready() -> void:
-		set_process(not bool(GameState.data.get("settings", {}).get("reduce_flashes", false)))
+		GameState.settings_changed.connect(_settings_changed)
+		_settings_changed("reduce_flashes")
+
+	func _settings_changed(key: String) -> void:
+		if key.is_empty() or key == "reduce_flashes":
+			set_process(not GameState.reduce_flashes)
 
 	func _process(delta: float) -> void:
 		_age += delta

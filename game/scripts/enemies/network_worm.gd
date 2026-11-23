@@ -68,7 +68,7 @@ func _draw() -> void:
 	var radius: float = 4.0 + (2.0 if state == State.TELEGRAPH else 0.0)
 	for index: int in range(4):
 		var pos: Vector2 = Vector2(index * 6 - 9, sin(age * 8 + index) * 2)
-		draw_circle(pos, radius, Color.WHITE if flash > 0 else Color("9dff4f"))
+		draw_circle(pos, radius, Color.WHITE if flash > 0 and not GameState.reduce_flashes else Color("9dff4f"))
 	draw_circle(Vector2(10, -1), 1, PQStyle.NIGHT)
 	if state == State.TELEGRAPH:
 		draw_line(Vector2(-8, -12), Vector2(-13, -18), PQStyle.RED, 2)

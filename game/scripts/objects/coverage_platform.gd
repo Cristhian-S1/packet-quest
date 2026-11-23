@@ -12,7 +12,6 @@ var _player: PacketPlayer
 var _router: Node2D
 var _time_outside: float = WARNING_TIME
 var _solid: bool = false
-var _reduce_flashes: bool = false
 
 static func is_covered(player_pos: Vector2, router_pos: Vector2, radius: float) -> bool:
 	return player_pos.distance_squared_to(router_pos) <= radius * radius
@@ -22,7 +21,6 @@ func _ready() -> void:
 	collision_mask = 0
 	_router = get_node_or_null(router) as Node2D if not router.is_empty() else null
 	_player = get_tree().get_first_node_in_group(&"player") as PacketPlayer
-	_reduce_flashes = bool(GameState.data.get("settings", {}).get("reduce_flashes", false))
 	_shape = PQStyle.box_shape(SIZE)
 	_shape.one_way_collision = true
 	_solid = _has_coverage()
@@ -52,7 +50,7 @@ func _draw() -> void:
 	if not _solid:
 		color.a = 0.35
 	elif _time_outside > 0.0:
-		color = Color(PQStyle.AMBER, 0.8 if _reduce_flashes or sin(_time_outside * 55) > 0 else 0.38)
+		color = Color(PQStyle.AMBER, 0.8 if GameState.reduce_flashes or sin(_time_outside * 55) > 0 else 0.38)
 	draw_rect(Rect2(-SIZE / 2, SIZE), Color(PQStyle.CHIP, color.a))
 	draw_line(Vector2(-32, -6), Vector2(32, -6), color, 2)
 	for x: int in range(-26, 29, 10):

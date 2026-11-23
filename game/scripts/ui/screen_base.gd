@@ -13,8 +13,8 @@ func _ready() -> void:
 	panel = Control.new()
 	add_child(panel)
 
-func title(text: String, color: Color = PQStyle.CYAN) -> void:
-	var label: Label = PQStyle.label_at(panel, text, Vector2(48, 72), 30, color)
+func title(text: String, color: Color = PQStyle.CYAN, y: float = 72.0) -> void:
+	var label: Label = PQStyle.label_at(panel, text, Vector2(48, y), 30, color)
 	label.size.x = 544
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 
