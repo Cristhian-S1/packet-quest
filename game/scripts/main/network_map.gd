@@ -9,6 +9,7 @@ var enter_button: Button
 var _playable: Array[int] = []
 
 func _ready() -> void:
+	AudioManager.play_music(&"menu")
 	StageBuilder.background(self)
 	PQStyle.label_at(self, "MAPA DE LA RED", Vector2(36, 28), 22, PQStyle.CYAN)
 	PQStyle.label_at(self, "NÚCLEOS: %d" % int(GameState.data.get("data_cores", 0)), Vector2(500, 36), 12, PQStyle.AMBER)

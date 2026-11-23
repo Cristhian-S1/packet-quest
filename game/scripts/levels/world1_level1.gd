@@ -9,6 +9,7 @@ const EXIT_X: float = 2710.0
 var transitioning: bool = false
 
 func _ready() -> void:
+	AudioManager.play_music(&"world_1")
 	StageBuilder.background(self)
 	add_child(ProjectilePool.new())
 	StageBuilder.platform(self, Vector2(0, 304), Vector2(752, 56))

@@ -63,6 +63,7 @@ static func descarga_lanes(index: int) -> Array[int]:
 	return lanes
 
 func _ready() -> void:
+	AudioManager.play_music(&"boss")
 	GameState.current_world = 4
 	GameState.in_boss = true
 	GameState.death_cause = "troyano_real"

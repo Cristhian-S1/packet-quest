@@ -22,6 +22,7 @@ var _hidden_core: DataCore
 var _transitioning: bool = false
 
 func _ready() -> void:
+	AudioManager.play_music(&"world_5")
 	GameState.current_world = 5
 	GameState.in_boss = false
 	GameState.death_cause = "nivel_5_1"

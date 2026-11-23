@@ -7,6 +7,7 @@ var _buttons: HBoxContainer
 var _options_button: Button
 
 func _ready() -> void:
+	AudioManager.play_music(&"menu")
 	StageBuilder.background(self)
 	PQStyle.label_at(self, "PQ / PROTOCOLO DE RESTAURACIÓN", Vector2(36, 28), 10, PQStyle.GREEN)
 	PQStyle.label_at(self, "PACKET\nQUEST", Vector2(32, 68), 40, PQStyle.CYAN)

@@ -19,6 +19,7 @@ static func format_time(seconds: float) -> String:
 	return "%02d:%02d" % [minutes, whole % 60]
 
 func _ready() -> void:
+	AudioManager.play_music(&"credits")
 	StageBuilder.background(self)
 	super._ready()
 	var stats: Dictionary = GameState.data.get("stats", {})
