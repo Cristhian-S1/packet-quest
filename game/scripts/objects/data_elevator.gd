@@ -15,8 +15,4 @@ func _draw() -> void:
 	for x: float in [2.0, size.x - 2.0]:
 		draw_line(Vector2(x, rail_top), Vector2(x, rail_end), PQStyle.EDGE, 2.0)
 		draw_rect(Rect2(x - 2.0, rail_top, 4.0, 4.0), PQStyle.AMBER)
-	draw_rect(Rect2(Vector2.ZERO, size), PQStyle.CHIP)
-	draw_rect(Rect2(Vector2.ZERO, size), PQStyle.EDGE, false)
-	draw_line(Vector2.ZERO, Vector2(size.x, 0), PQStyle.CYAN, 2.0)
-	for x: int in range(10, int(size.x) - 8, 12):
-		draw_rect(Rect2(x, 5, 6, 2), PQStyle.CYAN if x % 24 == 10 else PQStyle.AMBER)
+	super._draw()

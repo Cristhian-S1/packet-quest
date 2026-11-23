@@ -106,7 +106,7 @@ func _draw() -> void:
 		draw_rect(solid, Color(PQStyle.RED, 0.6 if preview else 1.0), false)
 		for y: int in range(int(solid.position.y) + 8, int(solid.end.y), 16):
 			draw_line(Vector2(-4, y), Vector2(4, y - 4), Color(PQStyle.AMBER, 0.45))
-	if _warning and (GameState.reduce_flashes or int(_age * 14.0) % 2 == 0):
+	if _warning:
 		var lanes: Array[int] = _lanes
 		if not swept:
 			lanes = [gap_lane(_age + FIXED_WARNING)]

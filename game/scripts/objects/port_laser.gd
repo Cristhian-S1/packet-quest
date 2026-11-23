@@ -43,9 +43,8 @@ func _draw() -> void:
 		draw_line(top, Vector2.ZERO, color, 5.0)
 		draw_line(top, Vector2.ZERO, Color.WHITE, 1.0)
 	elif _state == &"warning":
-		color = PQStyle.AMBER
-		if GameState.reduce_flashes or int(_age * 16.0) % 2 == 0:
-			draw_dashed_line(top, Vector2.ZERO, color, 2.0, 6.0)
+		color = PQStyle.RED
+		draw_dashed_line(top, Vector2.ZERO, color, 2.0, 6.0)
 	for y: float in [top.y, -4.0]:
 		draw_rect(Rect2(-size.x / 2.0 - 3.0, y - 2.0, size.x + 6.0, 6.0), PQStyle.CHIP)
 		draw_line(Vector2(-size.x / 2.0, y), Vector2(size.x / 2.0, y), color, 2.0)
