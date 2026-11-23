@@ -3,6 +3,8 @@ extends Node2D
 
 signal phase_changed(index: int)
 signal defeated
+
+const BossArt = preload("res://scripts/art/boss_art.gd")
 enum State { INTRO, IDLE, TELEGRAPH, ACTIVE, RECOVERY, PHASE_TRANSITION, DEFEATED }
 
 const RING_TIME_EPSILON: float = 0.000001
@@ -209,9 +211,7 @@ func _defeat() -> void:
 	invulnerable = true
 	pool.clear_enemy()
 	body.collision_layer = 0
-	card.text = "SEGMENTO RESTAURADO"
-	card.modulate = PQStyle.GREEN
-	card.visible = true
+	BossArt.show_restoration(card)
 	GameState.boss_progress = 1.0
 	defeated.emit()
 	CelebrationBurst.spawn(self, body.global_position, true)
@@ -249,26 +249,10 @@ func _draw_boss_bar() -> void:
 func _draw() -> void:
 	_draw_boss_bar()
 	if state == State.DEFEATED:
-		for index: int in range(24):
-			var pos: Vector2 = Vector2(320, 176) + Vector2.from_angle(index * TAU / 24) * minf(death_elapsed, 0.6) * 180
-			draw_rect(Rect2(pos, Vector2(4, 4)), PQStyle.GREEN)
+		BossArt.restored(self, body.position, death_elapsed, PQStyle.GREEN if phase == 0 else PQStyle.RED,
+			GameState.reduce_flashes)
 		return
-	var color: Color = PQStyle.GREEN if phase == 0 else PQStyle.RED
-	var casing: Color = Color.WHITE if flash > 0 and not GameState.reduce_flashes else Color("1e2b44")
-	draw_rect(Rect2(240, 128, 160, 96), casing)
-	draw_rect(Rect2(240, 128, 160, 96), PQStyle.EDGE, false, 2)
-	for index: int in range(4):
-		var x: float = 254 + index * 44
-		draw_line(Vector2(x, 128), Vector2(x - 4, 100), PQStyle.EDGE, 5)
-		draw_circle(Vector2(x - 4, 99), 3, color)
-	for x: float in [278.0, 346.0]:
-		draw_rect(Rect2(x, 154, 20, 10), color)
-		draw_line(Vector2(x, 150), Vector2(x + 20, 155 if phase == 1 else 150), color, 3)
-	draw_rect(Rect2(294, 184, 52, 25), PQStyle.NIGHT)
-	for index: int in range(6):
-		draw_rect(Rect2(300 + index * 7, 186, 3, 12), PQStyle.AMBER)
-	for index: int in range(8):
-		draw_rect(Rect2(250 + index * 18, 216, 5, 2), color)
+	BossArt.router(self, body.position, phase, age, flash, GameState.reduce_flashes)
 	if state == State.TELEGRAPH:
 		match attack:
 			&"A":

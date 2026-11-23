@@ -4,10 +4,14 @@ extends Node2D
 signal phase_changed(index: int)
 signal defeated
 
+const BossArt = preload("res://scripts/art/boss_art.gd")
+const ArtMotion = preload("res://scripts/art/art_motion.gd")
+
 enum State { INTRO, WARNING, JUMP, OPEN, RECOVERY, PHASE_TRANSITION, DEFEATED }
 
 const CHEST_SPOTS: Array[Vector2] = [Vector2(160, 296), Vector2(320, 296), Vector2(480, 296)]
 const DESCARGA_LANES: Array[float] = [296.0, 256.0, 216.0]
+const PHASE_COLORS: Array[Color] = [PQStyle.MAGENTA, PQStyle.AMBER, PQStyle.MAGENTA]
 const PHASE_NAMES: Array[String] = ["Cofre sellado", "Invocación", "Cofres falsos"]
 const POPUP: PackedScene = preload("res://scenes/enemies/PopUp.tscn")
 const MAX_HEALTH: float = 150.0
@@ -32,6 +36,7 @@ var phase: int = 1
 var _state: State = State.INTRO
 var _timer: float = 1.2
 var _flash: float = 0.0
+var _art_age: float = 0.0
 var _step: int = 0
 var _target: int = 0
 var _jump_origin: Vector2
@@ -98,6 +103,7 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	if _state != State.DEFEATED and player.state == PacketPlayer.State.DEAD:
 		return
+	_art_age += delta
 	_flash = maxf(0.0, _flash - delta)
 	_timer -= delta
 	match _state:
@@ -228,9 +234,7 @@ func _defeat() -> void:
 	body.hide()
 	pool.clear_enemy()
 	_clear_minions()
-	card.text = "SEGMENTO RESTAURADO"
-	card.modulate = PQStyle.GREEN
-	card.show()
+	BossArt.show_restoration(card)
 	GameState.collect_core(&"w4_trojan_boss")
 	GameState.win()
 	defeated.emit()
@@ -242,9 +246,8 @@ func _draw() -> void:
 		return
 	_draw_health()
 	if _state == State.DEFEATED:
-		for index: int in range(16):
-			var drift: Vector2 = Vector2.from_angle(index * TAU / 16.0) * (RECOVERY_TIME - _timer) * 110.0
-			draw_rect(Rect2(body.position + drift, Vector2(4, 4)), PQStyle.GREEN)
+		BossArt.restored(self, body.position - Vector2(0, 16), RECOVERY_TIME - _timer, PHASE_COLORS[phase - 1],
+			GameState.reduce_flashes)
 		return
 	var fake_phase: bool = phase == 3 and _state != State.PHASE_TRANSITION
 	if fake_phase:
@@ -253,7 +256,8 @@ func _draw() -> void:
 				var glows: bool = index == _target and WARNING_TIME - _timer < GLOW_TIME
 				_draw_chest(CHEST_SPOTS[index], PQStyle.CYAN if glows else PQStyle.MAGENTA, false)
 	if not (fake_phase and _state == State.WARNING):
-		var tint: Color = Color.WHITE if _flash > 0.0 and not GameState.reduce_flashes else PQStyle.MAGENTA
+		var tint: Color = PHASE_COLORS[phase - 1]
+		tint = tint.lerp(tint.lightened(0.5), ArtMotion.hit_strength(_flash, GameState.reduce_flashes))
 		_draw_chest(body.position, tint, _state == State.OPEN)
 	if _state == State.JUMP or (_state == State.WARNING and phase < 3):
 		var landing: Vector2 = chest_spot(_target) + Vector2(0, 6)
@@ -274,7 +278,8 @@ func _draw_health() -> void:
 
 func _draw_chest(center: Vector2, tint: Color, opened: bool) -> void:
 	var base: Rect2 = Rect2(center + Vector2(-24, -12), Vector2(48, 20))
-	var lid_y: float = -29.0 if opened else -23.0
+	var tick: int = ArtMotion.frame(_art_age, 4.0, 4)
+	var lid_y: float = -29.0 if opened else -23.0 - (1.0 if tick == 2 else 0.0)
 	var lid: Rect2 = Rect2(center + Vector2(-25, lid_y), Vector2(50, 11))
 	draw_rect(base, PQStyle.NIGHT)
 	draw_rect(base.grow(-2.0), PQStyle.CHIP)
@@ -283,9 +288,14 @@ func _draw_chest(center: Vector2, tint: Color, opened: bool) -> void:
 	draw_rect(lid, tint, false, 2.0)
 	for x: float in [-18.0, 14.0]:
 		draw_rect(Rect2(center + Vector2(x, -9), Vector2(4, 14)), Color(tint, 0.5))
+		draw_rect(Rect2(center + Vector2(x, -2), Vector2(4, 1)), BossArt.BEVEL)
+		draw_rect(Rect2(center + Vector2(x, 5), Vector2(5, 2)), PQStyle.NIGHT)
+	for index: int in range(phase):
+		draw_rect(Rect2(center + Vector2(-8 + 7 * index, lid_y + 4), Vector2(4, 2)),
+			tint if index == tick % phase else BossArt.BEVEL)
 	if opened:
 		draw_rect(Rect2(center + Vector2(-18, -18), Vector2(36, 6)), PQStyle.RED)
-		draw_circle(center + Vector2(0, -13), 8.0, Color(PQStyle.CYAN, 0.4))
+		draw_rect(Rect2(center + Vector2(-8, -20), Vector2(16, 15)), Color(PQStyle.CYAN, 0.26))
 		draw_rect(Rect2(center + Vector2(-4, -15), Vector2(8, 9)), PQStyle.CYAN)
 	else:
 		draw_rect(Rect2(center + Vector2(-5, -15), Vector2(10, 12)), PQStyle.AMBER)

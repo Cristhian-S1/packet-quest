@@ -4,6 +4,9 @@ extends Node2D
 signal phase_changed(index: int)
 signal defeated
 
+const BossArt = preload("res://scripts/art/boss_art.gd")
+const ArtMotion = preload("res://scripts/art/art_motion.gd")
+
 enum State { INTRO, WAIT, TELEGRAPH, ACTIVE, RECOVERY, PHASE_TRANSITION, DEFEATED }
 enum Attack { RULE, LASER }
 
@@ -11,6 +14,7 @@ const MAX_HEALTH: float = 120.0
 const PHASE_TWO: float = 0.70
 const PHASE_THREE: float = 0.40
 const PHASE_NAMES: Array[String] = ["Reglas de bloqueo", "Puertos abiertos", "El muro avanza"]
+const PHASE_COLORS: Array[Color] = [PQStyle.RED, PQStyle.BLUE, PQStyle.MAGENTA]
 const PORT_COLORS: Array[Color] = [PQStyle.RED, PQStyle.GREEN, PQStyle.BLUE]
 const FLOOR: float = 304.0
 const CENTER_PORT: float = 176.0
@@ -49,6 +53,7 @@ var _lower: FirewallBrick
 var _port_y: float = -1.0
 var _port_warning: bool = false
 var _port_flash: float = 0.0
+var _restoration_origin: Vector2
 
 static func phase_for(hp_ratio: float) -> int:
 	if hp_ratio <= PHASE_THREE:
@@ -289,13 +294,12 @@ func _defeat() -> void:
 	_state = State.DEFEATED
 	_timer = 0.8
 	var origin: Vector2 = _wall.to_global(Vector2(14, _port_y if _port_y >= 0.0 else CENTER_PORT))
+	_restoration_origin = to_local(origin)
 	_set_port(-1.0)
 	_clear_attacks()
 	_wall.hide()
 	CelebrationBurst.spawn(self, origin, true)
-	card.text = "SEGMENTO RESTAURADO"
-	card.modulate = PQStyle.GREEN
-	card.show()
+	BossArt.show_restoration(card)
 	GameState.collect_core(&"w3_firewall_boss")
 	GameState.win()
 	defeated.emit()
@@ -306,9 +310,8 @@ func _draw() -> void:
 		return
 	_draw_health()
 	if _state == State.DEFEATED:
-		for index: int in range(20):
-			var drift: Vector2 = Vector2.from_angle(index * TAU / 20.0) * (0.8 - _timer) * 160.0
-			draw_rect(Rect2(to_local(core.global_position) + drift, Vector2(4, 4)), PQStyle.GREEN)
+		BossArt.restored(self, _restoration_origin, 0.8 - _timer, PHASE_COLORS[phase - 1],
+			GameState.reduce_flashes)
 		return
 	_draw_ports()
 	if _attack == Attack.LASER and (_state == State.TELEGRAPH or _state == State.ACTIVE):
@@ -324,14 +327,15 @@ func _draw_health() -> void:
 
 func _draw_ports() -> void:
 	var front: float = _wall.position.x
+	var phase_ink: Color = PHASE_COLORS[phase - 1]
 	for index: int in range(PORT_NAMES.size()):
 		var y: float = CENTER_PORT if phase != 2 and index == 0 else RuleBar.LANES_Y[2 - index]
 		var active: bool = y == _port_y
 		var tint: Color = PORT_COLORS[index] if phase == 2 else PQStyle.AMBER
 		if not active:
 			tint = Color(tint, 0.42)
-		if index == 0 and _port_warning and (GameState.reduce_flashes or int(_phase_age * 18.0) % 2 == 0):
-			tint = Color.WHITE
+		if index == 0 and _port_warning:
+			tint = Color(PQStyle.RED, ArtMotion.warning_strength(_phase_age, GameState.reduce_flashes))
 		var height: float = minf(PORT_SIZE, FLOOR - y + PORT_SIZE / 2.0)
 		var mouth: Rect2 = Rect2(front + CORE_DEPTH - PORT_SIZE / 2.0, y - PORT_SIZE / 2.0, PORT_SIZE, height)
 		if active:
@@ -340,15 +344,25 @@ func _draw_ports() -> void:
 		draw_rect(mouth, tint, false, 1.0)
 		var port_name: String = "CENTRAL" if phase != 2 and index == 0 else PORT_NAMES[index]
 		draw_string(ThemeDB.fallback_font, Vector2(front + 73, y + 4), port_name, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, tint)
-	draw_rect(Rect2(front + 80, 86, 62, 40), PQStyle.NIGHT)
-	draw_rect(Rect2(front + 80, 86, 62, 40), PQStyle.RED, false)
-	draw_string(ThemeDB.fallback_font, Vector2(front + 88, 102), "ESTADO", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, PQStyle.RED)
+	draw_rect(Rect2(front + 80, 86, 62, 48), PQStyle.NIGHT)
+	draw_rect(Rect2(front + 80, 86, 62, 48), phase_ink, false)
+	draw_string(ThemeDB.fallback_font, Vector2(front + 88, 102), "ESTADO", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, phase_ink)
 	draw_string(ThemeDB.fallback_font, Vector2(front + 88, 117), "ABIERTO" if _port_y >= 0.0 else "CERRADO",
 		HORIZONTAL_ALIGNMENT_LEFT, -1, 9, PQStyle.GREEN if _port_y >= 0.0 else PQStyle.AMBER)
+	var tick: int = ArtMotion.frame(_phase_age, 4.0, 5)
+	for index: int in range(5):
+		draw_rect(Rect2(front + 88 + index * 10, 124, 7, 3), phase_ink if index == tick else PQStyle.EDGE)
+	for index: int in range(phase):
+		draw_rect(Rect2(front + 1, 64 + index * 6, 54, 2), phase_ink.darkened(0.35))
+	if phase == 3:
+		for y: int in range(145, 286, 22):
+			if _port_y < 0.0 or absf(y - _port_y) > PORT_SIZE / 2.0 + 8:
+				var point: Vector2 = Vector2(front + 6 - tick, y)
+				draw_line(point, point + Vector2(8, -5), phase_ink, 2)
+				draw_line(point, point + Vector2(8, 5), phase_ink, 2)
 
 func _draw_core(center: Vector2, tint: Color) -> void:
-	if _port_flash > 0.0 and not GameState.reduce_flashes:
-		tint = Color.WHITE
+	tint = tint.lerp(tint.lightened(0.45), ArtMotion.hit_strength(_port_flash, GameState.reduce_flashes))
 	var diamond: PackedVector2Array = PackedVector2Array([center + Vector2(0, -16), center + Vector2(15, 0),
 		center + Vector2(0, 16), center + Vector2(-15, 0), center + Vector2(0, -16)])
 	draw_colored_polygon(diamond, Color(tint, 0.25))
@@ -411,4 +425,4 @@ class FirewallBrick extends ChipPlatform:
 				draw_line(Vector2(x, y - 15), Vector2(x, y), Color(PQStyle.RED, 0.30))
 		draw_line(Vector2(1, 0), Vector2(1, size.y), PQStyle.RED, 2.0)
 		if _flash > 0.0 and not GameState.reduce_flashes:
-			draw_line(Vector2(3, 0), Vector2(3, size.y), PQStyle.AMBER, 2.0)
+			draw_line(Vector2(3, 0), Vector2(3, size.y), Color(PQStyle.AMBER, 0.45), 2.0)

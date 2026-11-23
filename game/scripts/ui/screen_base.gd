@@ -2,11 +2,12 @@ class_name PacketScreen
 extends CanvasLayer
 
 var panel: Control
+var backdrop: ColorRect
 
 func _ready() -> void:
 	layer = 30
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	var backdrop: ColorRect = ColorRect.new()
+	backdrop = ColorRect.new()
 	backdrop.color = Color(PQStyle.NIGHT, 0.93)
 	backdrop.size = Vector2(640, 360)
 	add_child(backdrop)

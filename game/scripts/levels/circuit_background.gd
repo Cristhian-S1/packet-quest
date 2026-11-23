@@ -19,8 +19,11 @@ func _draw() -> void:
 	for index: int in range(-1, 7):
 		var x: float = index * 144 - fposmod(scroll * 0.3, 144)
 		draw_rect(Rect2(x, 96, 96, 216), Color(PQStyle.BOARD, 0.5))
+		draw_rect(Rect2(x + 1, 96, 94, 2), Color(PQStyle.EDGE, 0.22))
 		for y: int in range(112, 304, 24):
 			draw_rect(Rect2(x + 8, y, 80, 12), Color(PQStyle.CHIP, 0.28))
+			draw_rect(Rect2(x + 12, y + 2, 18, 8), Color(PQStyle.NIGHT, 0.6))
+			draw_rect(Rect2(x + 35, y + 5, 25, 1), Color("3e2d32"))
 			draw_circle(Vector2(x + 77, y + 6), 1, Color(PQStyle.GREEN, 0.3))
 	for index: int in range(-1, 9):
 		var x: float = index * 96 - fposmod(scroll * 0.55, 96)

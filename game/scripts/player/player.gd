@@ -5,6 +5,9 @@ signal health_changed(current: float, maximum: float)
 signal shield_changed(current: float, maximum: float)
 enum State { IDLE, RUN, JUMP, FALL, DASH, SHIELD, HURT, DEAD }
 
+const ByteArt = preload("res://scripts/art/byte_art.gd")
+const ART_POSES: Array[StringName] = [&"idle", &"run", &"jump", &"fall", &"dash", &"shield", &"hurt", &"dead"]
+
 @export var speed: float = 150.0
 @export var acceleration: float = 1200.0
 @export var friction: float = 1600.0
@@ -59,6 +62,8 @@ var aim: Vector2 = Vector2.RIGHT
 var safe_position: Vector2 = Vector2.ZERO
 var pool: ProjectilePool
 var animation_time: float = 0.0
+var art_shot_left: float = 0.0
+var art_death_age: float = 0.0
 var trails: Array[Vector2] = []
 var shake_left: float = 0.0
 var shake_power: float = 0.0
@@ -168,6 +173,7 @@ func _exit_tree() -> void:
 func _physics_process(delta: float) -> void:
 	tick_slowdown(delta)
 	animation_time += delta
+	art_shot_left = maxf(0.0, art_shot_left - delta)
 	queue_redraw()
 	if state == State.DEAD:
 		external_push = Vector2.ZERO
@@ -328,6 +334,7 @@ func shoot() -> void:
 		if bullet != null:
 			bullet.homing_turn_rad = deg_to_rad(item.homing_turn_deg)
 			bullet.marks = marker_active
+	art_shot_left = ByteArt.RECOIL_TIME
 	shoot_wait += 1.0 / item.fire_rate
 	AudioManager.play_sfx(item.sfx)
 
@@ -351,6 +358,8 @@ func interact() -> void:
 func _die() -> void:
 	state = State.DEAD
 	velocity = Vector2.ZERO
+	var dissolve: Tween = create_tween().set_ignore_time_scale(true).set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	dissolve.tween_method(_draw_death_frame, 0.0, ByteArt.DEATH_TIME, ByteArt.DEATH_TIME)
 	GameState.record_death()
 	Events.player_died.emit()
 
@@ -385,21 +394,21 @@ func _settings_changed(key: String) -> void:
 			health.current = minf(maximum, health.current + bonus)
 			health.changed.emit(health.current, maximum)
 
+func visual_pose() -> StringName:
+	if state == State.IDLE and art_shot_left > 0.0:
+		return &"fire"
+	return ART_POSES[state]
+
+func visual_frame() -> int:
+	return ByteArt.frame(visual_pose(), animation_time)
+
+func _draw_death_frame(age: float) -> void:
+	art_death_age = age
+	queue_redraw()
+
 func _draw() -> void:
-	for index: int in range(trails.size()):
-		draw_rect(Rect2(to_local(trails[index]) - Vector2(8, 8), Vector2(16, 16)), Color(PQStyle.CYAN, 0.12 * (3 - index)))
-	if invulnerability > 0 and not GameState.reduce_flashes and int(animation_time * 14) % 2 == 0:
-		return
-	draw_rect(Rect2(-9, -9, 18, 18), Color("0b1a2e"))
-	draw_rect(Rect2(-8, -8, 16, 16), PQStyle.CYAN)
-	draw_rect(Rect2(-6, -6, 12, 3), Color.WHITE)
-	draw_rect(Rect2(facing * 2 - 3, -1, 2, 3), PQStyle.NIGHT)
-	draw_rect(Rect2(facing * 2 + 2, -1, 2, 3), PQStyle.NIGHT)
-	var step: float = sin(animation_time * 20) * 2 if state == State.RUN else 0.0
-	draw_line(Vector2(-4, 7), Vector2(-5 + step, 11), PQStyle.CYAN, 2)
-	draw_line(Vector2(4, 7), Vector2(5 - step, 11), PQStyle.CYAN, 2)
-	draw_line(Vector2.ZERO, aim * 13, PQStyle.CHIP, 5)
-	draw_circle(aim * 9 + Vector2(0, 2), 3, Color.WHITE)
-	draw_line(aim * 11, aim * 15, PQStyle.CYAN, 4)
-	if shield_active:
-		draw_arc(Vector2.ZERO, 16, -1.2 if facing > 0 else PI - 1.2, 1.2 if facing > 0 else PI + 1.2, 10, PQStyle.GREEN, 3)
+	if state == State.DASH:
+		for index: int in range(trails.size() - 1, -1, -1):
+			ByteArt.draw_trail(self, to_local(trails[index]), dash_vector, 0.17 * (3 - index))
+	ByteArt.draw_byte(self, visual_pose(), visual_frame(), facing, aim, dash_vector, art_shot_left,
+		hurt_left, invulnerability, art_death_age, shield_active, GameState.reduce_flashes)

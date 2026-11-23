@@ -3,6 +3,7 @@ extends StaticBody2D
 
 const SIZE: Vector2 = Vector2(64, 12)
 const WARNING_TIME: float = 0.3
+const TileArt = preload("res://scripts/art/tile_art.gd")
 
 @export var router: NodePath
 @export_range(0.0, 1000.0, 1.0) var range_px: float = 160.0
@@ -46,12 +47,9 @@ func _physics_process(delta: float) -> void:
 		queue_redraw()
 
 func _draw() -> void:
-	var color: Color = PQStyle.CYAN
+	var color: Color = PQStyle.BLUE.darkened(0.16)
 	if not _solid:
 		color.a = 0.35
 	elif _time_outside > 0.0:
-		color = Color(PQStyle.AMBER, 0.8 if GameState.reduce_flashes or sin(_time_outside * 55) > 0 else 0.38)
-	draw_rect(Rect2(-SIZE / 2, SIZE), Color(PQStyle.CHIP, color.a))
-	draw_line(Vector2(-32, -6), Vector2(32, -6), color, 2)
-	for x: int in range(-26, 29, 10):
-		draw_line(Vector2(x, 0), Vector2(x + 4, 0), color, 2)
+		color = PQStyle.AMBER
+	TileArt.chip(self, Rect2(-SIZE / 2, SIZE), color, color.a)

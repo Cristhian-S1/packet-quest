@@ -15,6 +15,4 @@ func take_damage(amount: float, origin: Vector2) -> void:
 func _draw() -> void:
 	super._draw()
 	if state != State.DEAD:
-		var plate: Rect2 = Rect2(facing * 10.0 - Vector2(2, 10), Vector2(4, 20))
-		draw_rect(plate, PQStyle.RED)
-		draw_rect(plate, Color.WHITE, false)
+		EnemyArt.armor(self, facing * 10.0, 20.0, facing.x)

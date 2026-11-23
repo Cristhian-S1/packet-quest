@@ -57,7 +57,11 @@ class Leds extends Node2D:
 
 	func _rail(x: int, y: int) -> void:
 		draw_rect(Rect2(x, y, 35, 7), Color(PQStyle.NIGHT, 0.66))
-		draw_rect(Rect2(x + 3, y + 2, 9, 2), Color(tint, 0.36))
-		draw_rect(Rect2(x + 17, y + 2, 3, 2), Color(tint, 0.25))
-		draw_rect(Rect2(x + 23, y + 2, 3, 2), Color(PQStyle.GREEN, 0.29))
-		draw_line(Vector2(x + 35, y + 3), Vector2(x + 58, y + 3), Color(PQStyle.EDGE, 0.25))
+		draw_rect(Rect2(x + 3, y + 2, 9, 2), Color(tint, 0.28))
+		draw_rect(Rect2(x + 17, y + 2, 3, 2), Color(tint, 0.22))
+		draw_rect(Rect2(x + 23, y + 2, 3, 2), Color(PQStyle.GREEN, 0.23))
+		var trace: Color = Color("4c3836")
+		var points: PackedVector2Array = [Vector2(x + 35, y + 3), Vector2(x + 49, y + 3),
+			Vector2(x + 56, y + 10), Vector2(x + 73, y + 10)]
+		draw_polyline(points, trace)
+		draw_rect(Rect2(x + 72, y + 9, 3, 3), trace)

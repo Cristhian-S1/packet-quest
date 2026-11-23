@@ -7,6 +7,11 @@ func snap(file: String, directory: String = "res://validation") -> Error:
 	await RenderingServer.frame_post_draw
 	return tree.root.get_texture().get_image().save_png(directory.path_join(file + ".png"))
 
+func capture_m13(scene_tree: SceneTree, before: bool) -> void:
+	tree = scene_tree
+	var gallery: RefCounted = load("res://tests/preview_m13.gd").new()
+	await gallery.call("capture", self, tree, before)
+
 func capture_options(scene_tree: SceneTree) -> void:
 	tree = scene_tree
 	GameState.data = SaveManager.defaults()

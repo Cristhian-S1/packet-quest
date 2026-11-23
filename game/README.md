@@ -169,7 +169,7 @@ bash tools/run-tests.sh --integration
 Vence al Troyano Real, selecciona **Centro de datos** en el mapa y pulsa **Entrar**.
 
 - **Centro de datos (5-1).** Usa las corrientes de aire para alcanzar la repisa alta. Cruza los apoyos de cobertura cerca del router, combina salto y dash entre los puertos y espera a que las nubes vuelvan a solidificarse. Busca un núcleo tras el hueco de los puertos y el otro sobre la última nube.
-- **Bot DDoS.** Cuando su carcasa se ilumina en ámbar, aléjate del abanico que apunta a Byte.
+- **Bot DDoS.** Las marcas rojas anticipan el abanico que apunta a Byte. Sus proyectiles son rosas.
 - **Prioridad de tráfico.** Pulsa **E** (o **Y / Triángulo**) en los interruptores de mayor a menor urgencia. Puedes usar **↺** para reiniciar. Cuando se abra la compuerta, camina hacia el extremo derecho.
 - **Malwarex.** Tiene 200 PV y cambia de fase al 75 %, 50 % y 25 %. Esquiva por los huecos de los cables y de la regla. En la tercera fase, conecta tres nodos para quitar los escudos. En la última, el suelo seguro queda a la izquierda.
 - **Final.** La victoria abre el epílogo y los créditos con el saldo de núcleos, las muertes y el tiempo de partida. **Nueva partida** inicia Red Local con los ajustes actuales.
@@ -182,3 +182,11 @@ bash tools/run-tests.sh --integration
 ~~~
 
 [Centro de datos](../docs/capturas/level5.png) · [Malwarex](../docs/capturas/boss5.png) · [Créditos](../docs/capturas/credits.png)
+
+## M13 · Arte procedural y animación
+
+La galería compara poses de Byte, avisos y derrotas de enemigos, todas las fases de los jefes y los cinco escenarios. [Antes](../docs/capturas/m13/antes/) · [Después](../docs/capturas/m13/despues/)
+
+```powershell
+& $godot --path game --fixed-fps 60 -s res://tests/capture_preview.gd -- --m13-after
+```
