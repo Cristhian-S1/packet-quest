@@ -161,8 +161,8 @@ func show_credits() -> void:
 
 func new_game() -> Error:
 	var fresh: Dictionary = SaveManager.defaults()
-	var settings: Dictionary = data.get("settings", fresh["settings"])
-	fresh["settings"] = settings.duplicate(true)
+	var saved_settings: Dictionary = data.get("settings", fresh["settings"])
+	fresh["settings"] = saved_settings.duplicate(true)
 	save_error = SaveManager.save_game(fresh)
 	if save_error == OK:
 		data = fresh

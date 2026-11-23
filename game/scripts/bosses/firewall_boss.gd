@@ -407,5 +407,5 @@ class FirewallBrick extends ChipPlatform:
 			for x: int in range(offset, int(size.x), 30):
 				draw_line(Vector2(x, y - 15), Vector2(x, y), Color(PQStyle.RED, 0.30))
 		draw_line(Vector2(1, 0), Vector2(1, size.y), PQStyle.RED, 2.0)
-		if _flash > 0.0:
+		if _flash > 0.0 and not GameState.reduce_flashes:
 			draw_line(Vector2(3, 0), Vector2(3, size.y), PQStyle.AMBER, 2.0)

@@ -30,6 +30,7 @@ var _hint: bool = false
 var _player: PacketPlayer
 
 func _ready() -> void:
+	GameState.settings_changed.connect(_settings_changed)
 	_packets = FirewallFilter.generate_sequence(sequence_seed)
 	_player = get_tree().get_first_node_in_group(&"player") as PacketPlayer
 	reset_node = _create_node(64.0, "↺ REINICIAR", PQStyle.AMBER, reset_puzzle)
@@ -52,6 +53,10 @@ func _ready() -> void:
 		door.set_open()
 		_feedback.text = FACT
 	_update_display()
+
+func _settings_changed(key: String) -> void:
+	if key.is_empty() or key == "reduce_flashes":
+		queue_redraw()
 
 func _create_node(x: float, title: String, color: Color, action: Callable) -> NetworkNode:
 	var node: NetworkNode = NetworkNode.new()

@@ -8,6 +8,8 @@ var finished: bool = false
 func run(tree: SceneTree) -> PackedStringArray:
 	_check_buses_at_restore()
 	await _controls(tree)
+	await _main_roundtrip(tree)
+	await _pause_roundtrip(tree)
 	GameState.data = SaveManager.defaults()
 	SaveManager.save_game(GameState.data)
 	GameState.restore()
@@ -100,6 +102,78 @@ func _slider(tree: SceneTree, key: String, bus: StringName, initial: float) -> v
 	_check(is_equal_approx(slider.value, 0.1) and _saved_volume(key, 0.1), "%s debe responder al mando" % key)
 	_check_bus(bus, 0.1)
 	await _tap(tree, &"ui_left")
+
+func _main_roundtrip(tree: SceneTree) -> void:
+	var main: Node = preload("res://scenes/main/Main.tscn").instantiate()
+	tree.root.add_child(main)
+	await tree.process_frame
+	var play: Button = _focused(tree) as Button
+	_check(play != null and play.text.begins_with("Jugar"), "Jugar debe conservar el foco inicial")
+	await _joy_tap(tree, JOY_BUTTON_DPAD_RIGHT)
+	var opener: Button = _focused(tree) as Button
+	if opener == null or opener.text != "Opciones":
+		errors.append("el mando debe enfocar Opciones entre Jugar y Salir")
+	else:
+		await _tap(tree, &"ui_right")
+		var exit_button: Button = _focused(tree) as Button
+		_check(exit_button != null and exit_button.text == "Salir", "Salir debe quedar después de Opciones")
+		await _tap(tree, &"ui_left")
+		_check(_focused(tree) == opener, "Izquierda debe regresar a Opciones desde Salir")
+		await _joy_tap(tree, JOY_BUTTON_A)
+		await _close_options(tree, main.get_node_or_null("OptionsMenu"), opener, "menú principal")
+	main.queue_free()
+	await tree.process_frame
+
+func _pause_roundtrip(tree: SceneTree) -> void:
+	var world: World1Level1 = preload("res://scenes/levels/World1Level1.tscn").instantiate() as World1Level1
+	tree.root.add_child(world)
+	await tree.physics_frame
+	await _tap(tree, &"pause")
+	_check(tree.paused, "la entrada pause debe pausar el nivel")
+	await _tap(tree, &"ui_down")
+	var opener: Button = _focused(tree) as Button
+	if opener == null or opener.text != "Opciones":
+		errors.append("la pausa debe ofrecer Opciones debajo de Continuar")
+	else:
+		await _tap(tree, &"ui_accept")
+		var menu: Node = world.find_child("OptionsMenu", true, false)
+		_check(tree.paused, "abrir Opciones debe mantener la pausa")
+		if menu != null:
+			Events.impact.emit(0.0, 4.0)
+			_check(world.player.shake_left == 0.0, "la sacudida desactivada debe ignorar impactos")
+			await _tap(tree, &"ui_accept")
+			Events.impact.emit(0.0, 4.0)
+			_check(world.player.shake_left > 0.0, "activar la sacudida debe afectar al nivel en curso")
+			world.player.camera.offset = Vector2(4, 4)
+			await _tap(tree, &"ui_accept")
+			_check(world.player.shake_left == 0.0 and world.player.camera.offset == Vector2.ZERO, "desactivar la sacudida debe limpiar el desplazamiento")
+			await _tap(tree, &"ui_down")
+			await _tap(tree, &"ui_down")
+			await _tap(tree, &"ui_accept")
+			_check(not bool(GameState.data["settings"]["assist_mode"]) and Engine.time_scale == 1.0, "desactivar asistencia debe restaurar la velocidad")
+			_check(world.player.health.max_health == world.player.max_hp, "desactivar asistencia debe retirar el PV adicional")
+			await _tap(tree, &"ui_up")
+			await _tap(tree, &"ui_up")
+		await _close_options(tree, menu, opener, "pausa")
+		_check(tree.paused, "volver a la pausa debe mantener el juego pausado")
+		await _tap(tree, &"ui_up")
+		await _tap(tree, &"ui_accept")
+		_check(not tree.paused, "Continuar debe reanudar después de volver")
+	tree.paused = false
+	world.queue_free()
+	await tree.process_frame
+
+func _close_options(tree: SceneTree, menu: Node, opener: Button, source: String) -> void:
+	if menu == null:
+		var focus: Button = _focused(tree) as Button
+		errors.append("Opciones no se abrió desde %s; foco %s" % [source, focus.text if focus != null else str(_focused(tree))])
+		return
+	for index: int in range(5):
+		await _tap(tree, &"ui_down")
+	var back: Button = _focused(tree) as Button
+	_check(back != null and back.text == "Volver", "Volver debe tener foco tras los cinco ajustes")
+	await _tap(tree, &"ui_accept")
+	_check(not is_instance_valid(menu) and _focused(tree) == opener, "Volver debe cerrar Opciones y restaurar el foco")
 
 func _check_bus(bus: StringName, value: float) -> void:
 	var index: int = AudioServer.get_bus_index(bus)

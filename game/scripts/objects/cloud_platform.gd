@@ -19,6 +19,7 @@ static func state_at(t: float) -> StringName:
 	return &"fading" if elapsed < GONE_START else &"gone"
 
 func _ready() -> void:
+	GameState.settings_changed.connect(_settings_changed)
 	collision_layer = 1
 	collision_mask = 0
 	_age = phase_offset
@@ -35,7 +36,11 @@ func _physics_process(delta: float) -> void:
 		_state = next_state
 		_shape.set_deferred(&"disabled", _state == &"gone")
 		queue_redraw()
-	elif _state == &"fading":
+	elif _state == &"fading" and not GameState.reduce_flashes:
+		queue_redraw()
+
+func _settings_changed(key: String) -> void:
+	if key.is_empty() or key == "reduce_flashes":
 		queue_redraw()
 
 func _draw() -> void:

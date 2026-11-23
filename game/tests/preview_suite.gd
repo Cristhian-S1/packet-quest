@@ -7,6 +7,25 @@ func snap(file: String, directory: String = "res://validation") -> Error:
 	await RenderingServer.frame_post_draw
 	return tree.root.get_texture().get_image().save_png(directory.path_join(file + ".png"))
 
+func capture_options(scene_tree: SceneTree) -> void:
+	tree = scene_tree
+	GameState.data = SaveManager.defaults()
+	var main: Node = preload("res://scenes/main/Main.tscn").instantiate()
+	tree.root.add_child(main)
+	await tree.process_frame
+	var pilot: BotPilot = BotPilot.new(tree)
+	await pilot.key_tap(KEY_RIGHT)
+	await pilot.confirm()
+	if main.get_node_or_null("OptionsMenu") == null:
+		push_error("No se pudo abrir la pantalla de opciones para la captura")
+		tree.quit(1)
+		return
+	var directory: String = ProjectSettings.globalize_path("res://../docs/capturas").simplify_path()
+	var result: Error = await snap("options", directory)
+	if result != OK:
+		push_error("Error al guardar options.png (%d)" % result)
+	tree.quit(0 if result == OK else 1)
+
 func capture(scene_tree: SceneTree) -> void:
 	tree = scene_tree
 	var state: Node = tree.root.get_node("GameState")
