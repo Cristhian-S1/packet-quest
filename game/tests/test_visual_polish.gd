@@ -15,10 +15,15 @@ func run(tree: SceneTree) -> PackedStringArray:
 	return errors
 
 func _test_parallax(tree: SceneTree) -> void:
+	# Las pruebas de transición pueden dejar su propia cámara en la ventana raíz.
+	var viewport: SubViewport = SubViewport.new()
+	viewport.size = Vector2i(640, 360)
+	viewport.world_2d = World2D.new()
+	tree.root.add_child(viewport)
 	for index: int in range(1, GameState.WORLDS.size()):
 		var path: String = GameState.WORLDS[index]["level"]
 		var level: Node2D = (load(path) as PackedScene).instantiate() as Node2D
-		tree.root.add_child(level)
+		viewport.add_child(level)
 		var backdrop: CanvasLayer = level.get_node_or_null("LevelParallax") as CanvasLayer
 		if backdrop == null:
 			errors.append("%s debe tener tres capas de parallax" % path.get_file())
@@ -32,10 +37,14 @@ func _test_parallax(tree: SceneTree) -> void:
 			player.position.x = 480.0
 			player.camera.force_update_scroll()
 			backdrop.call("_process", 0.0)
+			_check(viewport.get_camera_2d() == player.camera, "%s debe seguir la cámara de Byte" % path.get_file())
 			_check(0.0 > grid.position.x and grid.position.x > racks.position.x
-				and racks.position.x > leds.position.x, "%s debe separar las tres velocidades" % path.get_file())
+				and racks.position.x > leds.position.x, "%s debe separar las tres velocidades (%s, %s, %s)"
+				% [path.get_file(), grid.position.x, racks.position.x, leds.position.x])
 		level.queue_free()
 		await tree.process_frame
+	viewport.queue_free()
+	await tree.process_frame
 
 func _test_core(tree: SceneTree) -> void:
 	var level: World1Level1 = preload("res://scenes/levels/World1Level1.tscn").instantiate() as World1Level1
