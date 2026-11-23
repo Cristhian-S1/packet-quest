@@ -92,5 +92,32 @@ func run(tree: SceneTree) -> PackedStringArray:
 	door.free()
 	checkpoint.free()
 	player.free()
+	await _popup_appearance(tree)
 	finished = true
 	return errors
+
+func _popup_appearance(tree: SceneTree) -> void:
+	var popup: PopUp = PopUp.new()
+	popup.position = Vector2(900, 180)
+	tree.root.add_child(popup)
+	popup.set_physics_process(false)
+	popup._physics_process(1.0 / 60.0)
+	check(not popup.visible, "Pop-up fuera de cámara no aparece")
+	popup.position.x = 320
+	popup._physics_process(1.0 / 60.0)
+	check(popup.visible and popup.self_modulate.a < 1.0, "Pop-up inicia con una aparición visible y gradual")
+	var hitbox: CollisionShape2D = popup.get_child(0) as CollisionShape2D
+	var rectangle: RectangleShape2D = hitbox.shape as RectangleShape2D
+	check(popup.scale == Vector2.ONE and rectangle.size == Vector2(20, 16) and popup.collision_layer == 4, "aparición conserva el colisionador")
+	popup.take_damage(1.0, Vector2.ZERO)
+	check(popup.health.current == 2.0, "Pop-up recibe daño durante la aparición")
+	for index: int in range(15):
+		await tree.process_frame
+	check(is_equal_approx(popup.self_modulate.a, 1.0), "la aparición del Pop-up dura como máximo 0,25 s")
+	popup.position.x = 900
+	popup._physics_process(1.0 / 60.0)
+	popup.position.x = 320
+	popup._physics_process(1.0 / 60.0)
+	check(is_equal_approx(popup.self_modulate.a, 1.0), "el mismo Pop-up no reaparece al volver a cámara")
+	popup.queue_free()
+	await tree.process_frame
