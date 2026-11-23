@@ -59,6 +59,10 @@ func run(scene_tree: SceneTree) -> PackedStringArray:
 		return errors
 	await _capture("08_reina_vencida")
 	await _queen_victory()
+	_checkpoint("Reina y mapa")
+	if not await _world3():
+		_finish()
+		return errors
 	check(false, "recorrido a crÃ©ditos pendiente: mundos 3, 4 y 5 no implementados")
 	_finish()
 	return errors
@@ -473,3 +477,134 @@ func _queen_victory() -> void:
 	await pilot.wait_until(func() -> bool: return tree.current_scene is NetworkMap, 600)
 	tree.paused = false
 	check(tree.current_scene is NetworkMap, "vencer a la Reina no vuelve al mapa")
+
+func _world3() -> bool:
+	if not GameState.is_world_unlocked(GameState.data, 3):
+		check(false, "la Reina no desbloquea Firewall")
+		return false
+	var map: NetworkMap = tree.current_scene as NetworkMap
+	while map.selected_world != 3:
+		await pilot.menu_tap(&"ui_right")
+	await pilot.confirm()
+	if not await pilot.wait_until(func() -> bool: return tree.current_scene is World3Level1, 240):
+		check(false, "no se abre el mundo 3")
+		return false
+	_checkpoint("mapa al mundo 3")
+	var world: World3Level1 = tree.current_scene as World3Level1
+	var player: PacketPlayer = world.player
+	player.health.changed.connect(func(current: float, _maximum: float) -> void: print("Mundo 3: PV %.0f Byte %s" % [current, player.position]))
+	Input.action_press(&"move_right")
+	for approach: float in [210.0, 375.0]:
+		await pilot.wait_until(func() -> bool: return player.position.x >= approach or player.health.current <= 0.0, 300)
+		Input.action_press(&"jump")
+		await pilot.physics_frames(35)
+		Input.action_release(&"jump")
+		await pilot.wait_until(func() -> bool: return player.is_on_floor() or player.health.current <= 0.0, 100)
+		Input.action_release(&"move_right")
+		Input.action_press(&"move_left")
+		Input.action_press(&"lock_aim")
+		Input.action_press(&"shoot")
+		await pilot.physics_frames(65)
+		Input.action_release(&"shoot")
+		Input.action_release(&"lock_aim")
+		Input.action_release(&"move_left")
+		Input.action_press(&"move_right")
+		await pilot.physics_frames(2)
+	Input.action_release(&"move_right")
+	for laser_x: float in [664.0, 880.0]:
+		if not await _cross_port(world, player, laser_x):
+			return false
+	Input.action_press(&"move_right")
+	await pilot.wait_until(func() -> bool: return player.position.x >= 950.0 or player.health.current <= 0.0, 1200)
+	if player.health.current <= 0.0 or player.position.x < 950.0:
+		check(false, "mundo 3: no llega al foso: Byte %s PV %.0f" % [player.position, player.health.current])
+		return false
+	await _cross_world1_gap(player)
+	Input.action_release(&"move_right")
+	if not await _cross_port(world, player, 1160.0):
+		return false
+	Input.action_press(&"move_right")
+	await pilot.wait_until(func() -> bool: return player.position.x >= 1250.0 or player.health.current <= 0.0, 180)
+	Input.action_press(&"jump")
+	await pilot.physics_frames(16)
+	Input.action_press(&"dash")
+	await pilot.physics_frames(2)
+	Input.action_release(&"dash")
+	await pilot.physics_frames(20)
+	Input.action_release(&"jump")
+	await pilot.wait_until(func() -> bool: return player.is_on_floor() or player.health.current <= 0.0, 120)
+	await pilot.physics_frames(2)
+	Input.action_press(&"jump")
+	await pilot.physics_frames(32)
+	Input.action_release(&"jump")
+	await pilot.wait_until(func() -> bool: return player.is_on_floor() or player.health.current <= 0.0, 120)
+	Input.action_release(&"move_right")
+	if not await _cross_port(world, player, 1608.0):
+		return false
+	Input.action_press(&"move_right")
+	for approach: float in [1640.0, 1760.0]:
+		await pilot.wait_until(func() -> bool: return player.position.x >= approach or player.health.current <= 0.0, 200)
+		Input.action_press(&"jump")
+		await pilot.physics_frames(35)
+		Input.action_release(&"jump")
+		await pilot.wait_until(func() -> bool: return player.is_on_floor() or player.health.current <= 0.0, 100)
+		await pilot.physics_frames(2)
+	await pilot.wait_until(func() -> bool: return player.position.x >= 2380.0 or player.health.current <= 0.0, 1800)
+	Input.action_release(&"move_right")
+	Input.action_release(&"shoot")
+	if player.health.current <= 0.0 or player.position.x < 2380.0:
+		check(false, "mundo 3: no llega al puzle: Byte %s PV %.0f" % [player.position, player.health.current])
+		return false
+	var puzzle: FirewallPuzzle = world.puzzle
+	while puzzle.packet_index < puzzle.get(&"_packets").size():
+		var packet: Dictionary = puzzle.get(&"_packets")[puzzle.packet_index]
+		var allowed: bool = FirewallFilter.is_allowed(packet["shape"], packet["color"], FirewallFilter.TRIANGLE, FirewallFilter.RED)
+		var node: NetworkNode = puzzle.pass_node if allowed else puzzle.block_node
+		await _move_to(player, node.global_position.x)
+		var before: int = puzzle.packet_index
+		await pilot.tap(&"interact")
+		await pilot.frames(2)
+		if puzzle.packet_index == before:
+			check(false, "mundo 3: terminal no responde en %s" % player.position)
+			return false
+	if not puzzle.is_solved:
+		check(false, "mundo 3: filtro no resuelto")
+		return false
+	Input.action_press(&"move_right")
+	var entered: bool = await pilot.wait_until(func() -> bool: return tree.current_scene is FirewallBoss, 800)
+	Input.action_release(&"move_right")
+	check(entered, "mundo 3: no se abre arena Firewall")
+	_checkpoint("nivel 3-1")
+	if not entered:
+		return false
+	var won: bool = await load("res://tests/bot/firewall_pilot.gd").fight(tree, tree.current_scene)
+	pilot.release_all()
+	check(won, "mundo 3: Firewall Corrupto no vencido")
+	if not won:
+		return false
+	await _capture("09_firewall_vencido")
+	var map_reached: bool = await pilot.wait_until(func() -> bool: return tree.current_scene is NetworkMap, 600)
+	check(map_reached and GameState.is_world_unlocked(GameState.data, 4), "Firewall no vuelve al mapa o no desbloquea Servidor")
+	_checkpoint("Firewall y mapa")
+	return map_reached and GameState.is_world_unlocked(GameState.data, 4)
+
+func _cross_port(world: World3Level1, player: PacketPlayer, x: float) -> bool:
+	Input.action_press(&"move_right")
+	await pilot.wait_until(func() -> bool: return player.position.x >= x - 30.0 or player.health.current <= 0.0, 1200)
+	Input.action_release(&"move_right")
+	var laser: PortLaser
+	for node: Node in world.get_children():
+		if node is PortLaser and is_equal_approx((node as PortLaser).position.x, x):
+			laser = node as PortLaser
+			break
+	if laser == null:
+		check(false, "puerto %.0f no encontrado" % x)
+		return false
+	await pilot.wait_until(func() -> bool: return (laser.get(&"_state") == &"open" and fposmod(float(laser.get(&"_age")), 3.0) < 1.95) or player.health.current <= 0.0, 240)
+	Input.action_press(&"move_right")
+	await pilot.wait_until(func() -> bool: return player.position.x >= x + 20.0 or player.health.current <= 0.0, 120)
+	Input.action_release(&"move_right")
+	if player.health.current <= 0.0 or player.position.x < x + 20.0:
+		check(false, "mundo 3: puerto %.0f Byte %s PV %.0f" % [x, player.position, player.health.current])
+		return false
+	return true

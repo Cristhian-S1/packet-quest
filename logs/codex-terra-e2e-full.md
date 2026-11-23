@@ -40,3 +40,10 @@ El primer lanzamiento del checkout falló al no existir la caché de clases de G
 - Banco aislado: 10/10 victorias en 10 ejecuciones con semillas 1–10; las trayectorias observadas son similares, por lo que no prueban una cobertura exhaustiva de variaciones.
 - El recorrido encadenado venció a la Reina; el runner mantiene el FAIL explícito mientras faltan mundos 3–5 y créditos.
 - El lanzador importa recursos antes de ejecutar y tiene timeout de 600 s.
+
+## Mundo 3 y Firewall Corrupto
+
+- El recorrido encadenado atravesó 3-1, resolvió los diez paquetes mediante los terminales y venció al jefe; se comprobó el regreso al mapa y el desbloqueo del mundo 4. La travesía todavía necesita más pruebas frente a variaciones de los enemigos.
+- Banco aislado del Firewall: 10/10 victorias, semillas 1–10, sin asistencia. El piloto esquiva las barras y empuja el muro con disparos antes de atacar el núcleo.
+- Ejecución observada: mapa al mundo 3 0,024 s; nivel 3-1 1,092 s; Firewall y mapa 2,593 s. Los tiempos son de reloj headless.
+- No se ha demostrado un bug del juego. Mundos 4–5 y créditos siguen pendientes.
