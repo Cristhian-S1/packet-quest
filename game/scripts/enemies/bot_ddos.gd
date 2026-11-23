@@ -18,6 +18,7 @@ static func fan_directions(center: Vector2, count: int, spread_deg: float) -> Ar
 
 func _ready() -> void:
 	super._ready()
+	_warning_sfx = &"enemy_ddos"
 	_spawn = position
 
 func _physics_process(delta: float) -> void:
@@ -39,7 +40,7 @@ func advance(delta: float) -> void:
 	else:
 		state = State.TELEGRAPH
 		timer += telegraph_time
-		AudioManager.play_sfx(&"telegraph")
+		_play_attack_warning()
 
 func fire() -> void:
 	if not on_screen or not is_instance_valid(player) or pool == null:

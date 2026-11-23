@@ -24,8 +24,13 @@ const PRESETS: Dictionary[StringName, Array] = {
 	&"upgrade": [SINE, 480.0, 3.0, 0.016, 0.14, 0.2, 0.17, 0.5],
 	&"cable_connected": [SQUARE, 440.0, 3.7, 0.012, 0.11, 0.14, 0.035, 0.16],
 	&"firewall_connected": [SINE, 540.0, 3.8, 0.019, 0.12, 0.15, 0.06, 0.5],
-	&"telegraph": [SQUARE, 330.0, 1.5, 0.016, 0.10, 0.074, 0.18, 0.17],
 	&"boss_defeated": [SQUARE, 240.0, 3.6, 0.025, 0.26, 0.32, 0.05, 0.24],
+	# Enemigos: alerta aguda, arrastre, salto, apertura y ráfaga.
+	&"enemy_popup": [SQUARE, 780.0, 4.6, 0.005, 0.052, 0.080, 0.0, 0.20],
+	&"enemy_worm": [SAW, 290.0, -5.5, 0.013, 0.088, 0.12, 0.22, 0.5],
+	&"enemy_spyware": [SINE, 630.0, 8.0, 0.008, 0.075, 0.075, 0.28, 0.5],
+	&"enemy_trojan": [SQUARE, 185.0, 3.7, 0.026, 0.16, 0.17, 0.07, 0.35],
+	&"enemy_ddos": [NOISE, 3100.0, -8.0, 0.017, 0.11, 0.085, 0.34, 0.5],
 	# Router: anillo, estampida y láser.
 	&"router_A": [SINE, 390.0, 2.1, 0.016, 0.19, 0.20, 0.17, 0.5],
 	&"router_B": [NOISE, 1950.0, -4.0, 0.048, 0.18, 0.13, 0.28, 0.5],

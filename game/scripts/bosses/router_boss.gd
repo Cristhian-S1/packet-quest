@@ -50,7 +50,7 @@ var core_spawned: bool = false
 var card: Label
 
 func _ready() -> void:
-	AudioManager.play_music(&"boss")
+	AudioManager.play_music(&"boss_router")
 	StageBuilder.background(self)
 	pool = ProjectilePool.new()
 	add_child(pool)

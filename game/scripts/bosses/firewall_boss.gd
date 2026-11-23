@@ -70,7 +70,7 @@ static func wall_x(elapsed: float, hits: int) -> float:
 	return clampf(WALL_START - WALL_SPEED * elapsed + 8.0 * hits, WALL_LIMIT, WALL_START)
 
 func _ready() -> void:
-	AudioManager.play_music(&"boss")
+	AudioManager.play_music(&"boss_firewall")
 	GameState.current_world = 3
 	GameState.in_boss = true
 	GameState.death_cause = "firewall_corrupto"

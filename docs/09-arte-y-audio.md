@@ -34,9 +34,25 @@
 
 | Tipo | Dirección | Fuente |
 |---|---|---|
-| Música | Chiptune, 120–140 BPM. Un tema por mundo, un tema para menú y mapa, uno para créditos y un tema compartido por los jefes a 140 BPM. | Composiciones originales sintetizadas en `scripts/audio/` |
-| SFX | Pitidos y efectos digitales para movimiento, armas, impactos, puzles e interfaz. | Síntesis en `scripts/audio/` |
-| Avisos | Los jefes usan sonidos asociados a sus ataques. | Catálogo de efectos sintetizados |
+| Música | Chiptune / synthwave. Un tema por mundo a 120–140 BPM y uno por jefe a 130–150 BPM. | Composición propia en `MusicCatalog` |
+| SFX | Sonidos de módem, clics de teclado, pitidos de router y barridos digitales. | Síntesis procedural en `SfxCatalog` |
+| Avisos | Sonido fijo por tipo de enemigo común y por tipo de ataque de jefe, acompañado de una señal con forma. | Síntesis procedural en `SfxCatalog` |
 
-- El juego genera el audio al ejecutarse. `game/tools/export_audio.gd` exporta muestras WAV para revisión.
-- `game/assets/CREDITS.md` registra la procedencia de los recursos de audio.
+| Jefe | BPM | Motivo |
+|---|---:|---|
+| Router | 134 | Llamada sincopada que salta a la octava y contesta en descenso. |
+| Reina Wi-Fi | 142 | Arpegio ascendente con una nota aguda sostenida. |
+| Firewall | 146 | Golpes repetidos y un semitono de respuesta sobre un bajo insistente. |
+| Troyano Real | 138 | Frases agrupadas en 3+3+2 corcheas. |
+| Malwarex | 148 | Cuatro notas de apertura reaparecen en Remezcla, Cables vivos, Núcleo blindado y Borrado de datos. |
+
+Cada tema se genera en segundo plano como PCM mono de 16 bits a 22 050 Hz. El juego reutiliza el
+audio de la sesión y aplica un fundido de 280 ms entre pistas, también al cambiar de fase Malwarex.
+La muestra de Malwarex encadena sus cuatro secciones completas en el orden del combate.
+[Muestras WAV](audio/README.md)
+
+Los avisos comunes usan un margen de 32 px del viewport y un máximo de dos voces. Los blindados
+comparten el sonido de su tipo base y los avisos de jefe tienen prioridad en la mezcla.
+
+El juego genera el audio al ejecutarse; `game/tools/export_audio.gd` exporta muestras WAV para revisión.
+Registrar la licencia de cada recurso externo en `game/assets/CREDITS.md`.

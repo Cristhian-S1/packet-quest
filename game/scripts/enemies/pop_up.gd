@@ -7,6 +7,7 @@ var _appeared: bool = false
 
 func _ready() -> void:
 	super._ready()
+	_warning_sfx = &"enemy_popup"
 	self_modulate.a = 0.0
 
 func _physics_process(delta: float) -> void:

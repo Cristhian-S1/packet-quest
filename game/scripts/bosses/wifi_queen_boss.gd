@@ -74,7 +74,7 @@ static func interference_lanes(seed_index: int) -> Array[int]:
 		_: return [0, 3]
 
 func _ready() -> void:
-	AudioManager.play_music(&"boss")
+	AudioManager.play_music(&"boss_wifi_queen")
 	GameState.current_world = 2
 	GameState.in_boss = true
 	GameState.death_cause = "reina_wifi"
