@@ -1,5 +1,7 @@
 extends Node
 
+signal settings_changed(key: String)
+
 const WORLDS: Array[Dictionary] = [
 	{"level": "res://scenes/levels/World1Level1.tscn", "boss": "res://scenes/bosses/RouterBoss.tscn"},
 	{"level": "res://scenes/levels/World2Level1.tscn", "boss": "res://scenes/bosses/WifiQueenBoss.tscn"},
@@ -27,12 +29,42 @@ var puzzle_complete: bool = false
 var playing: bool = false
 var death_cause: String = "nivel_1_1"
 var save_error: Error = OK
+var settings: Dictionary:
+	get:
+		return data.get("settings", {})
+var reduce_flashes: bool:
+	get:
+		return bool(settings.get("reduce_flashes", false))
+var assist_mode: bool:
+	get:
+		return bool(settings.get("assist_mode", false))
+var screen_shake: bool:
+	get:
+		return bool(settings.get("screen_shake", true))
 
 func _ready() -> void:
-	call_deferred("restore")
+	restore()
 
 func restore() -> void:
 	data = SaveManager.load_game()
+	restore_speed()
+	settings_changed.emit("")
+
+func update_setting(key: String, value: Variant) -> Error:
+	var current: Dictionary = settings
+	var previous: Variant = current[key]
+	current[key] = value
+	var result: Error = save()
+	if result != OK:
+		current[key] = previous
+		return result
+	if key == "assist_mode":
+		restore_speed()
+	settings_changed.emit(key)
+	return OK
+
+func restore_speed() -> void:
+	Engine.time_scale = 0.8 if assist_mode else 1.0
 
 func _process(delta: float) -> void:
 	if playing and not data.is_empty():
@@ -76,7 +108,7 @@ func enter_boss() -> void:
 
 func change_scene(path: String) -> void:
 	get_tree().paused = false
-	Engine.time_scale = 0.8 if bool(data.get("settings", {}).get("assist_mode", false)) else 1.0
+	restore_speed()
 	get_tree().change_scene_to_file.call_deferred(path)
 
 func collect_core(id: StringName) -> bool:
@@ -129,8 +161,8 @@ func show_credits() -> void:
 
 func new_game() -> Error:
 	var fresh: Dictionary = SaveManager.defaults()
-	var settings: Dictionary = data.get("settings", fresh["settings"])
-	fresh["settings"] = settings.duplicate(true)
+	var saved_settings: Dictionary = data.get("settings", fresh["settings"])
+	fresh["settings"] = saved_settings.duplicate(true)
 	save_error = SaveManager.save_game(fresh)
 	if save_error == OK:
 		data = fresh

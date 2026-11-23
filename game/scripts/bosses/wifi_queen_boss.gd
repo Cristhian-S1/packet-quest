@@ -49,7 +49,6 @@ var _lanes: Array[int] = []
 var _interference_hit: bool = false
 var _age: float = 0.0
 var _flash: float = 0.0
-var _reduce_flashes: bool = false
 
 static func phase_for(hp_ratio: float) -> int:
 	if hp_ratio <= PHASE_THREE:
@@ -75,7 +74,6 @@ func _ready() -> void:
 	GameState.in_boss = true
 	GameState.death_cause = "reina_wifi"
 	GameState.boss_progress = 0.0
-	_reduce_flashes = bool(GameState.data.get("settings", {}).get("reduce_flashes", false))
 	add_child(WifiBackdrop.new())
 	pool = ProjectilePool.new()
 	add_child(pool)
@@ -310,7 +308,7 @@ func _draw_antennas(color: Color) -> void:
 			draw_arc(center, 31 + ring * 10, 0.25, PI - 0.25, 16, tint, 1.0)
 
 func _draw_queen(center: Vector2, color: Color) -> void:
-	var casing: Color = Color.WHITE if _flash > 0.0 and not _reduce_flashes else Color("223756")
+	var casing: Color = Color.WHITE if _flash > 0.0 and not GameState.reduce_flashes else Color("223756")
 	for side: float in [-1.0, 1.0]:
 		var wing: PackedVector2Array = PackedVector2Array([center + Vector2(side * 17, -8),
 			center + Vector2(side * 46, -19), center + Vector2(side * 42, 6), center + Vector2(side * 19, 17)])

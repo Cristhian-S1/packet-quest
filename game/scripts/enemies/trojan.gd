@@ -52,7 +52,7 @@ func _draw() -> void:
 	if state == State.DEAD:
 		draw_bits()
 		return
-	var tint: Color = Color.WHITE if flash > 0.0 else PQStyle.MAGENTA
+	var tint: Color = Color.WHITE if flash > 0.0 and not GameState.reduce_flashes else PQStyle.MAGENTA
 	draw_rect(Rect2(-11, -12, 22, 18), PQStyle.NIGHT)
 	draw_rect(Rect2(-11, -12, 22, 18), tint, false, 2.0)
 	draw_rect(Rect2(-7, -9, 14, 5), PQStyle.CHIP)

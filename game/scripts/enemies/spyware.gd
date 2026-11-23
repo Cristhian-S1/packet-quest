@@ -12,7 +12,6 @@ var jump_velocity: Vector2:
 	get:
 		return _body.velocity
 var _body: CharacterBody2D
-var _reduce_flashes: bool = false
 
 func _ready() -> void:
 	super._ready()
@@ -20,7 +19,6 @@ func _ready() -> void:
 	collision_layer = 0
 	collision_mask = 0
 	monitoring = false
-	_reduce_flashes = bool(GameState.data.get("settings", {}).get("reduce_flashes", false))
 	_body = CharacterBody2D.new()
 	_body.collision_layer = 0
 	_body.collision_mask = 1
@@ -92,13 +90,13 @@ func _draw() -> void:
 	if spy_state == SpyState.DISGUISED:
 		DataCore.draw_core(self, age, PQStyle.AMBER)
 		return
-	var color: Color = Color.WHITE if flash > 0.0 and not _reduce_flashes else PQStyle.MAGENTA
+	var color: Color = Color.WHITE if flash > 0.0 and not GameState.reduce_flashes else PQStyle.MAGENTA
 	draw_colored_polygon(PackedVector2Array([Vector2(-10, 6), Vector2(-7, -7), Vector2(0, -4),
 		Vector2(8, -10), Vector2(11, 6), Vector2(0, 9)]), color)
 	draw_rect(Rect2(-6, -1, 12, 4), PQStyle.NIGHT)
 	draw_rect(Rect2(-3, 0, 2, 2), PQStyle.PINK)
 	draw_rect(Rect2(2, 0, 2, 2), PQStyle.PINK)
 	if spy_state == SpyState.TELEGRAPH:
-		var shift: float = 2.0 if _reduce_flashes else sin(age * 50) * 5
+		var shift: float = 2.0 if GameState.reduce_flashes else sin(age * 50) * 5
 		draw_line(Vector2(-15 + shift, -12), Vector2(7 + shift, -12), PQStyle.PINK, 2)
 		draw_line(Vector2(0 - shift, 11), Vector2(14 - shift, 11), color, 2)

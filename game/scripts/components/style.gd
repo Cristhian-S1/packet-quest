@@ -42,18 +42,18 @@ static func panel(color: Color = NIGHT, border: Color = EDGE) -> StyleBoxFlat:
 	return style
 
 static func button(parent: Node, text: String, pos: Vector2, action: Callable, width: float = 224.0) -> Button:
-	var button: Button = Button.new()
-	button.text = text
-	button.position = pos
-	button.size = Vector2(width, 32)
-	button.add_theme_font_size_override("font_size", 14)
-	button.add_theme_stylebox_override("normal", panel(BOARD, EDGE))
-	button.add_theme_stylebox_override("hover", panel(CHIP, CYAN))
-	button.add_theme_stylebox_override("focus", panel(CHIP, CYAN))
-	button.add_theme_stylebox_override("pressed", panel(BOARD, GREEN))
-	button.pressed.connect(action)
-	parent.add_child(button)
-	return button
+	var node: Button = Button.new()
+	node.text = text
+	node.position = pos
+	node.size = Vector2(width, 32)
+	node.add_theme_font_size_override("font_size", 14)
+	node.add_theme_stylebox_override("normal", panel(BOARD, EDGE))
+	node.add_theme_stylebox_override("hover", panel(CHIP, CYAN))
+	node.add_theme_stylebox_override("focus", panel(CHIP, CYAN))
+	node.add_theme_stylebox_override("pressed", panel(BOARD, GREEN))
+	node.pressed.connect(action)
+	parent.add_child(node)
+	return node
 
 static func bar(color: Color) -> StyleBoxFlat:
 	var style: StyleBoxFlat = StyleBoxFlat.new()

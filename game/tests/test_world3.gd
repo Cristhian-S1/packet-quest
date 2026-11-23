@@ -344,6 +344,8 @@ func _test_level_route(tree: SceneTree) -> void:
 	stage = tree.current_scene as Node2D
 	player = stage.get(&"player") as PacketPlayer
 	check(player.position == Vector2(2400, 296), "reintentar reaparece en la sala del puzle")
+	# Aísla la interacción del retroceso y del hit-stop del Pop-up anterior al checkpoint.
+	player.invulnerability = 100.0
 
 	var puzzle: FirewallPuzzle = stage.get(&"puzzle") as FirewallPuzzle
 	for packet: Dictionary in FirewallFilter.generate_sequence(0):
@@ -356,6 +358,7 @@ func _test_level_route(tree: SceneTree) -> void:
 		Input.action_release(&"interact")
 		await tree.physics_frame
 	check(puzzle.is_solved and puzzle.door.opened, "los terminales del nivel abren la compuerta")
+	check(puzzle.mistakes == 0, "los terminales deben registrar la secuencia correcta sin errores (%d)" % puzzle.mistakes)
 	if not puzzle.is_solved:
 		return
 	# Desde el último terminal se recorre a pie toda la distancia hasta la salida.

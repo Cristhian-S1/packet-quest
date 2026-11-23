@@ -55,7 +55,7 @@ func _draw() -> void:
 		draw_bits()
 		return
 	var color: Color = PQStyle.AMBER if state == State.TELEGRAPH else PQStyle.MAGENTA
-	var hull: Color = Color.WHITE if flash > 0.0 else PQStyle.CHIP
+	var hull: Color = Color.WHITE if flash > 0.0 and not GameState.reduce_flashes else PQStyle.CHIP
 	draw_rect(Rect2(-10, -6, 20, 12), hull)
 	draw_rect(Rect2(-10, -6, 20, 12), color, false)
 	for side: int in [-1, 1]:

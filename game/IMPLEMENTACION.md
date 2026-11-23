@@ -95,3 +95,10 @@ Validación final: import, inicio, cinco pruebas y 300 frames: exit=0, sin error
 - **Arena.** Las ventanas tienen un aviso de 0,6 s. El daño al núcleo se detiene en el siguiente umbral de fase para preservar el puzle incluso con impactos simultáneos. El doble anillo mantiene un ciclo de 2 s con 0,8 s de recuperación y una espera de 0,25 s. El borrado de suelo conserva su propio reloj.
 - **Nueva partida.** Inicia 1-1 con progreso y estadísticas nuevos y conserva los ajustes de la partida anterior.
 - **Reloj de pruebas.** La suite principal usa un paso fijo de 60 Hz para completar la simulación headless sin depender del tiempo de pared. La suite de integración conserva el reloj del motor.
+
+## Decisiones Opciones
+
+- **Guardado.** Cada cambio válido actualiza `settings` en la partida activa y se escribe mediante SaveManager. Si falla la escritura, el control recupera el valor anterior y muestra un aviso.
+- **Audio.** Música y Efectos usan pasos de 10 % y buses independientes. El cero activa el silencio del bus y los valores positivos se convierten a dB. El proyecto aún carece de una pista de música. Los efectos existentes se reproducen por SFX.
+- **Accesibilidad.** Desactivar la sacudida limpia el desplazamiento actual de la cámara. Reducir destellos atenúa el parpadeo y conserva las señales de aviso. La asistencia aplica velocidad ×0,8 y un PV adicional. Si se activa durante una partida, añade ese PV sin curar el daño previo.
+- **Navegación.** Arriba y abajo recorren los ajustes. Izquierda y derecha cambian el volumen del control enfocado. Volver, Escape o Start cierran la pantalla y devuelven el foco a Opciones. Al regresar al menú de pausa, el nivel sigue pausado.

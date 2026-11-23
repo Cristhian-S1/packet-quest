@@ -7,8 +7,10 @@ const SCENES: Array[String] = [
 	"res://scenes/levels/World4Level1.tscn", "res://scenes/bosses/TrojanBoss.tscn",
 	"res://scenes/levels/World5Level1.tscn", "res://scenes/bosses/MalwarexBoss.tscn", "res://scenes/ui/CreditsScreen.tscn",
 	"res://scenes/main/NetworkMap.tscn", "res://scenes/ui/Workshop.tscn", "res://scenes/main/Main.tscn",
+	"res://scenes/ui/OptionsMenu.tscn",
 ]
 const ACTIONS: Array[StringName] = [&"move_left", &"move_right", &"jump", &"dash", &"shoot", &"shield", &"aim_up", &"aim_down", &"lock_aim", &"swap_weapon", &"interact", &"pause"]
+const OPTIONS_ACTIONS: Array[StringName] = [&"ui_up", &"ui_down", &"ui_left", &"ui_right", &"ui_accept"]
 var errors: PackedStringArray = []
 var finished: bool = false
 
@@ -19,6 +21,9 @@ func run(tree: SceneTree) -> PackedStringArray:
 	tree.paused = false
 	var frames: int = 1200 if OS.has_environment("PACKET_FUZZ_LONG") else 200
 	for index: int in range(SCENES.size()):
+		if not ResourceLoader.exists(SCENES[index]):
+			errors.append("falta la escena %s" % SCENES[index])
+			continue
 		await _exercise(tree, SCENES[index], index, frames)
 		await _transitions(tree, SCENES[index], index)
 	finished = true
@@ -36,6 +41,7 @@ func _exercise(tree: SceneTree, path: String, index: int, frames: int) -> void:
 	_setup(index)
 	var baseline: int = int(Performance.get_monitor(Performance.OBJECT_NODE_COUNT))
 	var scene: Node = (load(path) as PackedScene).instantiate()
+	var options: bool = scene is OptionsMenu
 	tree.root.add_child(scene)
 	await tree.physics_frame
 	var player: PacketPlayer = tree.get_first_node_in_group(&"player") as PacketPlayer
@@ -43,8 +49,14 @@ func _exercise(tree: SceneTree, path: String, index: int, frames: int) -> void:
 	rng.seed = 0x51f00d + index
 	var inside: int = 0
 	for frame: int in range(frames):
-		var action: StringName = ACTIONS[rng.randi_range(0, ACTIONS.size() - 1)]
-		if action == &"pause":
+		if not is_instance_valid(scene):
+			break
+		var actions: Array[StringName] = OPTIONS_ACTIONS if options else ACTIONS
+		var action: StringName = actions[rng.randi_range(0, actions.size() - 1)]
+		if options:
+			_send_action(action, true)
+			_send_action(action, false)
+		elif action == &"pause":
 			if is_instance_valid(player) and player.state != PacketPlayer.State.DEAD:
 				await _pause_roundtrip(tree, player, path, frame)
 		elif rng.randi_range(0, 1) == 0:
@@ -110,10 +122,10 @@ func _inside_solid(player: PacketPlayer) -> bool:
 func _pause_roundtrip(tree: SceneTree, player: PacketPlayer, path: String, frame: int) -> void:
 	if tree.paused:
 		return
-	_send_pause(true)
+	_send_action(&"pause", true)
 	await tree.process_frame
 	await tree.process_frame
-	_send_pause(false)
+	_send_action(&"pause", false)
 	await tree.process_frame
 	if not tree.paused:
 		errors.append("%s frame %d: no se activó la pausa" % [path, frame])
@@ -124,18 +136,18 @@ func _pause_roundtrip(tree: SceneTree, player: PacketPlayer, path: String, frame
 	await tree.process_frame
 	if player.global_position != pos or player.health.current != hp or player.shield_meter != shield:
 		errors.append("%s frame %d: estado cambió durante pausa" % [path, frame])
-	_send_pause(true)
+	_send_action(&"pause", true)
 	await tree.process_frame
 	await tree.process_frame
-	_send_pause(false)
+	_send_action(&"pause", false)
 	await tree.process_frame
 	if tree.paused and player.state != PacketPlayer.State.DEAD:
 		errors.append("%s frame %d: no se reanudó" % [path, frame])
 		tree.paused = false
 
-func _send_pause(pressed: bool) -> void:
+func _send_action(action: StringName, pressed: bool) -> void:
 	var event: InputEventAction = InputEventAction.new()
-	event.action = &"pause"
+	event.action = action
 	event.pressed = pressed
 	Input.parse_input_event(event)
 

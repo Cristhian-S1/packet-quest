@@ -152,10 +152,18 @@ func run(scene_tree: SceneTree) -> PackedStringArray:
 	for child: Node in world.get_children():
 		if child is ChipPlatform and (child as ChipPlatform).vertical_travel > 0:
 			moving_chip = child as ChipPlatform
+	var guide: Line2D = moving_chip.get_node_or_null("CableGuide") as Line2D
+	check(guide != null and guide.points.size() == 2, "el cable móvil necesita una guía con dos extremos")
+	var guide_origin: Vector2 = Vector2.ZERO
+	if guide != null and guide.points.size() == 2:
+		guide_origin = guide.to_global(guide.points[0])
+		check(guide.to_global(guide.points[1]) - guide_origin == Vector2(0, -64), "la guía del cable debe medir 64 px")
 	byte.global_position = moving_chip.global_position + Vector2(32, -24)
 	byte.velocity = Vector2.ZERO
 	await frames(90)
 	check(byte.is_on_floor() and absf(byte.position.y + 7 - moving_chip.position.y) < 1, "plataforma móvil no transporta pasajero: Byte=%.2f, plataforma=%.2f" % [byte.position.y, moving_chip.position.y])
+	if guide != null and guide.points.size() == 2:
+		check(guide.to_global(guide.points[0]) == guide_origin, "la guía debe seguir anclada mientras se mueve la plataforma")
 	# Solve with actual player interaction; no direct setting of directions.
 	world.puzzle.reset_puzzle()
 	for node: PuzzleNode in world.puzzle.nodes:
@@ -291,12 +299,18 @@ func run(scene_tree: SceneTree) -> PackedStringArray:
 	boss.timer = 0
 	var ring_ticks: Array[int] = []
 	var previous_state: RouterBoss.State = boss.state
-	for tick: int in range(260):
+	for tick: int in range(600):
 		boss._physics_process(1.0 / 60.0)
 		if boss.state == RouterBoss.State.ACTIVE and previous_state == RouterBoss.State.TELEGRAPH and boss.attack == &"A":
 			ring_ticks.append(tick)
+			check(_count_active(boss.pool.enemy_bullets) == 12, "cada anillo debe emitir 12 balas")
+			boss.pool.clear_enemy()
+		elif boss.attack == &"B":
+			boss.pool.clear_enemy()
 		previous_state = boss.state
-	check(ring_ticks.size() >= 2 and absf(float(ring_ticks[1] - ring_ticks[0]) / 60 - 3) < 0.05, "anillo F1 no respeta 3 s")
+	check(ring_ticks.size() == 4, "se esperaban cuatro anillos F1: %s" % str(ring_ticks))
+	for index: int in range(1, ring_ticks.size()):
+		check(ring_ticks[index] - ring_ticks[index - 1] == 180, "anillo F1: deben transcurrir 180 ticks entre emisiones: %s" % str(ring_ticks))
 	# Defeat -> spawned core -> real Area2D pickup -> saved victory.
 	boss.health.current = 1
 	boss.invulnerable = false

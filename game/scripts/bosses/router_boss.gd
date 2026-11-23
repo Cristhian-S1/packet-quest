@@ -5,6 +5,8 @@ signal phase_changed(index: int)
 signal defeated
 enum State { INTRO, IDLE, TELEGRAPH, ACTIVE, RECOVERY, PHASE_TRANSITION, DEFEATED }
 
+const RING_TIME_EPSILON: float = 0.000001
+
 @export var max_health: float = 60.0
 @export var phase_threshold: float = 0.5
 @export var transition_duration: float = StageBuilder.BOSS_TRANSITION_TIME
@@ -137,9 +139,12 @@ func advance(delta: float) -> void:
 func _begin_attack() -> void:
 	var sequence: Array[StringName] = phases[phase].attack_sequence
 	attack = sequence[sequence_index % sequence.size()]
-	if attack == &"A" and ring_wait > ring_telegraph:
-		timer = ring_wait - ring_telegraph
-		return
+	if attack == &"A":
+		# El residuo de coma flotante no debe retrasar el aviso un tick entero.
+		var until_warning: float = ring_wait - ring_telegraph - RING_TIME_EPSILON
+		if until_warning > 0.0:
+			timer = until_warning
+			return
 	sequence_index += 1
 	state = State.TELEGRAPH
 	match attack:
@@ -247,7 +252,7 @@ func _draw() -> void:
 			draw_rect(Rect2(pos, Vector2(4, 4)), PQStyle.GREEN)
 		return
 	var color: Color = PQStyle.GREEN if phase == 0 else PQStyle.RED
-	var casing: Color = Color.WHITE if flash > 0 and not bool(GameState.data.get("settings", {}).get("reduce_flashes", false)) else Color("1e2b44")
+	var casing: Color = Color.WHITE if flash > 0 and not GameState.reduce_flashes else Color("1e2b44")
 	draw_rect(Rect2(240, 128, 160, 96), casing)
 	draw_rect(Rect2(240, 128, 160, 96), PQStyle.EDGE, false, 2)
 	for index: int in range(4):

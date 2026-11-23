@@ -20,6 +20,24 @@ var _tones: Dictionary[StringName, AudioStreamWAV] = {}
 var last_sfx: StringName = &""
 var last_pitch: float = 1.0
 
+func _ready() -> void:
+	GameState.settings_changed.connect(_apply_settings)
+	_apply_settings("")
+
+func _apply_settings(key: String) -> void:
+	if key.is_empty() or key == "music_volume":
+		_set_volume(&"Music", float(GameState.settings["music_volume"]))
+	if key.is_empty() or key == "sfx_volume":
+		_set_volume(&"SFX", float(GameState.settings["sfx_volume"]))
+
+func _set_volume(bus: StringName, volume: float) -> void:
+	var index: int = AudioServer.get_bus_index(bus)
+	if volume <= 0.0:
+		AudioServer.set_bus_mute(index, true)
+	else:
+		AudioServer.set_bus_volume_db(index, linear_to_db(volume))
+		AudioServer.set_bus_mute(index, false)
+
 func play_sfx(id: StringName, stream: AudioStream = null) -> void:
 	last_sfx = id
 	last_pitch = float(SFX_PITCH.get(id, 1.0))
@@ -32,6 +50,7 @@ func play_sfx(id: StringName, stream: AudioStream = null) -> void:
 	if stream == null:
 		return
 	var voice: AudioStreamPlayer = AudioStreamPlayer.new()
+	voice.bus = &"SFX"
 	voice.stream = stream
 	voice.pitch_scale = last_pitch
 	add_child(voice)
