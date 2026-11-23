@@ -33,3 +33,10 @@ El primer lanzamiento del checkout falló al no existir la caché de clases de G
 - `bash tools/run-e2e.sh`: FAIL en Reina; no hay victoria ni créditos verificados.
 - `bash tools/run-tests.sh --integration`: `RESULTADO: 17/17 PASS` y `PASS integration`.
 - Pendiente: estrategia de combate fiable, mundos 3–5, capturas de jefes vencidos y comprobación de `Núcleos de datos: N/12`.
+
+## Continuación: banco de la Reina
+
+- El piloto usa predicción de 12 frames de balas, anticipa teletransporte y zonas de interferencia, y conserva el hueco entre columnas del ping. Controla a Byte solo con acciones de entrada, sin assist_mode.
+- Banco aislado: 10/10 victorias en 10 ejecuciones con semillas 1–10; las trayectorias observadas son similares, por lo que no prueban una cobertura exhaustiva de variaciones.
+- El recorrido encadenado venció a la Reina; el runner mantiene el FAIL explícito mientras faltan mundos 3–5 y créditos.
+- El lanzador importa recursos antes de ejecutar y tiene timeout de 600 s.

@@ -463,70 +463,10 @@ func _shoot_cell(player: PacketPlayer, piece: CableCell) -> void:
 # --- Reina Wi-Fi --------------------------------------------------------
 
 func _fight_queen() -> bool:
-	var queen: WifiQueenBoss = tree.current_scene as WifiQueenBoss
-	if queen == null:
-		return false
-	var player: PacketPlayer = queen.player
-	Input.action_press(&"aim_up")
-	Input.action_press(&"shoot")
-	var jump_frames := 0
-	var pending_jump := -1
-	var dash_left_frames := 0
-	var prev_state: WifiQueenBoss.State = queen.state
-	var prev_phase: int = queen.phase
-	var guard := 0
-	var previous_health: float = player.health.current
-	while queen.state != WifiQueenBoss.State.DEFEATED and player.health.current > 0.0:
-		await tree.physics_frame
-		guard += 1
-		if player.health.current < previous_health:
-			print("Reina: frame %d Byte %s PV %.0f estado %d ataque %d oleada %d" % [guard, player.global_position, player.health.current, queen.state, queen.attack, queen.get(&"_wave_index")])
-			previous_health = player.health.current
-		if guard > 12000:
-			break
-		if jump_frames > 0:
-			jump_frames -= 1
-			if jump_frames == 0:
-				Input.action_release(&"jump")
-		if pending_jump > 0:
-			pending_jump -= 1
-			if pending_jump == 0 and jump_frames == 0:
-				Input.action_press(&"jump")
-				jump_frames = 40
-		# Mantente bajo la antena actual para disparar recto hacia arriba.
-		var target_x: float = queen.body.global_position.x
-		var dx: float = target_x - player.global_position.x
-		if absf(dx) > 5.0:
-			if dx > 0.0:
-				Input.action_press(&"move_right")
-				Input.action_release(&"move_left")
-			else:
-				Input.action_press(&"move_left")
-				Input.action_release(&"move_right")
-		else:
-			Input.action_release(&"move_right")
-			Input.action_release(&"move_left")
-		# Esquiva según el aviso.
-		if queen.state == WifiQueenBoss.State.TELEGRAPH and prev_state != WifiQueenBoss.State.TELEGRAPH:
-			match queen.attack:
-				WifiQueenBoss.Attack.WAVES:
-					if 0 in WifiQueenBoss.wave_lanes(int(queen.get(&"_wave_index"))):
-						pending_jump = 40
-				WifiQueenBoss.Attack.PING:
-					# Aléjate de la columna que marca el aviso.
-					if player.global_position.x <= queen.get(&"_ping_x"):
-						Input.action_press(&"move_left")
-					else:
-						Input.action_press(&"move_right")
-				WifiQueenBoss.Attack.SPIRAL:
-					pending_jump = 1
-		prev_state = queen.state
-		prev_phase = queen.phase
-	var won: bool = queen.state == WifiQueenBoss.State.DEFEATED
-	if not won:
-		check(false, "el bot no derrota a la Reina (PV %.0f, fase %d, frame %d, Byte %s, PV %.0f, estado %d, ataque %d, oleada %d)" % [queen.health.current, queen.phase, guard, player.global_position, player.health.current, queen.state, queen.attack, queen.get(&"_wave_index")])
+	var result: bool = await load("res://tests/bot/queen_pilot.gd").fight(tree, tree.current_scene)
+	check(result, "el bot no derrota a la Reina")
 	pilot.release_all()
-	return won
+	return result
 
 func _queen_victory() -> void:
 	# Al vencerla, GameState.open_map() devuelve al mapa (DEFEATED lo programa).
