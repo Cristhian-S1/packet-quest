@@ -152,10 +152,18 @@ func run(scene_tree: SceneTree) -> PackedStringArray:
 	for child: Node in world.get_children():
 		if child is ChipPlatform and (child as ChipPlatform).vertical_travel > 0:
 			moving_chip = child as ChipPlatform
+	var guide: Line2D = moving_chip.get_node_or_null("CableGuide") as Line2D
+	check(guide != null and guide.points.size() == 2, "el cable móvil necesita una guía con dos extremos")
+	var guide_origin: Vector2 = Vector2.ZERO
+	if guide != null and guide.points.size() == 2:
+		guide_origin = guide.to_global(guide.points[0])
+		check(guide.to_global(guide.points[1]) - guide_origin == Vector2(0, -64), "la guía del cable debe medir 64 px")
 	byte.global_position = moving_chip.global_position + Vector2(32, -24)
 	byte.velocity = Vector2.ZERO
 	await frames(90)
 	check(byte.is_on_floor() and absf(byte.position.y + 7 - moving_chip.position.y) < 1, "plataforma móvil no transporta pasajero: Byte=%.2f, plataforma=%.2f" % [byte.position.y, moving_chip.position.y])
+	if guide != null and guide.points.size() == 2:
+		check(guide.to_global(guide.points[0]) == guide_origin, "la guía debe seguir anclada mientras se mueve la plataforma")
 	# Solve with actual player interaction; no direct setting of directions.
 	world.puzzle.reset_puzzle()
 	for node: PuzzleNode in world.puzzle.nodes:
