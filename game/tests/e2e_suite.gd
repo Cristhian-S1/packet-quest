@@ -98,6 +98,8 @@ func _reset_state() -> void:
 	save_path = "user://e2e_session_%d.json" % OS.get_process_id()
 	SaveManager.save_path = save_path
 	GameState.data = SaveManager.defaults()
+	GameState.data["settings"]["reduce_flashes"] = OS.get_environment("E2E_REDUCE_FLASHES") == "1"
+	print("Opciones e2e: assist_mode=%s reduce_flashes=%s" % [GameState.assist_mode, GameState.reduce_flashes])
 	GameState.current_world = 1
 	GameState.in_boss = false
 	GameState.checkpoint = Vector2(48, 296)
@@ -544,8 +546,33 @@ func _world3() -> bool:
 	Input.action_release(&"jump")
 	await pilot.wait_until(func() -> bool: return player.is_on_floor() or player.health.current <= 0.0, 120)
 	Input.action_release(&"move_right")
+	# El Pop-up blindado queda detrás: eliminarlo evita sus disparos mientras
+	# esperamos a que se abra el puerto siguiente.
+	Input.action_press(&"move_left")
+	Input.action_press(&"lock_aim")
+	Input.action_press(&"shoot")
+	await pilot.wait_until(func() -> bool:
+		for enemy: Node in tree.get_nodes_in_group(&"enemies"):
+			if enemy is ArmoredPopUp and absf(enemy.position.x - 1440.0) < 1.0 and enemy.state != EnemyBase.State.DEAD:
+				return false
+		return true, 180)
+	Input.action_release(&"shoot")
+	Input.action_release(&"lock_aim")
+	Input.action_release(&"move_left")
+	# Dejar que los disparos ya emitidos se alejen antes de avanzar tras ellos.
+	Input.action_press(&"shield")
+	await pilot.wait_until(func() -> bool:
+		for bullet: Projectile in player.pool.enemy_bullets:
+			if bullet.active and bullet.velocity.x > 0.0 and absf(bullet.position.x - player.position.x) < 250.0:
+				return false
+		return true, 180)
+	Input.action_release(&"shield")
+	await pilot.wait_until(func() -> bool: return player.shield_meter > 90.0 or player.health.current <= 0.0, 300)
+	Input.action_press(&"shield")
 	if not await _cross_port(world, player, 1608.0):
+		Input.action_release(&"shield")
 		return false
+	Input.action_release(&"shield")
 	Input.action_press(&"move_right")
 	for approach: float in [1640.0, 1760.0]:
 		await pilot.wait_until(func() -> bool: return player.position.x >= approach or player.health.current <= 0.0, 200)
@@ -801,7 +828,7 @@ func _world5() -> bool:
 		for cloud: CloudPlatform in world.clouds:
 			await _jump_to_x(player, cloud.position.x)
 			print("Nube %.0f: Byte %s suelo %s estado %s edad %.2f PV %.0f" % [cloud.position.x, player.position, player.is_on_floor(), cloud.get(&"_state"), cloud.get(&"_age"), player.health.current])
-			if player.health.current <= 0.0 or absf(player.position.x - cloud.position.x) > 20.0:
+			if player.health.current <= 0.0 or not player.is_on_floor() or absf(player.position.x - cloud.position.x) > 50.0:
 				break
 		if player.health.current > 0.0:
 			Input.action_press(&"move_right")
@@ -891,7 +918,14 @@ func _world5() -> bool:
 
 func _jump_to_x(player: PacketPlayer, x: float) -> void:
 	Input.action_press(&"jump")
-	await _move_to(player, x)
+	if is_equal_approx(x, 2780.0):
+		# La nube central está más alta; el dash aporta alcance durante el salto.
+		Input.action_press(&"move_right")
+		await pilot.physics_frames(8)
+		Input.action_press(&"dash")
+		await pilot.physics_frames(2)
+		Input.action_release(&"dash")
+	await _move_to(player, x - 30.0 if is_equal_approx(x, 2780.0) else x)
 	await pilot.wait_until(func() -> bool: return player.is_on_floor() or player.health.current <= 0.0, 100)
 	Input.action_release(&"jump")
 	await pilot.frames(3)
