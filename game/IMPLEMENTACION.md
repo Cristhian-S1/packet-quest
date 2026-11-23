@@ -102,3 +102,12 @@ Validación final: import, inicio, cinco pruebas y 300 frames: exit=0, sin error
 - **Audio.** Música y Efectos usan pasos de 10 % y buses independientes. El cero activa el silencio del bus y los valores positivos se convierten a dB. El proyecto aún carece de una pista de música. Los efectos existentes se reproducen por SFX.
 - **Accesibilidad.** Desactivar la sacudida limpia el desplazamiento actual de la cámara. Reducir destellos atenúa el parpadeo y conserva las señales de aviso. La asistencia aplica velocidad ×0,8 y un PV adicional. Si se activa durante una partida, añade ese PV sin curar el daño previo.
 - **Navegación.** Arriba y abajo recorren los ajustes. Izquierda y derecha cambian el volumen del control enfocado. Volver, Escape o Start cierran la pantalla y devuelven el foco a Opciones. Al regresar al menú de pausa, el nivel sigue pausado.
+
+## Decisiones M12
+
+- **Efectos.** El catálogo convierte parámetros de onda y envolvente a PCM mono de 16 bits a 22 050 Hz. El ruido usa una semilla fija. Cada arma y cada aviso de jefe tiene su propio WAV. Una reserva de cuatro voces mantiene los avisos separados de los efectos frecuentes. Las conexiones de cable y firewall conservan sus IDs.
+- **Música.** Ocho composiciones de ocho compases a 120–140 BPM. Menú y mapa comparten tema para conservar la posición entre ambas pantallas. Los cinco jefes comparten un tema a 140 BPM. Dos pulsos llevan la melodía y la armonía, un triángulo marca el bajo y el ruido acompaña el golpe de percusión. Las envolventes y los extremos a cero suavizan la unión del bucle.
+- **Carga y mezcla.** Un hilo genera el WAV que pide la escena y la caché lo conserva durante la sesión. Si cambia la petición mientras se renderiza, se da paso a la última al terminar el trabajo actual. Dos voces en Music hacen un fundido de 280 ms. Headless registra los IDs y omite la reproducción. Cero en Opciones silencia el bus correspondiente.
+- **Fondos.** Wi-Fi, Firewall, Servidor y Centro de datos conservan sus fondos temáticos y añaden cuadrícula y LEDs a velocidades distintas. Las tres capas quedan detrás del escenario. Red Local ya tenía tres planos.
+- **Celebración.** Los núcleos y los jefes emiten partículas en el lugar de la recogida o de la derrota. Reducir destellos elimina el anillo y atenúa las partículas. La sacudida de 150 ms funciona aunque Byte deje de moverse, y se cancela al desactivar el ajuste.
+- **Muestras.** `game/tools/export_audio.gd` genera cuatro temas y seis SFX en `docs/audio/` para revisión del equipo.
