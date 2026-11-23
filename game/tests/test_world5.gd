@@ -96,7 +96,7 @@ func _test_bot(tree: SceneTree) -> void:
 	for index: int in range(6):
 		var shot: Projectile = pool.enemy_bullets[index]
 		check(shot.active and is_equal_approx(shot.velocity.length(), 90.0)
-			and shot.damage == 1.0 and shot.get(&"enemy_color") == PQStyle.AMBER, "bala ámbar %d" % index)
+			and shot.damage == 1.0 and shot.get(&"enemy_color") == PQStyle.PINK, "bala rosa %d" % index)
 	pool.clear_enemy()
 	bot.on_screen = false
 	bot.fire()

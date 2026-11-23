@@ -29,6 +29,7 @@ func run(tree: SceneTree) -> PackedStringArray:
 		enemy.set_physics_process(false)
 		_box(enemy, Vector2(20, 16), Vector2.ZERO)
 		_check(enemy.collision_layer == (0 if scene_name == "Spyware" else 4), "capa de " + scene_name)
+		_test_enemy(enemy)
 	var motion_path: String = "res://scripts/art/art_motion.gd"
 	if ResourceLoader.exists(motion_path):
 		var motion: Script = load(motion_path)
@@ -67,6 +68,26 @@ func _test_byte(byte: PacketPlayer) -> void:
 	byte.invulnerability = 0.0
 	byte.take_damage(3.0, Vector2.ZERO)
 	_check(byte.call("visual_pose") == &"dead", "la muerte prevalece sobre el daño")
+
+func _test_enemy(enemy: EnemyBase) -> void:
+	if not enemy.has_method("visual_pose") or not enemy.has_method("visual_frame"):
+		errors.append("faltan las poses de " + enemy.name)
+		return
+	var poses: Array[StringName] = [&"idle", &"warning", &"active", &"recovery", &"dead"]
+	for index: int in range(poses.size()):
+		if "spy_state" in enemy:
+			enemy.set("spy_state", index)
+			enemy.state = EnemyBase.State.DEAD if index == 4 else EnemyBase.State.IDLE
+		else:
+			enemy.state = index as EnemyBase.State
+		var expected: StringName = &"disguised" if index == 0 and "spy_state" in enemy else poses[index]
+		_check(enemy.call("visual_pose") == expected, "%s: pose %s" % [enemy.name, expected])
+	enemy.state = EnemyBase.State.IDLE
+	if "spy_state" in enemy:
+		enemy.set("spy_state", 3)
+	for index: int in range(5):
+		enemy.age = 0.25 * index + 0.01
+		_check(enemy.call("visual_frame") == index % 4, "%s: ciclo de cuatro fotogramas" % enemy.name)
 
 func _box(parent: Node, size: Vector2, offset: Vector2) -> void:
 	for child: Node in parent.get_children():

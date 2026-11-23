@@ -46,21 +46,17 @@ func fire() -> void:
 		return
 	var aim: Vector2 = player.global_position - global_position
 	for direction: Vector2 in fan_directions(aim, SHOT_COUNT, FAN_SPREAD):
-		var shot: Projectile = pool.fire(true, global_position, direction * bullet_speed)
-		if shot != null:
-			shot.enemy_color = PQStyle.AMBER
+		pool.fire(true, global_position, direction * bullet_speed)
 
 func _draw() -> void:
 	if state == State.DEAD:
 		draw_bits()
 		return
-	var color: Color = PQStyle.AMBER if state == State.TELEGRAPH else PQStyle.MAGENTA
-	var hull: Color = Color.WHITE if flash > 0.0 and not GameState.reduce_flashes else PQStyle.CHIP
-	draw_rect(Rect2(-10, -6, 20, 12), hull)
-	draw_rect(Rect2(-10, -6, 20, 12), color, false)
-	for side: int in [-1, 1]:
-		draw_line(Vector2(side * 5, -5), Vector2(side * 14, -10), color, 2)
-		draw_line(Vector2(side * 8, 5), Vector2(side * 13, 9), color, 2)
-	draw_rect(Rect2(-3, -2, 6, 4), color)
+	EnemyArt.bot(self, visual_pose(), visual_frame(), art_tint())
 	if state == State.TELEGRAPH:
-		draw_arc(Vector2.ZERO, 18, 0, TAU, 24, color, 2)
+		draw_warning(14.0)
+		if is_instance_valid(player):
+			var aim: Vector2 = global_position.direction_to(player.global_position)
+			for angle: float in [-FAN_SPREAD / 2.0, 0.0, FAN_SPREAD / 2.0]:
+				var ray: Vector2 = aim.rotated(deg_to_rad(angle))
+				draw_line((ray * 18).round(), (ray * 25).round(), PQStyle.RED, 2.0)

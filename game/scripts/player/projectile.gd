@@ -27,6 +27,7 @@ var ray: PhysicsRayQueryParameters2D
 var cull_rect: Rect2 = Rect2()
 
 func _ready() -> void:
+	z_index = 5 if enemy else 1
 	collision_layer = 16 if enemy else 8
 	collision_mask = 131 if enemy else 37
 	monitoring = false
@@ -170,7 +171,9 @@ func _nearest_target() -> Node2D:
 
 func _draw() -> void:
 	if enemy:
-		draw_rect(Rect2(-5, -4, 10, 8), enemy_color)
+		draw_rect(Rect2(-6, -4, 12, 8), PQStyle.NIGHT)
+		draw_rect(Rect2(-5, -3, 10, 6), enemy_color)
+		draw_rect(Rect2(-3, -4, 6, 8), enemy_color)
 		draw_rect(Rect2(-2, -2, 4, 4), Color.WHITE)
 	else:
 		draw_line(-velocity.normalized() * 7, Vector2.ZERO, Color(PQStyle.CYAN, 0.3), 4)

@@ -3,6 +3,9 @@ extends Area2D
 
 signal died
 enum State { IDLE, TELEGRAPH, ACTIVE, RECOVERY, DEAD }
+const EnemyArt = preload("res://scripts/art/enemy_art.gd")
+const ArtMotion = preload("res://scripts/art/art_motion.gd")
+const ART_POSES: Array[StringName] = [&"idle", &"warning", &"active", &"recovery", &"dead"]
 @export var max_health: float = 3.0
 @export var telegraph_time: float = 0.4
 @export var cycle_time: float = 1.8
@@ -100,7 +103,19 @@ func _die() -> void:
 		get_parent().add_child.call_deferred(cache)
 	died.emit()
 
+func visual_pose() -> StringName:
+	return ART_POSES[state]
+
+func visual_frame() -> int:
+	return ArtMotion.frame(age, 4.0, 4)
+
+func art_tint() -> Color:
+	return EnemyArt.tint(flash, GameState.reduce_flashes)
+
+func draw_warning(half_width: float) -> void:
+	var progress: float = 1.0 - clampf(timer / maxf(telegraph_time, 0.001), 0.0, 1.0)
+	EnemyArt.warning(self, age, progress, half_width, GameState.reduce_flashes)
+
 func draw_bits() -> void:
-	for index: int in range(8):
-		var offset: Vector2 = Vector2.from_angle(index * TAU / 8.0) * (0.3 - timer) * 100
-		draw_rect(Rect2(offset, Vector2(3, 3)), PQStyle.MAGENTA)
+	ArtMotion.pixels(self, Vector2.ZERO, 1.0 - timer / 0.3, 31.0, 12,
+		PQStyle.MAGENTA, EnemyArt.LIGHT)
