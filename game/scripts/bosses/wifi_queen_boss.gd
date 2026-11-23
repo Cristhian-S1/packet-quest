@@ -4,6 +4,9 @@ extends Node2D
 signal phase_changed(index: int)
 signal defeated
 
+const BossArt = preload("res://scripts/art/boss_art.gd")
+const ArtMotion = preload("res://scripts/art/art_motion.gd")
+
 enum State { INTRO, WAIT, TELEGRAPH, ACTIVE, RECOVERY, PHASE_TRANSITION, DEFEATED }
 enum Attack { WAVES, PING, SPIRAL, TELEPORT }
 
@@ -267,9 +270,7 @@ func _defeat() -> void:
 	body.collision_layer = 0
 	body.remove_from_group(&"homing_target")
 	pool.clear_enemy()
-	card.text = "SEGMENTO RESTAURADO"
-	card.modulate = PQStyle.GREEN
-	card.show()
+	BossArt.show_restoration(card)
 	GameState.win()
 	defeated.emit()
 	CelebrationBurst.spawn(self, body.global_position, true)
@@ -282,9 +283,8 @@ func _draw() -> void:
 	_draw_bar(color)
 	_draw_antennas(color)
 	if state == State.DEFEATED:
-		for index: int in range(20):
-			var offset: Vector2 = Vector2.from_angle(index * TAU / 20) * (0.8 - timer) * 110
-			draw_rect(Rect2(body.position + offset, Vector2(3, 3)), PQStyle.GREEN)
+		BossArt.restored(self, body.position, 0.8 - timer, color,
+			GameState.reduce_flashes)
 		return
 	if state == State.TELEGRAPH and attack == Attack.SPIRAL:
 		draw_set_transform(body.position, TAU * (1.0 - timer / WARNINGS[Attack.SPIRAL]))
@@ -315,14 +315,20 @@ func _draw_antennas(color: Color) -> void:
 			draw_arc(center, 31 + ring * 10, 0.25, PI - 0.25, 16, tint, 1.0)
 
 func _draw_queen(center: Vector2, color: Color) -> void:
-	var casing: Color = Color.WHITE if _flash > 0.0 and not GameState.reduce_flashes else Color("223756")
+	var casing: Color = Color("223756").lerp(color, ArtMotion.hit_strength(_flash, GameState.reduce_flashes))
+	var swing: float = roundf(sin(_age * 5.0) * (2.0 + phase))
 	for side: float in [-1.0, 1.0]:
+		var span: float = 42.0 + phase * 4.0
 		var wing: PackedVector2Array = PackedVector2Array([center + Vector2(side * 17, -8),
-			center + Vector2(side * 46, -19), center + Vector2(side * 42, 6), center + Vector2(side * 19, 17)])
+			center + Vector2(side * span, -19 + swing), center + Vector2(side * (span - 4), 6 + swing),
+			center + Vector2(side * 19, 17)])
 		draw_colored_polygon(wing, casing)
 		wing.append(wing[0])
 		draw_polyline(wing, color, 2)
-		draw_line(center + Vector2(side * 37, -6), center + Vector2(side * 22, 2), color, 2)
+		for rib: int in range(phase + 1):
+			var origin: Vector2 = center + Vector2(side * (span - 7), -10 + swing + rib * 4)
+			draw_line(origin, center + Vector2(side * 22, -1 + rib * 4), color.darkened(0.35), 2)
+		draw_rect(Rect2(center + Vector2(side * (span - 6) - 1, -13 + swing), Vector2(3, 3)), color)
 	draw_colored_polygon(PackedVector2Array([center + Vector2(-21, -16), center + Vector2(21, -16),
 		center + Vector2(24, 4), center + Vector2(0, 23), center + Vector2(-24, 4)]), casing)
 	draw_rect(Rect2(center + Vector2(-15, -8), Vector2(30, 14)), PQStyle.NIGHT)
@@ -331,7 +337,8 @@ func _draw_queen(center: Vector2, color: Color) -> void:
 	draw_polyline(PackedVector2Array([center + Vector2(-17, -17), center + Vector2(-20, -28),
 		center + Vector2(-7, -23), center + Vector2(0, -34), center + Vector2(7, -23),
 		center + Vector2(20, -28), center + Vector2(17, -17), center + Vector2(-17, -17)]), PQStyle.AMBER, 2.0)
-	draw_circle(center + Vector2(0, 13), 3, color)
+	for index: int in range(phase):
+		draw_rect(Rect2(center + Vector2(index * 6 - phase * 3 + 1, 11), Vector2(4, 3)), color)
 
 func _draw_warning() -> void:
 	match attack:

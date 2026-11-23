@@ -1,6 +1,7 @@
 extends EnemyBase
 
 enum SpyState { DISGUISED, TELEGRAPH, JUMP, RECOVER }
+const SPY_POSES: Array[StringName] = [&"disguised", &"warning", &"active", &"recovery"]
 const REVEAL_DISTANCE: float = 64.0
 const CHASE_DISTANCE: float = 160.0
 const RECOVER_TIME: float = 0.8
@@ -83,20 +84,22 @@ func _die() -> void:
 	remove_from_group(&"homing_target")
 	super._die()
 
-func _draw() -> void:
+func visual_pose() -> StringName:
 	if state == State.DEAD:
+		return &"dead"
+	return SPY_POSES[spy_state]
+
+func _draw() -> void:
+	var pose: StringName = visual_pose()
+	if pose == &"dead":
 		draw_bits()
 		return
-	if spy_state == SpyState.DISGUISED:
+	if pose == &"disguised":
 		DataCore.draw_core(self, age, PQStyle.AMBER)
 		return
-	var color: Color = Color.WHITE if flash > 0.0 and not GameState.reduce_flashes else PQStyle.MAGENTA
-	draw_colored_polygon(PackedVector2Array([Vector2(-10, 6), Vector2(-7, -7), Vector2(0, -4),
-		Vector2(8, -10), Vector2(11, 6), Vector2(0, 9)]), color)
-	draw_rect(Rect2(-6, -1, 12, 4), PQStyle.NIGHT)
-	draw_rect(Rect2(-3, 0, 2, 2), PQStyle.PINK)
-	draw_rect(Rect2(2, 0, 2, 2), PQStyle.PINK)
-	if spy_state == SpyState.TELEGRAPH:
-		var shift: float = 2.0 if GameState.reduce_flashes else sin(age * 50) * 5
-		draw_line(Vector2(-15 + shift, -12), Vector2(7 + shift, -12), PQStyle.PINK, 2)
-		draw_line(Vector2(0 - shift, 11), Vector2(14 - shift, 11), color, 2)
+	var direction: float = -1.0 if jump_velocity.x < 0.0 else 1.0
+	if pose == &"warning" and is_instance_valid(player):
+		direction = -1.0 if player.global_position.x < global_position.x else 1.0
+	EnemyArt.spyware(self, pose, visual_frame(), art_tint(), direction)
+	if pose == &"warning":
+		draw_warning(9.0)

@@ -65,11 +65,9 @@ func _draw() -> void:
 	if state == State.DEAD:
 		draw_bits()
 		return
-	var radius: float = 4.0 + (2.0 if state == State.TELEGRAPH else 0.0)
-	for index: int in range(4):
-		var pos: Vector2 = Vector2(index * 6 - 9, sin(age * 8 + index) * 2)
-		draw_circle(pos, radius, Color.WHITE if flash > 0 and not GameState.reduce_flashes else Color("9dff4f"))
-	draw_circle(Vector2(10, -1), 1, PQStyle.NIGHT)
+	var length: float = cable.curve.get_baked_length() if cable != null else 0.0
+	var forward: bool = length <= 0.0 or fposmod(age * move_speed, length * 2.0) < length
+	var direction: float = 1.0 if forward == (move_speed >= 0.0) else -1.0
+	EnemyArt.worm(self, visual_pose(), visual_frame(), art_tint(), direction)
 	if state == State.TELEGRAPH:
-		draw_line(Vector2(-8, -12), Vector2(-13, -18), PQStyle.RED, 2)
-		draw_line(Vector2(8, -12), Vector2(13, -18), PQStyle.RED, 2)
+		draw_warning(11.0)

@@ -52,11 +52,6 @@ func _draw() -> void:
 	if state == State.DEAD:
 		draw_bits()
 		return
-	var tint: Color = Color.WHITE if flash > 0.0 and not GameState.reduce_flashes else PQStyle.MAGENTA
-	draw_rect(Rect2(-11, -12, 22, 18), PQStyle.NIGHT)
-	draw_rect(Rect2(-11, -12, 22, 18), tint, false, 2.0)
-	draw_rect(Rect2(-7, -9, 14, 5), PQStyle.CHIP)
-	draw_rect(Rect2(-5, -6, 10, 4), PQStyle.RED if state == State.TELEGRAPH else tint)
-	draw_rect(Rect2(-10, 6, 6, 2), tint)
-	draw_rect(Rect2(4, 6, 6, 2), tint)
-	draw_line(Vector2(-4, 2), Vector2(4, 2), PQStyle.AMBER, 1.0)
+	EnemyArt.trojan(self, visual_pose(), visual_frame(), art_tint())
+	if state == State.TELEGRAPH:
+		draw_warning(11.0)
