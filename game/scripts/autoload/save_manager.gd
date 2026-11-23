@@ -10,7 +10,7 @@ func defaults() -> Dictionary:
 		"data_cores": 0, "collected_cores": [], "owned_upgrades": [],
 		"equipped": {"weapons": ["packet"], "passive": ""},
 		"settings": {"screen_shake": true, "reduce_flashes": false,
-			"assist_mode": false, "music_volume": 0.8, "sfx_volume": 0.9},
+			"assist_mode": false, "music_volume": 0.8, "sfx_volume": 0.9, "bindings": {}},
 		"stats": {"deaths": {}, "play_time_s": 0.0}
 	}
 
@@ -79,6 +79,7 @@ func load_game(path: String = "") -> Dictionary:
 		return base
 	var finished: Variant = data.get("finished", false)
 	data["finished"] = finished if finished is bool else false
+	data["settings"]["bindings"] = InputBindings.validated(data["settings"].get("bindings", {}))
 	return data
 
 func _is_number(value: Variant) -> bool:

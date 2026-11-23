@@ -187,8 +187,8 @@ ataques C/D siguen mientras Byte conecta los nodos. Al caer por debajo del 25 %:
 ### Derrota y pantalla de muerte
 
 - `_defeat()`: `GameState.win()` (registra `w5_boss`, marca `finished`), limpia el pool, emite
-  `Events.boss_defeated.emit(&"malwarex")` y enruta a los créditos (§6). No suelta núcleo (como la
-  Reina): los 2 núcleos del Mundo 5 están en el nivel.
+  `Events.boss_defeated.emit(&"malwarex")` y enruta a los créditos (§6). Los dos núcleos del
+  Mundo 5 se recogen durante el nivel 5-1, antes de la arena.
 - `death_screen.gd`: añadir `MALWAREX_THRESHOLDS: Array[float] = [0.25, 0.5, 0.75]` y elegirlo
   cuando `current_world == 5` (marcas de fase en la barra de progreso).
 
@@ -199,14 +199,16 @@ mostrada al derrotar a Malwarex (no hay vuelta al mapa: la historia termina).
 
 - `GameState.show_credits()`: `playing = false; change_scene(CREDITS)` con
   `const CREDITS: String = "res://scenes/ui/CreditsScreen.tscn"`.
-- `const TOTAL_DATA_CORES: int = 10` (2 núcleos por mundo × 5 mundos; total de la partida):
-  `w1_hidden_a`/`w1_router`, `w2_core_a`/`w2_core_b`, `w3_core_a`/`w3_core_b`,
-  `w4_core_a`/`w4_core_b` (M10) y `w5_core_a`/`w5_core_b` (M11).
+- `GameState.ALL_CORE_IDS` enumera los 12 núcleos de la partida. En los niveles se recogen
+  `w1_hidden_a`, `w2_core_a`/`w2_core_b`, `w3_core_a`/`w3_core_b`, `w4_core_a`/`w4_core_b`
+  y `w5_core_a`/`w5_core_b`. Las victorias contra el Router Furioso, el Firewall Corrupto
+  y el Troyano Real dan `w1_router`, `w3_firewall_boss` y `w4_trojan_boss`.
 - Contenido:
   - Título "INTERNET RESTAURADA" (verde) y un epílogo de 2–3 líneas.
-  - **Estadísticas:** "Núcleos de datos: X/10" (`GameState.data["data_cores"]` sobre
-    `TOTAL_DATA_CORES`), "Muertes: N" (suma de `stats.deaths.values()`) y "Tiempo: mm:ss"
-    (`stats.play_time_s`).
+  - **Estadísticas:** «Núcleos de datos: X/12» cuenta los identificadores únicos de
+    `collected_cores` que figuran en `GameState.ALL_CORE_IDS`. Las compras en el Taller
+    reducen el saldo `data_cores`. «Muertes: N» suma `stats.deaths.values()` y
+    «Tiempo: mm:ss» usa `stats.play_time_s`.
   - **Créditos** (lista estática o desplazamiento lento).
   - Botones "Menú principal" (`GameState.menu`) y "Nueva partida".
 - Función pura testeable: `static func format_time(seconds: float) -> String` → `"mm:ss"`.
@@ -270,7 +272,7 @@ Nuevo `tests/test_world5.gd` registrado en `test_runner.gd` (`TESTS` += `"world5
 
 - Desde el mapa: vencer al Troyano Real (M10) desbloquea "Centro de datos"; entrar lleva a 5-1; la
   compuerta del puzle QoS lleva a Malwarex; vencerlo muestra créditos/epílogo con "Núcleos de datos:
-  X/10", muertes y tiempo, y **no** desbloquea ningún mundo 6.
+  X/12", muertes y tiempo, y **no** desbloquea ningún mundo 6.
 - 300 frames del nivel 5-1 y del jefe sin errores en headless.
 - Capturas en `docs/capturas/` de `level5.png`, `boss5.png` y `credits.png`.
 - `README.md` del juego actualizado con la sección M11 y el nuevo mapa de 5 mundos.

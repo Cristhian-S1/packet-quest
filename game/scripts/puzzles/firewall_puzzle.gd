@@ -9,6 +9,7 @@ const COLORS: Array[Color] = [PQStyle.RED, PQStyle.GREEN, PQStyle.BLUE]
 const COLOR_NAMES: Array[String] = ["ROJO", "VERDE", "AZUL"]
 const SHAPE_NAMES: Array[String] = ["CÍRCULO", "TRIÁNGULO", "CUADRADO"]
 const FACT: String = "Dato: un firewall deja pasar o bloquea cada paquete según sus reglas."
+const INSTRUCTION: String = "Pulsa %s junto a un terminal para decidir."
 
 @export var sequence_seed: int = 0
 
@@ -24,6 +25,7 @@ var _packets: Array[Dictionary] = []
 var _status: Label
 var _packet_label: Label
 var _feedback: Label
+var _feedback_pattern: String
 var _slide: float = 0.0
 var _waiting: float = 0.0
 var _hint: bool = false
@@ -45,18 +47,25 @@ func _ready() -> void:
 	PQStyle.label_at(self, "Bloquea ROJO · Permite ▲", Vector2(32, 117), 16, PQStyle.AMBER)
 	_status = PQStyle.label_at(self, "", Vector2(284, 154), 11)
 	_packet_label = PQStyle.label_at(self, "", Vector2(284, 173), 12, PQStyle.CYAN)
-	_feedback = PQStyle.label_at(self, "Pulsa E junto a un terminal para decidir.", Vector2(32, 218), 12)
+	_feedback = PQStyle.label_at(self, "", Vector2(32, 218), 12)
+	_set_feedback(INSTRUCTION)
 	PQStyle.label_at(self, "Firewall Corrupto →", Vector2(498, 273), 12, PQStyle.AMBER)
 	if GameState.puzzle_complete:
 		is_solved = true
 		packet_index = _packets.size()
 		door.set_open()
-		_feedback.text = FACT
+		_set_feedback(FACT)
 	_update_display()
 
 func _settings_changed(key: String) -> void:
 	if key.is_empty() or key == "reduce_flashes":
 		queue_redraw()
+	if key.is_empty() or key == "bindings":
+		_set_feedback(_feedback_pattern)
+
+func _set_feedback(pattern: String) -> void:
+	_feedback_pattern = pattern
+	_feedback.text = pattern % InputLabels.for_action(&"interact") if "%s" in pattern else pattern
 
 func _create_node(x: float, title: String, color: Color, action: Callable) -> NetworkNode:
 	var node: NetworkNode = NetworkNode.new()
@@ -79,17 +88,17 @@ func _decide(pass_packet: bool) -> void:
 	_waiting = 0.0
 	_hint = false
 	_slide = 1.0
-	_feedback.text = "Decisión correcta." if correct else "Ese paquete seguía la otra salida."
+	_set_feedback("Decisión correcta." if correct else "Ese paquete seguía la otra salida.")
 	if packet_index == _packets.size():
 		if mistakes <= MAX_MISTAKES:
 			is_solved = true
 			GameState.puzzle_complete = true
 			door.set_open()
-			_feedback.text = FACT
+			_set_feedback(FACT)
 			solved.emit()
 			Events.puzzle_solved.emit(&"w3_firewall")
 		else:
-			_feedback.text = "Demasiados fallos. Pulsa E en ↺ REINICIAR."
+			_set_feedback("Demasiados fallos. Pulsa %s en ↺ REINICIAR.")
 	_update_display()
 
 func reset_puzzle() -> void:
@@ -101,7 +110,7 @@ func reset_puzzle() -> void:
 	_hint = false
 	_slide = 0.0
 	door.set_open(false)
-	_feedback.text = "Pulsa E junto a un terminal para decidir."
+	_set_feedback(INSTRUCTION)
 	_update_display()
 
 func _packet_allowed() -> bool:

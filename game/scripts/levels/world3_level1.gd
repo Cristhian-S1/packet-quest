@@ -59,7 +59,7 @@ func _ready() -> void:
 	puzzle.position.x = PUZZLE_START
 	add_child(puzzle)
 	_signs()
-	StageBuilder.hud(self)
+	StageBuilder.hud(self, WIDTH)
 
 func _spawn_enemy(scene: PackedScene, center: Vector2) -> void:
 	var enemy: EnemyBase = scene.instantiate() as EnemyBase

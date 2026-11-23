@@ -7,7 +7,7 @@ const SCENES: Array[String] = [
 	"res://scenes/levels/World4Level1.tscn", "res://scenes/bosses/TrojanBoss.tscn",
 	"res://scenes/levels/World5Level1.tscn", "res://scenes/bosses/MalwarexBoss.tscn", "res://scenes/ui/CreditsScreen.tscn",
 	"res://scenes/main/NetworkMap.tscn", "res://scenes/ui/Workshop.tscn", "res://scenes/main/Main.tscn",
-	"res://scenes/ui/OptionsMenu.tscn",
+	"res://scenes/ui/OptionsMenu.tscn", "res://scenes/ui/ControlsMenu.tscn",
 ]
 const ACTIONS: Array[StringName] = [&"move_left", &"move_right", &"jump", &"dash", &"shoot", &"shield", &"aim_up", &"aim_down", &"lock_aim", &"swap_weapon", &"interact", &"pause"]
 const OPTIONS_ACTIONS: Array[StringName] = [&"ui_up", &"ui_down", &"ui_left", &"ui_right", &"ui_accept"]
@@ -41,9 +41,15 @@ func _exercise(tree: SceneTree, path: String, index: int, frames: int) -> void:
 	_setup(index)
 	var baseline: int = int(Performance.get_monitor(Performance.OBJECT_NODE_COUNT))
 	var scene: Node = (load(path) as PackedScene).instantiate()
-	var options: bool = scene is OptionsMenu
+	var settings_menu: bool = scene is OptionsMenu or scene is ControlsMenu
 	tree.root.add_child(scene)
 	await tree.physics_frame
+	if scene is ControlsMenu:
+		# Garantiza al menos una captura con entrada física, además de la navegación al azar.
+		_send_action(&"ui_accept", true)
+		_send_action(&"ui_accept", false)
+		await tree.process_frame
+		_send_capture_key(KEY_J)
 	var player: PacketPlayer = tree.get_first_node_in_group(&"player") as PacketPlayer
 	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
 	rng.seed = 0x51f00d + index
@@ -51,11 +57,13 @@ func _exercise(tree: SceneTree, path: String, index: int, frames: int) -> void:
 	for frame: int in range(frames):
 		if not is_instance_valid(scene):
 			break
-		var actions: Array[StringName] = OPTIONS_ACTIONS if options else ACTIONS
+		var actions: Array[StringName] = OPTIONS_ACTIONS if settings_menu else ACTIONS
 		var action: StringName = actions[rng.randi_range(0, actions.size() - 1)]
-		if options:
+		if settings_menu:
 			_send_action(action, true)
 			_send_action(action, false)
+			if rng.randi_range(0, 7) == 0:
+				_send_capture_key([KEY_ESCAPE, KEY_F, KEY_X, KEY_SPACE][rng.randi_range(0, 3)])
 		elif action == &"pause":
 			if is_instance_valid(player) and player.state != PacketPlayer.State.DEAD:
 				await _pause_roundtrip(tree, player, path, frame)
@@ -96,6 +104,8 @@ func _exercise(tree: SceneTree, path: String, index: int, frames: int) -> void:
 	if is_instance_valid(scene):
 		scene.queue_free()
 	await tree.process_frame
+	if settings_menu:
+		InputBindings.apply({})
 	if Projectile.enemy_time_scale != 1.0:
 		errors.append("%s: escala de proyectiles no restablecida" % path)
 	var after: int = int(Performance.get_monitor(Performance.OBJECT_NODE_COUNT))
@@ -149,6 +159,16 @@ func _send_action(action: StringName, pressed: bool) -> void:
 	var event: InputEventAction = InputEventAction.new()
 	event.action = action
 	event.pressed = pressed
+	Input.parse_input_event(event)
+
+func _send_capture_key(code: Key) -> void:
+	var event: InputEventKey = InputEventKey.new()
+	event.keycode = code
+	event.physical_keycode = code
+	event.pressed = true
+	Input.parse_input_event(event)
+	event = event.duplicate() as InputEventKey
+	event.pressed = false
 	Input.parse_input_event(event)
 
 func _release() -> void:

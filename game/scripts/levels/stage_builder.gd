@@ -35,8 +35,10 @@ static func player(parent: Node, pos: Vector2, width: int = 2720) -> PacketPlaye
 	parent.add_child(byte)
 	return byte
 
-static func hud(parent: Node) -> void:
-	parent.add_child(preload("res://scenes/ui/HUD.tscn").instantiate())
+static func hud(parent: Node, level_exit_x: float = 0.0) -> void:
+	var overlay: PacketHUD = preload("res://scenes/ui/HUD.tscn").instantiate() as PacketHUD
+	overlay.level_exit_x = level_exit_x
+	parent.add_child(overlay)
 
 static func boss_card(parent: Node, boss_name: String, opening: String, title_center: Vector2 = Vector2(320, 52)) -> Label:
 	var layer: CanvasLayer = CanvasLayer.new()

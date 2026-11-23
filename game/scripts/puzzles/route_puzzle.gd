@@ -29,7 +29,7 @@ func _ready() -> void:
 	add_child(reset_node)
 	PQStyle.label_at(self, "REINICIAR", Vector2(5, 264), 9, PQStyle.GREEN)
 	PQStyle.label_at(self, "RUTA DE PAQUETES", Vector2(40, 115), 20, PQStyle.CYAN)
-	PQStyle.label_at(self, "E gira 90°  ·  Conecta emisor y receptor", Vector2(40, 143), 12)
+	InputLabels.label_at(self, "%s gira 90°  ·  Conecta emisor y receptor", [&"interact"], Vector2(40, 143), 12)
 	caption = PQStyle.label_at(self, "Sigue los cables: →  ↑  →", Vector2(40, 167), 12, PQStyle.EDGE)
 	if GameState.puzzle_complete:
 		for index: int in range(nodes.size()):

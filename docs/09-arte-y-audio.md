@@ -34,9 +34,9 @@
 
 | Tipo | Dirección | Fuente |
 |---|---|---|
-| Música | Chiptune / synthwave, 120–140 BPM; un tema por mundo y otro por jefe | Composición propia o con licencia CC0/CC-BY |
-| SFX | Sonidos de módem, clics de teclado, pitidos de router, *whoosh* digital | Freesound (filtrar por CC0), sfxr/jsfxr para generar |
-| Avisos | Cada tipo de ataque del jefe tiene un sonido propio que se repite siempre igual | Generados con jsfxr |
+| Música | Chiptune, 120–140 BPM. Un tema por mundo, un tema para menú y mapa, uno para créditos y un tema compartido por los jefes a 140 BPM. | Composiciones originales sintetizadas en `scripts/audio/` |
+| SFX | Pitidos y efectos digitales para movimiento, armas, impactos, puzles e interfaz. | Síntesis en `scripts/audio/` |
+| Avisos | Los jefes usan sonidos asociados a sus ataques. | Catálogo de efectos sintetizados |
 
-- Edición: Audacity. Normalizar a −1 dBFS y exportar a `.ogg`.
-- Registrar la licencia de cada recurso en `assets/CREDITS.md`.
+- El juego genera el audio al ejecutarse. `game/tools/export_audio.gd` exporta muestras WAV para revisión.
+- `game/assets/CREDITS.md` registra la procedencia de los recursos de audio.

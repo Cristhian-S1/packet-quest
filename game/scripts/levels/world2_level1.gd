@@ -41,7 +41,7 @@ func _ready() -> void:
 	puzzle.position.x = PUZZLE_START
 	add_child(puzzle)
 	_signs()
-	StageBuilder.hud(self)
+	StageBuilder.hud(self, WIDTH)
 
 func _build_waves() -> void:
 	_wave(Vector2(240, 244), 90.0, 0.0)
