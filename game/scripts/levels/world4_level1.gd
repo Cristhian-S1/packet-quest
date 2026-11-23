@@ -53,7 +53,7 @@ func _ready() -> void:
 	puzzle.position.x = PUZZLE_START
 	add_child(puzzle)
 	_signs()
-	StageBuilder.hud(self)
+	StageBuilder.hud(self, WIDTH)
 
 func _add_vent(x: float, phase_offset: float) -> void:
 	var vent: AirVent = AirVent.new()

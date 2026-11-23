@@ -38,4 +38,4 @@ func _draw() -> void:
 	draw_rect(Rect2(-5, -7, 10, 9), PQStyle.RED if corruption_hits > 0 else accent)
 	if nearby:
 		draw_arc(Vector2.ZERO, 15, 0, TAU, 16, accent, 1)
-		draw_string(ThemeDB.fallback_font, Vector2(-3, -19), "E", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color.WHITE)
+		draw_string(ThemeDB.fallback_font, Vector2(-3, -19), InputLabels.for_action(&"interact"), HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color.WHITE)

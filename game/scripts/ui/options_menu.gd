@@ -3,9 +3,12 @@ extends PacketScreen
 
 signal closed
 
+const CONTROLS: PackedScene = preload("res://scenes/ui/ControlsMenu.tscn")
+
 var _rows: VBoxContainer
 var _status: Label
 var _focus_order: Array[Control] = []
+var _controls_button: Button
 
 func _ready() -> void:
 	super._ready()
@@ -24,7 +27,9 @@ func _ready() -> void:
 	_add_toggle("Modo asistencia", "assist_mode")
 	_add_slider("Música", "music_volume")
 	_add_slider("Efectos", "sfx_volume")
-	var back: Button = PQStyle.button(panel, "Volver", Vector2(248, 285), _close, 144)
+	_controls_button = PQStyle.button(panel, "Controles", Vector2(136, 285), _open_controls, 180)
+	_focus_order.append(_controls_button)
+	var back: Button = PQStyle.button(panel, "Volver", Vector2(360, 285), _close, 144)
 	_focus_order.append(back)
 	for index: int in range(_focus_order.size()):
 		var control: Control = _focus_order[index]
@@ -108,6 +113,16 @@ func _save(key: String, value: Variant) -> bool:
 	var saved: bool = GameState.update_setting(key, value) == OK
 	_status.text = "" if saved else "No se pudo guardar el ajuste."
 	return saved
+
+func _open_controls() -> void:
+	hide()
+	var controls: ControlsMenu = CONTROLS.instantiate() as ControlsMenu
+	controls.closed.connect(_restore_focus)
+	add_child(controls)
+
+func _restore_focus() -> void:
+	show()
+	_controls_button.grab_focus()
 
 func _close() -> void:
 	hide()

@@ -54,4 +54,5 @@ La muestra de Malwarex encadena sus cuatro secciones completas en el orden del c
 Los avisos comunes usan un margen de 32 px del viewport y un máximo de dos voces. Los blindados
 comparten el sonido de su tipo base y los avisos de jefe tienen prioridad en la mezcla.
 
-Registrar la licencia de cada recurso externo en `assets/CREDITS.md`.
+El juego genera el audio al ejecutarse; `game/tools/export_audio.gd` exporta muestras WAV para revisión.
+Registrar la licencia de cada recurso externo en `game/assets/CREDITS.md`.

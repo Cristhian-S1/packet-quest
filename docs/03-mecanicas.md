@@ -85,7 +85,7 @@ puntual con enfriamiento).
 
 ## Progresión: núcleos de datos y mejoras
 
-- Cada jefe da **1 núcleo de datos**. Además hay 2 núcleos ocultos por mundo, tras rutas secretas o puzles opcionales (el prototipo del Mundo 1 incluye solo 1).
+- Hay **12 núcleos de datos**: uno en el nivel de Red Local, dos en cada uno de los otros cuatro niveles y uno por cada victoria contra el Router Furioso, el Firewall Corrupto y el Troyano Real. Los créditos muestran cuántos núcleos distintos se recogieron de esos 12.
 - Las mejoras se compran en el **Taller de Mejoras** del mapa de la red.
 
 | Mejora | Coste | Tipo | Efecto |

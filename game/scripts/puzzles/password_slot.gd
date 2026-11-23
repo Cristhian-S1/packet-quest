@@ -14,4 +14,4 @@ func _draw() -> void:
 	draw_rect(Rect2(-20, -30, 40, 28), PQStyle.CHIP)
 	draw_string(ThemeDB.fallback_font, Vector2(-20, -10), SYMBOLS[symbol], HORIZONTAL_ALIGNMENT_CENTER, 40, 22, tint)
 	if nearby and not accepted:
-		draw_string(ThemeDB.fallback_font, Vector2(-4, -42), "E", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color.WHITE)
+		draw_string(ThemeDB.fallback_font, Vector2(-4, -42), InputLabels.for_action(&"interact"), HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color.WHITE)

@@ -3,7 +3,7 @@ extends Node2D
 
 signal solved
 
-const INSTRUCTION: String = "Pulsa E en los interruptores, de más a menos bloques de urgencia."
+const INSTRUCTION: String = "Pulsa %s en los interruptores, de más a menos bloques de urgencia."
 const FACT: String = "Dato: QoS prioriza el tráfico urgente (voz y vídeo) sobre las descargas."
 const BRIDGE_SIZE: Vector2 = Vector2(76, 8)
 const BRIDGE_Y: float = 260.0
@@ -26,7 +26,8 @@ var _hint_bridge: StringName = &""
 func _ready() -> void:
 	_player = get_tree().get_first_node_in_group(&"player") as PacketPlayer
 	PQStyle.label_at(self, "PRIORIDAD DE TRÁFICO", Vector2(28, 109), 22, PQStyle.CYAN)
-	_caption = PQStyle.label_at(self, INSTRUCTION, Vector2(28, 148), 13, PQStyle.EDGE)
+	_caption = PQStyle.label_at(self, INSTRUCTION % InputLabels.for_action(&"interact"), Vector2(28, 148), 13, PQStyle.EDGE)
+	GameState.settings_changed.connect(_settings_changed)
 	PQStyle.label_at(self, "↺", Vector2(25, 257), 15, PQStyle.GREEN)
 	for node: QosNode in nodes:
 		node.pressed.connect(_on_pressed)
@@ -76,7 +77,7 @@ func _set_solved(value: bool) -> void:
 	if GameState.current_world == 5:
 		GameState.puzzle_complete = value
 	door.set_open(value)
-	_caption.text = FACT if value else INSTRUCTION
+	_settings_changed("bindings")
 	_caption.add_theme_color_override(&"font_color", PQStyle.GREEN if value else PQStyle.EDGE)
 	set_process(not value and is_instance_valid(_player))
 
@@ -84,7 +85,7 @@ func _process(delta: float) -> void:
 	if _fall > 0.0:
 		_fall = maxf(0.0, _fall - delta)
 		if is_zero_approx(_fall):
-			_caption.text = INSTRUCTION
+			_settings_changed("bindings")
 			set_process(is_instance_valid(_player) and not is_solved)
 		queue_redraw()
 	if not is_instance_valid(_player):
@@ -96,6 +97,10 @@ func _process(delta: float) -> void:
 	if _elapsed >= 60.0 and fposmod(_elapsed - 60.0, 10.0) < 1.0:
 		hint = QosPuzzle.next_expected(activated)
 	_update_lights(hint)
+
+func _settings_changed(key: String) -> void:
+	if (key.is_empty() or key == "bindings") and _fall <= 0.0:
+		_caption.text = FACT if is_solved else INSTRUCTION % InputLabels.for_action(&"interact")
 
 func _refresh() -> void:
 	_update_lights(&"")

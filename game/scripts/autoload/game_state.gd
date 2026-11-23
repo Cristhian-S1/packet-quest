@@ -25,6 +25,7 @@ var current_level: String:
 	get:
 		return String(WORLDS[current_world - 1]["boss" if in_boss else "level"])
 var boss_progress: float = 0.0
+var level_progress: float = 0.0
 var puzzle_complete: bool = false
 var playing: bool = false
 var death_cause: String = "nivel_1_1"
@@ -47,6 +48,7 @@ func _ready() -> void:
 
 func restore() -> void:
 	data = SaveManager.load_game()
+	InputBindings.apply(settings["bindings"])
 	restore_speed()
 	settings_changed.emit("")
 
@@ -60,6 +62,8 @@ func update_setting(key: String, value: Variant) -> Error:
 		return result
 	if key == "assist_mode":
 		restore_speed()
+	elif key == "bindings":
+		InputBindings.apply(value)
 	settings_changed.emit(key)
 	return OK
 
@@ -92,12 +96,14 @@ func start_run(world: int = 1) -> void:
 	checkpoint = Vector2(48, 296)
 	puzzle_complete = false
 	boss_progress = 0.0
+	level_progress = 0.0
 	playing = true
 	change_scene(current_level)
 
 func retry() -> void:
 	playing = true
 	boss_progress = 0.0
+	level_progress = 0.0
 	change_scene(current_level)
 
 func enter_boss() -> void:

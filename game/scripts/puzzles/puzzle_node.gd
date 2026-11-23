@@ -22,4 +22,4 @@ func _draw() -> void:
 	if nearby or hint:
 		draw_arc(Vector2.ZERO, 16, 0, TAU, 16, PQStyle.GREEN, 1)
 	if nearby:
-		draw_string(ThemeDB.fallback_font, Vector2(-3, -20), "E", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color.WHITE)
+		draw_string(ThemeDB.fallback_font, Vector2(-3, -20), InputLabels.for_action(&"interact"), HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color.WHITE)

@@ -46,4 +46,4 @@ func _draw() -> void:
 	for index: int in range(urgency):
 		draw_rect(Rect2((index - (urgency - 1) * 0.5) * 7.0 - 2, -17, 4, 13), color)
 	if _nearby:
-		draw_string(font, Vector2(-26, -45), "E", HORIZONTAL_ALIGNMENT_CENTER, 52, 10, Color.WHITE)
+		draw_string(font, Vector2(-26, -45), InputLabels.for_action(&"interact"), HORIZONTAL_ALIGNMENT_CENTER, 52, 10, Color.WHITE)

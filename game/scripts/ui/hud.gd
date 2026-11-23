@@ -2,6 +2,7 @@ class_name PacketHUD
 extends CanvasLayer
 
 var player: PacketPlayer
+var level_exit_x: float = 0.0
 var canvas: Control
 var info: Label
 var notice: Label
@@ -10,6 +11,7 @@ var notice_time: float = 0.0
 var hit_stop_frames: int = 0
 var death_shown: bool = false
 var _stopping: bool = false
+var _pause_key: String
 
 func _ready() -> void:
 	layer = 10
@@ -26,11 +28,23 @@ func _ready() -> void:
 	Events.checkpoint_reached.connect(_checkpoint)
 	Events.core_collected.connect(_core)
 	Events.impact.connect(_impact)
+	GameState.settings_changed.connect(_settings_changed)
+	_settings_changed("")
+	_update_level_progress()
+
+func _physics_process(_delta: float) -> void:
+	if not get_tree().paused:
+		_update_level_progress()
+
+func _update_level_progress() -> void:
+	if level_exit_x > 0.0 and not GameState.in_boss and is_instance_valid(player):
+		GameState.level_progress = clampf(player.position.x / level_exit_x, 0.0, 1.0)
 
 func _process(delta: float) -> void:
 	canvas.queue_redraw()
 	var weapon_name: String = player.current_weapon().display_name.to_upper() if is_instance_valid(player) else "PAQUETE"
-	info.text = "%s   ·   NÚCLEOS %02d   ·   ESC pausa" % [weapon_name, int(GameState.data.get("data_cores", 0))]
+	info.text = "%s   ·   NÚCLEOS %02d   ·   %s pausa" % [
+		weapon_name, int(GameState.data.get("data_cores", 0)), _pause_key]
 	notice_time = maxf(0, notice_time - delta)
 	notice.visible = notice_time > 0
 	if hit_stop_frames > 0:
@@ -38,6 +52,10 @@ func _process(delta: float) -> void:
 	if _stopping and hit_stop_frames == 0:
 		_stopping = false
 		GameState.restore_speed()
+
+func _settings_changed(key: String) -> void:
+	if key.is_empty() or key == "bindings":
+		_pause_key = InputLabels.for_action(&"pause")
 
 func _draw_hud() -> void:
 	canvas.draw_rect(Rect2(0, 0, 640, 42), Color(PQStyle.NIGHT, 0.96))
@@ -65,8 +83,7 @@ func _death() -> void:
 	if death_shown:
 		return
 	death_shown = true
-	if is_instance_valid(player) and not GameState.in_boss:
-		GameState.boss_progress = clampf(player.global_position.x / player.camera_width, 0, 1)
+	_update_level_progress()
 	get_tree().paused = true
 	add_child(preload("res://scenes/ui/DeathScreen.tscn").instantiate())
 

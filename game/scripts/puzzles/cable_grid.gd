@@ -16,6 +16,7 @@ const TILES: Array[Tile] = [
 ]
 const INITIAL: Array[int] = [0, 3, 0, 0, 0, 1, 0, 0, 2, 1, 2, 3]
 const SOLUTION: Array[int] = [0, 1, 1, 1, 1, 3, 0, 0, 2, 1, 2, 3]
+const ROUTE: Array[Vector2i] = [ANTENNA, Vector2i(1, 1), Vector2i(1, 0), Vector2i(2, 0), ROUTER]
 const BASE_MASKS: Array[int] = [0, N | S, N | E, N | E | S]
 const SIDES: Array[int] = [N, E, S, W]
 const STEPS: Array[Vector2i] = [Vector2i.UP, Vector2i.RIGHT, Vector2i.DOWN, Vector2i.LEFT]
@@ -35,8 +36,18 @@ func rotate_cell(cell: Vector2i) -> void:
 
 func openings(cell: Vector2i) -> int:
 	var index: int = cell.y * SIZE.x + cell.x
-	var mask: int = BASE_MASKS[TILES[index]]
-	for turn: int in range(_rotations[index]):
+	return _mask(TILES[index], _rotations[index])
+
+func next_hint_cell() -> Vector2i:
+	for cell: Vector2i in ROUTE:
+		var index: int = cell.y * SIZE.x + cell.x
+		if openings(cell) != _mask(TILES[index], SOLUTION[index]):
+			return cell
+	return Vector2i(-1, -1)
+
+static func _mask(tile: Tile, rotation: int) -> int:
+	var mask: int = BASE_MASKS[tile]
+	for turn: int in range(rotation):
 		mask = ((mask << 1) | (mask >> 3)) & 15
 	return mask
 
