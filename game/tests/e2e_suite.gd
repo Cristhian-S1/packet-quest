@@ -800,11 +800,32 @@ func _world5() -> bool:
 		await pilot.wait_until(func() -> bool: return fposmod(float(first.get(&"_age")), 4.0) < 0.12, 240)
 		for cloud: CloudPlatform in world.clouds:
 			await _jump_to_x(player, cloud.position.x)
+			print("Nube %.0f: Byte %s suelo %s estado %s edad %.2f PV %.0f" % [cloud.position.x, player.position, player.is_on_floor(), cloud.get(&"_state"), cloud.get(&"_age"), player.health.current])
 			if player.health.current <= 0.0 or absf(player.position.x - cloud.position.x) > 20.0:
 				break
 		if player.health.current > 0.0:
-			await _jump_to_x(player, 2938.0)
-		crossed = player.health.current > 0.0 and player.position.x >= 2920.0
+			Input.action_press(&"move_right")
+			Input.action_press(&"jump")
+			await pilot.physics_frames(3)
+			Input.action_press(&"dash")
+			await pilot.physics_frames(2)
+			Input.action_release(&"dash")
+			await pilot.wait_until(func() -> bool: return player.position.x >= 2938.0 or player.health.current <= 0.0, 120)
+			Input.action_release(&"move_right")
+			Input.action_release(&"jump")
+		if player.health.current > 0.0 and player.position.x >= 2920.0:
+			await _move_to(player, 2942.0)
+			var final_port: PortLaser
+			for node: Node in world.get_children():
+				if node is PortLaser and is_equal_approx((node as PortLaser).position.x, 2976.0):
+					final_port = node as PortLaser
+					break
+			if final_port != null:
+				Input.action_press(&"shield")
+				await pilot.wait_until(func() -> bool: return (final_port.get(&"_state") == &"open" and fposmod(float(final_port.get(&"_age")), 3.0) < 1.95) or player.health.current <= 0.0, 240)
+				Input.action_release(&"shield")
+			await _move_to(player, 3070.0)
+		crossed = player.health.current > 0.0 and player.position.x >= 3040.0
 		if crossed:
 			break
 		print("Mundo 5: intento de nubes %d fallido en %s" % [attempt + 1, player.position])
@@ -824,7 +845,6 @@ func _world5() -> bool:
 	if not crossed:
 		check(false, "mundo 5: nubes no cruzadas Byte %s PV %.0f" % [player.position, player.health.current])
 		return false
-	await _move_to(player, 3070.0)
 	Input.action_release(&"shoot")
 	if player.health.current <= 0.0 or player.position.x < 3040.0:
 		check(false, "mundo 5: no llega al QoS Byte %s PV %.0f" % [player.position, player.health.current])
@@ -874,4 +894,4 @@ func _jump_to_x(player: PacketPlayer, x: float) -> void:
 	await _move_to(player, x)
 	await pilot.wait_until(func() -> bool: return player.is_on_floor() or player.health.current <= 0.0, 100)
 	Input.action_release(&"jump")
-	await pilot.physics_frames(2)
+	await pilot.frames(3)
