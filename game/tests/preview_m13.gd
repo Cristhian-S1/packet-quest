@@ -2,6 +2,7 @@ extends RefCounted
 
 const ENEMIES: Array[String] = ["PopUp", "NetworkWorm", "Spyware", "ArmoredPopUp", "ArmoredWorm", "Trojan", "BotDDoS"]
 const BOSSES: Array[String] = ["RouterBoss", "WifiQueenBoss", "FirewallBoss", "TrojanBoss", "MalwarexBoss"]
+const PHASES: Array[int] = [2, 3, 3, 3, 4]
 const BYTE_POSES: Array[String] = ["reposo", "carrera", "salto", "caida", "dash", "disparo", "dano", "muerte", "escudo"]
 
 var directory: String
@@ -31,7 +32,7 @@ func capture(suite: RefCounted, tree: SceneTree, before: bool) -> void:
 		byte.state = [PacketPlayer.State.IDLE, PacketPlayer.State.RUN, PacketPlayer.State.JUMP,
 			PacketPlayer.State.FALL, PacketPlayer.State.DASH, PacketPlayer.State.IDLE, PacketPlayer.State.HURT,
 			PacketPlayer.State.DEAD, PacketPlayer.State.SHIELD][index] as PacketPlayer.State
-		byte.animation_time = 0.36
+		byte.animation_time = 0.58 if index == 0 else 0.36
 		byte.hurt_left = byte.hurt_duration if index == 6 else 0.0
 		byte.shield_active = index == 8
 		if "art_shot_left" in byte:
@@ -80,15 +81,30 @@ func capture(suite: RefCounted, tree: SceneTree, before: bool) -> void:
 		var boss: Node2D = boss_scene.instantiate() as Node2D
 		tree.root.add_child(boss)
 		boss.set_physics_process(false)
+		var player: PacketPlayer = boss.get("player")
+		player.set_physics_process(false)
 		boss.call("_physics_process", 1.2)
-		await _snap(suite, boss_name.to_snake_case() + "-fase-1")
-		var phase: int = int(boss.get("phase"))
-		boss.set("phase", phase + 1)
-		boss.queue_redraw()
-		await _snap(suite, boss_name.to_snake_case() + "-fase-2")
-		boss.call("_defeat")
+		var prefix: String = boss_name.to_snake_case()
+		await _snap(suite, prefix + "-fase-1")
+		for phase: int in range(2, PHASES[index] + 1):
+			if index == 0:
+				boss.call("_begin_transition")
+			else:
+				boss.call("_begin_transition", phase)
+			boss.call("_physics_process", StageBuilder.BOSS_TRANSITION_TIME)
+			await _snap(suite, "%s-fase-%d" % [prefix, phase])
+		if index == 0:
+			var pool: ProjectilePool = boss.get("pool")
+			for point: Vector2 in [Vector2(120, 225), Vector2(240, 160), Vector2(320, 210), Vector2(480, 248)]:
+				var bullet: Projectile = pool.fire(true, point, Vector2.ZERO)
+				bullet.set_physics_process(false)
+			await _snap(suite, "contraste-proyectiles")
+		var health: HealthComponent = boss.get("health")
+		health.damage(health.current)
 		boss.call("_physics_process", 0.18)
-		await _snap(suite, boss_name.to_snake_case() + "-restaurado")
+		await _snap(suite, prefix + "-restaurado")
+		boss.call("_physics_process", 0.29)
+		await _snap(suite, prefix + "-enlace")
 		boss.queue_free()
 		await tree.process_frame
 	print("CAPTURAS M13: " + directory)

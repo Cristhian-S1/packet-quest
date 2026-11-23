@@ -111,3 +111,12 @@ Validación final: import, inicio, cinco pruebas y 300 frames: exit=0, sin error
 - **Fondos.** Wi-Fi, Firewall, Servidor y Centro de datos conservan sus fondos temáticos y añaden cuadrícula y LEDs a velocidades distintas. Las tres capas quedan detrás del escenario. Red Local ya tenía tres planos.
 - **Celebración.** Los núcleos y los jefes emiten partículas en el lugar de la recogida o de la derrota. Reducir destellos elimina el anillo y atenúa las partículas. La sacudida de 150 ms funciona aunque Byte deje de moverse, y se cancela al desactivar el ajuste.
 - **Muestras.** `game/tools/export_audio.gd` genera cuatro temas y seis SFX en `docs/audio/` para revisión del equipo.
+
+## Decisiones M13
+
+- **Byte.** La carcasa de 16 × 16 px tiene cabecera, visor y contactos. El reposo usa dos fotogramas y la carrera seis. El cañón apunta y retrocede sobre la pose actual. Los píxeles de la desintegración siguen animados mientras la pantalla de derrota mantiene la simulación en pausa.
+- **Enemigos.** La silueta distingue cada especie y el metal identifica el lado blindado. La barra roja mide lo que resta del aviso y las marcas del Bot DDoS indican su abanico. Todos los proyectiles enemigos usan rosa, centro claro, contorno oscuro y prioridad de dibujo sobre el escenario.
+- **Jefes.** Las antenas, alas, puertos, cofres y órbitas distinguen sus fases. Al derrotar a cualquiera, los píxeles salen del punto de impacto y tres nodos verdes se enlazan en la tarjeta. Malwarex conserva el título «Internet restaurada». La secuencia usa el intervalo de derrota de cada arena.
+- **Escenario.** Los chips comparten bisel, pistas de cobre y LEDs de baja luminancia. Los ascensores, las plataformas de cobertura y las nubes usan el borde para comunicar su estado. Los racks y pistas del fondo quedan detrás del plano de combate.
+- **Accesibilidad y física.** El daño usa un tinte local que `reduce_flashes` suprime. Los avisos siguen visibles con intensidad fija y la restauración reduce la cantidad de partículas. La sacudida usa el ajuste existente. Las poses, partículas y tiles se dibujan por código. Los contactos, las capas de colisión y los tiempos de combate conservan sus valores.
+- **Capturas.** `tests/capture_preview.gd -- --m13-before` desde la revisión base y `--m13-after` desde M13 usan la misma galería de poses y escenas. Se ejecutan con renderer Compatibility a 60 Hz. La comparación incluye las fases de cada jefe, dos instantes de la restauración y cuatro balas sobre la arena del Router.
