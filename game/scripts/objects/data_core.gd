@@ -26,8 +26,8 @@ func _entered(body: Node2D) -> void:
 	if cache_fragment:
 		var player: PacketPlayer = body as PacketPlayer
 		player.shield_meter = minf(player.shield_max, player.shield_meter + 20)
-	else:
-		GameState.collect_core(core_id)
+	elif GameState.collect_core(core_id):
+		CelebrationBurst.spawn(get_parent(), global_position)
 	collected.emit()
 	queue_free()
 

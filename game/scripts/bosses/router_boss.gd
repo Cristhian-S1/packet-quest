@@ -214,6 +214,7 @@ func _defeat() -> void:
 	card.visible = true
 	GameState.boss_progress = 1.0
 	defeated.emit()
+	CelebrationBurst.spawn(self, body.global_position, true)
 	Events.boss_defeated.emit(&"router_boss")
 
 func _spawn_core() -> void:

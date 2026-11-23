@@ -7,12 +7,14 @@ const TRACE: Color = Color("5f2851")
 const PANEL: Color = Color("23102f")
 
 @export var width: int = 640
+var draw_base: bool = true
 
 func _ready() -> void:
 	z_index = -10
 
 func _draw() -> void:
-	draw_rect(Rect2(0, 0, width, 360), INTERIOR)
+	if draw_base:
+		draw_rect(Rect2(0, 0, width, 360), INTERIOR)
 	draw_rect(Rect2(0, 0, width, 36), PANEL)
 	draw_rect(Rect2(0, 38, width, 2), TRACE)
 	draw_rect(Rect2(0, 300, width, 60), PANEL)

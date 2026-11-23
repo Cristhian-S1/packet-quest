@@ -288,9 +288,11 @@ func _clear_attacks() -> void:
 func _defeat() -> void:
 	_state = State.DEFEATED
 	_timer = 0.8
+	var origin: Vector2 = _wall.to_global(Vector2(14, _port_y if _port_y >= 0.0 else CENTER_PORT))
 	_set_port(-1.0)
 	_clear_attacks()
 	_wall.hide()
+	CelebrationBurst.spawn(self, origin, true)
 	card.text = "SEGMENTO RESTAURADO"
 	card.modulate = PQStyle.GREEN
 	card.show()

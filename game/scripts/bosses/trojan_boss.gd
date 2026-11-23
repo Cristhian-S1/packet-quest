@@ -233,6 +233,7 @@ func _defeat() -> void:
 	GameState.collect_core(&"w4_trojan_boss")
 	GameState.win()
 	defeated.emit()
+	CelebrationBurst.spawn(self, body.global_position, true)
 	Events.boss_defeated.emit(&"troyano_real")
 
 func _draw() -> void:

@@ -272,6 +272,7 @@ func _defeat() -> void:
 	card.show()
 	GameState.win()
 	defeated.emit()
+	CelebrationBurst.spawn(self, body.global_position, true)
 	Events.boss_defeated.emit(&"wifi_queen")
 
 func _draw() -> void:

@@ -63,6 +63,8 @@ var animation_time: float = 0.0
 var trails: Array[Vector2] = []
 var shake_left: float = 0.0
 var shake_power: float = 0.0
+var _shake_tween: Tween
+const SHAKE_TIME: float = 0.15
 var weapon_slots: Array[WeaponData] = []
 var weapon_index: int = 0
 var marker_active: bool = false
@@ -258,11 +260,6 @@ func _physics_process(delta: float) -> void:
 		interact()
 	if Input.is_action_just_pressed("swap_weapon"):
 		swap_weapon()
-	if shake_left > 0:
-		shake_left -= delta
-		camera.offset = Vector2(sin(animation_time * 120), cos(animation_time * 99)) * shake_power
-	else:
-		camera.offset = Vector2.ZERO
 
 func _update_aim(horizontal: float, vertical: float, locked: bool) -> void:
 	if absf(horizontal) > 0.2:
@@ -370,12 +367,25 @@ func _die() -> void:
 	Events.player_died.emit()
 
 func _impact(_duration: float, power: float) -> void:
-	if GameState.screen_shake:
-		shake_left = 0.15
-		shake_power = power
+	if not GameState.screen_shake or power <= 0.0:
+		return
+	if _shake_tween != null:
+		_shake_tween.kill()
+	shake_left = SHAKE_TIME
+	shake_power = power
+	_shake_tween = create_tween().set_ignore_time_scale(true).set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	_shake_tween.tween_method(_update_shake, SHAKE_TIME, 0.0, SHAKE_TIME)
+
+func _update_shake(remaining: float) -> void:
+	shake_left = remaining
+	var elapsed: float = SHAKE_TIME - remaining
+	var amplitude: float = shake_power * remaining / SHAKE_TIME
+	camera.offset = Vector2(sin(elapsed * 120.0), cos(elapsed * 99.0)) * amplitude
 
 func _settings_changed(key: String) -> void:
 	if (key.is_empty() or key == "screen_shake") and not GameState.screen_shake:
+		if _shake_tween != null:
+			_shake_tween.kill()
 		shake_left = 0.0
 		camera.offset = Vector2.ZERO
 	if key.is_empty() or key == "assist_mode":

@@ -9,6 +9,14 @@ static func background(parent: Node) -> void:
 	layer.add_child(CircuitBackground.new())
 	parent.add_child(layer)
 
+static func parallax(parent: Node, backdrop: Node2D, base: Color, tint: Color) -> void:
+	var backdrop_layer: LevelParallax = LevelParallax.new()
+	backdrop_layer.name = "LevelParallax"
+	backdrop_layer.base = base
+	backdrop_layer.tint = tint
+	backdrop_layer.middle = backdrop
+	parent.add_child(backdrop_layer)
+
 static func platform(parent: Node, pos: Vector2, size: Vector2, moving: float = 0.0, one_way: bool = false,
 		chip: ChipPlatform = null) -> ChipPlatform:
 	if chip == null:

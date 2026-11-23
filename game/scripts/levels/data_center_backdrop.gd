@@ -12,12 +12,11 @@ func _ready() -> void:
 	z_index = -10
 
 func _draw() -> void:
-	draw_rect(Rect2(0, 0, width, 360), COLD)
 	for x: int in range(0, width, AISLE_WIDTH):
 		var hot: bool = floori(x / float(AISLE_WIDTH)) % 2 == 1
 		var tint: Color = PQStyle.MAGENTA if hot else PQStyle.CYAN
 		var aisle: Rect2 = Rect2(x, 58, minf(AISLE_WIDTH, width - x), 246)
-		draw_rect(aisle, HOT if hot else COLD)
+		draw_rect(aisle, Color(HOT if hot else COLD, 0.52))
 		draw_rect(Rect2(x, 68, aisle.size.x, 5), Color(tint, 0.24))
 		draw_rect(Rect2(x, 277, aisle.size.x, 27), Color(tint, 0.065))
 		draw_line(Vector2(x + 2, 71), Vector2(x + 2, 302), Color(tint, 0.2), 3)
