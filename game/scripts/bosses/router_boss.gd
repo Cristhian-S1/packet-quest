@@ -5,6 +5,8 @@ signal phase_changed(index: int)
 signal defeated
 enum State { INTRO, IDLE, TELEGRAPH, ACTIVE, RECOVERY, PHASE_TRANSITION, DEFEATED }
 
+const RING_TIME_EPSILON: float = 0.000001
+
 @export var max_health: float = 60.0
 @export var phase_threshold: float = 0.5
 @export var transition_duration: float = StageBuilder.BOSS_TRANSITION_TIME
@@ -137,9 +139,12 @@ func advance(delta: float) -> void:
 func _begin_attack() -> void:
 	var sequence: Array[StringName] = phases[phase].attack_sequence
 	attack = sequence[sequence_index % sequence.size()]
-	if attack == &"A" and ring_wait > ring_telegraph:
-		timer = ring_wait - ring_telegraph
-		return
+	if attack == &"A":
+		# El residuo de coma flotante no debe retrasar el aviso un tick entero.
+		var until_warning: float = ring_wait - ring_telegraph - RING_TIME_EPSILON
+		if until_warning > 0.0:
+			timer = until_warning
+			return
 	sequence_index += 1
 	state = State.TELEGRAPH
 	match attack:

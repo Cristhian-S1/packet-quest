@@ -291,12 +291,18 @@ func run(scene_tree: SceneTree) -> PackedStringArray:
 	boss.timer = 0
 	var ring_ticks: Array[int] = []
 	var previous_state: RouterBoss.State = boss.state
-	for tick: int in range(260):
+	for tick: int in range(600):
 		boss._physics_process(1.0 / 60.0)
 		if boss.state == RouterBoss.State.ACTIVE and previous_state == RouterBoss.State.TELEGRAPH and boss.attack == &"A":
 			ring_ticks.append(tick)
+			check(_count_active(boss.pool.enemy_bullets) == 12, "cada anillo debe emitir 12 balas")
+			boss.pool.clear_enemy()
+		elif boss.attack == &"B":
+			boss.pool.clear_enemy()
 		previous_state = boss.state
-	check(ring_ticks.size() >= 2 and absf(float(ring_ticks[1] - ring_ticks[0]) / 60 - 3) < 0.05, "anillo F1 no respeta 3 s")
+	check(ring_ticks.size() == 4, "se esperaban cuatro anillos F1: %s" % str(ring_ticks))
+	for index: int in range(1, ring_ticks.size()):
+		check(ring_ticks[index] - ring_ticks[index - 1] == 180, "anillo F1: deben transcurrir 180 ticks entre emisiones: %s" % str(ring_ticks))
 	# Defeat -> spawned core -> real Area2D pickup -> saved victory.
 	boss.health.current = 1
 	boss.invulnerable = false
