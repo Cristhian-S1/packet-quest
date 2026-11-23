@@ -16,6 +16,8 @@ class ErrorCounter extends Logger:
 var error_counter: ErrorCounter = ErrorCounter.new()
 
 func _initialize() -> void:
+	# Semilla fija: enemy_base.gd suelta fragmentos con randf(); así el recorrido es reproducible.
+	seed(20261123)
 	OS.add_logger(error_counter)
 	call_deferred("run")
 
