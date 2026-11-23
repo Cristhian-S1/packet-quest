@@ -56,7 +56,6 @@ func _draw() -> void:
 	if state == State.TELEGRAPH:
 		draw_warning(14.0)
 		if is_instance_valid(player):
-			var aim: Vector2 = global_position.direction_to(player.global_position)
-			for angle: float in [-FAN_SPREAD / 2.0, 0.0, FAN_SPREAD / 2.0]:
-				var ray: Vector2 = aim.rotated(deg_to_rad(angle))
+			var aim: Vector2 = player.global_position - global_position
+			for ray: Vector2 in fan_directions(aim, 3, FAN_SPREAD):
 				draw_line((ray * 18).round(), (ray * 25).round(), PQStyle.RED, 2.0)

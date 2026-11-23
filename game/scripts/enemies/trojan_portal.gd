@@ -62,4 +62,4 @@ func _draw() -> void:
 		draw_line(center + Vector2(0, -10), center + Vector2(0, 10), PQStyle.RED, 3.0)
 	if _warning_left > 0.0:
 		var radius: float = lerpf(4.0, 21.0, 1.0 - _warning_left / _warning_time)
-		draw_arc(center, radius, 0.0, TAU, 24, PQStyle.AMBER, 1.5)
+		draw_arc(center, radius, 0.0, TAU, 24, PQStyle.RED, 1.5)

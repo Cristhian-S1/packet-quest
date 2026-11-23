@@ -103,14 +103,15 @@ static func _cannon(canvas: Node2D, aim: Vector2, recoil: float, reduce_flashes:
 	for distance: int in range(5, 13):
 		var pos: Vector2 = (origin + aim * (distance - kick)).round()
 		canvas.draw_rect(Rect2(pos - Vector2(2, 2), Vector2(4, 4)), PQStyle.NIGHT)
+	for distance: int in range(5, 13):
+		var pos: Vector2 = (origin + aim * (distance - kick)).round()
 		canvas.draw_rect(Rect2(pos - Vector2(1, 1), Vector2(3, 2)), MID if distance < 10 else PQStyle.CYAN)
 	var muzzle: Vector2 = (origin + aim * (12.0 - kick)).round()
 	canvas.draw_rect(Rect2(muzzle - Vector2(1, 1), Vector2(2, 2)), GLINT)
-	if recoil > 0.0:
+	if recoil > 0.0 and not reduce_flashes:
 		var tip: Vector2 = (aim * 16.0).round()
-		var tint: Color = PQStyle.CYAN if reduce_flashes else GLINT
-		canvas.draw_rect(Rect2(tip - Vector2(1, 1), Vector2(2, 2)), tint)
-		canvas.draw_rect(Rect2((tip + aim * 3.0).round(), Vector2.ONE), Color(tint, 0.6))
+		canvas.draw_rect(Rect2(tip - Vector2(1, 1), Vector2(2, 2)), GLINT)
+		canvas.draw_rect(Rect2((tip + aim * 3.0).round(), Vector2.ONE), Color(GLINT, 0.6))
 
 static func _firewall(canvas: Node2D, facing: float) -> void:
 	canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2(facing, 1))
