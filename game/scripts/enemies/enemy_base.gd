@@ -21,7 +21,7 @@ func _ready() -> void:
 	add_to_group("enemies")
 	add_to_group("homing_target")
 	collision_layer = 4
-	collision_mask = 8
+	collision_mask = 0
 	add_child(PQStyle.box_shape(Vector2(20, 16)))
 	health = HealthComponent.new()
 	health.max_health = max_health

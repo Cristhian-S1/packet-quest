@@ -3,7 +3,6 @@ extends CharacterBody2D
 
 signal health_changed(current: float, maximum: float)
 signal shield_changed(current: float, maximum: float)
-signal died
 enum State { IDLE, RUN, JUMP, FALL, DASH, SHIELD, HURT, DEAD }
 
 @export var speed: float = 150.0
@@ -98,16 +97,6 @@ func _ready() -> void:
 	shield_area.collision_mask = 16
 	shield_area.add_child(PQStyle.box_shape(Vector2(5, 24)))
 	add_child(shield_area)
-	var interact_area: Area2D = Area2D.new()
-	interact_area.name = "InteractArea"
-	interact_area.collision_layer = 0
-	interact_area.collision_mask = 32
-	var circle: CircleShape2D = CircleShape2D.new()
-	circle.radius = interact_range
-	var shape: CollisionShape2D = CollisionShape2D.new()
-	shape.shape = circle
-	interact_area.add_child(shape)
-	add_child(interact_area)
 	camera = Camera2D.new()
 	camera.position_smoothing_enabled = false
 	camera.limit_left = 0
@@ -363,7 +352,6 @@ func _die() -> void:
 	state = State.DEAD
 	velocity = Vector2.ZERO
 	GameState.record_death()
-	died.emit()
 	Events.player_died.emit()
 
 func _impact(_duration: float, power: float) -> void:
