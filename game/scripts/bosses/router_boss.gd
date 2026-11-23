@@ -247,7 +247,7 @@ func _draw() -> void:
 			draw_rect(Rect2(pos, Vector2(4, 4)), PQStyle.GREEN)
 		return
 	var color: Color = PQStyle.GREEN if phase == 0 else PQStyle.RED
-	var casing: Color = Color.WHITE if flash > 0 and not bool(GameState.data.get("settings", {}).get("reduce_flashes", false)) else Color("1e2b44")
+	var casing: Color = Color.WHITE if flash > 0 and not GameState.reduce_flashes else Color("1e2b44")
 	draw_rect(Rect2(240, 128, 160, 96), casing)
 	draw_rect(Rect2(240, 128, 160, 96), PQStyle.EDGE, false, 2)
 	for index: int in range(4):

@@ -11,7 +11,6 @@ const GONE_START: float = 2.5
 var _age: float = 0.0
 var _state: StringName = &"solid"
 var _shape: CollisionShape2D
-var _reduce_flashes: bool = false
 
 static func state_at(t: float) -> StringName:
 	var elapsed: float = fposmod(t, PERIOD)
@@ -22,7 +21,6 @@ static func state_at(t: float) -> StringName:
 func _ready() -> void:
 	collision_layer = 1
 	collision_mask = 0
-	_reduce_flashes = bool(GameState.data.get("settings", {}).get("reduce_flashes", false))
 	_age = phase_offset
 	_state = state_at(_age)
 	_shape = PQStyle.box_shape(SIZE)
@@ -37,12 +35,12 @@ func _physics_process(delta: float) -> void:
 		_state = next_state
 		_shape.set_deferred(&"disabled", _state == &"gone")
 		queue_redraw()
-	elif _state == &"fading" and not _reduce_flashes:
+	elif _state == &"fading":
 		queue_redraw()
 
 func _draw() -> void:
 	var tint: Color = PQStyle.CYAN
-	if _state == &"fading" and (_reduce_flashes or int(_age * 16.0) % 2 == 0):
+	if _state == &"fading" and (GameState.reduce_flashes or int(_age * 16.0) % 2 == 0):
 		tint = Color.WHITE
 	elif _state == &"gone":
 		tint.a = 0.25

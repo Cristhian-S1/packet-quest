@@ -32,7 +32,6 @@ var phase: int = 1
 var _state: State = State.INTRO
 var _timer: float = 1.2
 var _flash: float = 0.0
-var _reduce_flashes: bool = false
 var _step: int = 0
 var _target: int = 0
 var _jump_origin: Vector2
@@ -68,7 +67,6 @@ func _ready() -> void:
 	GameState.in_boss = true
 	GameState.death_cause = "troyano_real"
 	GameState.boss_progress = 0.0
-	_reduce_flashes = bool(GameState.data.get("settings", {}).get("reduce_flashes", false))
 	add_child(ServerBackdrop.new())
 	StageBuilder.platform(self, Vector2(0, 304), Vector2(640, 56))
 	StageBuilder.platform(self, Vector2(-16, 0), Vector2(16, 360))
@@ -249,7 +247,7 @@ func _draw() -> void:
 				var glows: bool = index == _target and WARNING_TIME - _timer < GLOW_TIME
 				_draw_chest(CHEST_SPOTS[index], PQStyle.CYAN if glows else PQStyle.MAGENTA, false)
 	if not (fake_phase and _state == State.WARNING):
-		var tint: Color = Color.WHITE if _flash > 0.0 and not _reduce_flashes else PQStyle.MAGENTA
+		var tint: Color = Color.WHITE if _flash > 0.0 and not GameState.reduce_flashes else PQStyle.MAGENTA
 		_draw_chest(body.position, tint, _state == State.OPEN)
 	if _state == State.JUMP or (_state == State.WARNING and phase < 3):
 		var landing: Vector2 = chest_spot(_target) + Vector2(0, 6)

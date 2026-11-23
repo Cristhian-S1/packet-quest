@@ -33,7 +33,7 @@ func _process(delta: float) -> void:
 	notice.visible = notice_time > 0
 	if hit_stop_until > 0 and Time.get_ticks_msec() >= hit_stop_until:
 		hit_stop_until = 0
-		_restore_speed()
+		GameState.restore_speed()
 
 func _draw_hud() -> void:
 	canvas.draw_rect(Rect2(0, 0, 640, 42), Color(PQStyle.NIGHT, 0.96))
@@ -80,8 +80,5 @@ func _impact(duration: float, _shake: float) -> void:
 	hit_stop_until = maxi(hit_stop_until, Time.get_ticks_msec() + int(duration * 1000))
 	Engine.time_scale = 0.05
 
-func _restore_speed() -> void:
-	Engine.time_scale = 0.8 if bool(GameState.data.get("settings", {}).get("assist_mode", false)) else 1.0
-
 func _exit_tree() -> void:
-	_restore_speed()
+	GameState.restore_speed()

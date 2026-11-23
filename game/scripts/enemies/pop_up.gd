@@ -5,10 +5,11 @@ func _draw() -> void:
 	if state == State.DEAD:
 		draw_bits()
 		return
-	var color: Color = Color.WHITE if flash > 0 else PQStyle.MAGENTA
+	var color: Color = Color.WHITE if flash > 0 and not GameState.reduce_flashes else PQStyle.MAGENTA
 	draw_rect(Rect2(-10, -8, 20, 16), Color("2a0f3a"))
 	draw_rect(Rect2(-10, -8, 20, 16), color, false, 1)
-	draw_rect(Rect2(-9, -7, 18, 4), Color.WHITE if state == State.TELEGRAPH and int(age * 18) % 2 == 0 else color)
+	var warning: Color = PQStyle.RED if GameState.reduce_flashes else (Color.WHITE if int(age * 18) % 2 == 0 else color)
+	draw_rect(Rect2(-9, -7, 18, 4), warning if state == State.TELEGRAPH else color)
 	draw_line(Vector2(5, -6), Vector2(7, -4), PQStyle.NIGHT, 1)
 	draw_line(Vector2(7, -6), Vector2(5, -4), PQStyle.NIGHT, 1)
 	draw_line(Vector2(-5, 1), Vector2(5, 1), color, 1)

@@ -7,7 +7,6 @@ extends Area2D
 
 var _age: float = 0.0
 var _player: PacketPlayer
-var _reduce_flashes: bool = false
 
 static func state_at(t: float) -> StringName:
 	var cycle: float = fposmod(t, 3.0)
@@ -21,7 +20,6 @@ func _ready() -> void:
 	monitorable = false
 	process_physics_priority = -10
 	_age = phase_offset
-	_reduce_flashes = bool(GameState.data.get("settings", {}).get("reduce_flashes", false))
 	add_child(PQStyle.box_shape(size))
 	body_entered.connect(_track_player)
 	body_exited.connect(_release_player)
@@ -46,7 +44,7 @@ func _draw() -> void:
 	if phase == &"inactive":
 		color.a = 0.14
 	elif phase == &"warning":
-		color = Color(PQStyle.AMBER, 0.75 if _reduce_flashes or sin(_age * 28) > 0 else 0.24)
+		color = Color(PQStyle.AMBER, 0.75 if GameState.reduce_flashes or sin(_age * 28) > 0 else 0.24)
 	draw_rect(Rect2(-size / 2, size), Color(color, color.a * 0.12))
 	var direction: float = -1.0 if push < 0 else 1.0
 	var heading: float = PI if push < 0 else 0.0

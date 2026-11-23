@@ -49,7 +49,6 @@ var _lower: FirewallBrick
 var _port_y: float = -1.0
 var _port_warning: bool = false
 var _port_flash: float = 0.0
-var _reduce_flashes: bool = false
 
 static func phase_for(hp_ratio: float) -> int:
 	if hp_ratio <= PHASE_THREE:
@@ -70,7 +69,6 @@ func _ready() -> void:
 	GameState.in_boss = true
 	GameState.death_cause = "firewall_corrupto"
 	GameState.boss_progress = 0.0
-	_reduce_flashes = bool(GameState.data.get("settings", {}).get("reduce_flashes", false))
 	process_physics_priority = -5
 	add_child(FirewallBackdrop.new())
 	pool = ProjectilePool.new()
@@ -329,7 +327,7 @@ func _draw_ports() -> void:
 		var tint: Color = PORT_COLORS[index] if phase == 2 else PQStyle.AMBER
 		if not active:
 			tint = Color(tint, 0.42)
-		if index == 0 and _port_warning and (_reduce_flashes or int(_phase_age * 18.0) % 2 == 0):
+		if index == 0 and _port_warning and (GameState.reduce_flashes or int(_phase_age * 18.0) % 2 == 0):
 			tint = Color.WHITE
 		var height: float = minf(PORT_SIZE, FLOOR - y + PORT_SIZE / 2.0)
 		var mouth: Rect2 = Rect2(front + CORE_DEPTH - PORT_SIZE / 2.0, y - PORT_SIZE / 2.0, PORT_SIZE, height)
@@ -346,7 +344,7 @@ func _draw_ports() -> void:
 		HORIZONTAL_ALIGNMENT_LEFT, -1, 9, PQStyle.GREEN if _port_y >= 0.0 else PQStyle.AMBER)
 
 func _draw_core(center: Vector2, tint: Color) -> void:
-	if _port_flash > 0.0 and not _reduce_flashes:
+	if _port_flash > 0.0 and not GameState.reduce_flashes:
 		tint = Color.WHITE
 	var diamond: PackedVector2Array = PackedVector2Array([center + Vector2(0, -16), center + Vector2(15, 0),
 		center + Vector2(0, 16), center + Vector2(-15, 0), center + Vector2(0, -16)])

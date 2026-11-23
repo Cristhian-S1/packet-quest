@@ -36,7 +36,12 @@ class RackLeds extends Node2D:
 	var _tick: int = 0
 
 	func _ready() -> void:
-		set_process(not bool(GameState.data.get("settings", {}).get("reduce_flashes", false)))
+		GameState.settings_changed.connect(_settings_changed)
+		_settings_changed("reduce_flashes")
+
+	func _settings_changed(key: String) -> void:
+		if key.is_empty() or key == "reduce_flashes":
+			set_process(not GameState.reduce_flashes)
 
 	func _process(delta: float) -> void:
 		_age += delta

@@ -6,7 +6,6 @@ extends Area2D
 
 var _age: float = 0.0
 var _state: StringName
-var _reduce_flashes: bool = false
 
 static func state_at(t: float) -> StringName:
 	var cycle: float = fposmod(t, 3.0)
@@ -21,7 +20,6 @@ func _ready() -> void:
 	var shape: CollisionShape2D = PQStyle.box_shape(size)
 	shape.position.y = -size.y / 2.0
 	add_child(shape)
-	_reduce_flashes = bool(GameState.data.get("settings", {}).get("reduce_flashes", false))
 	_age = phase_offset
 	_state = state_at(_age)
 
@@ -46,7 +44,7 @@ func _draw() -> void:
 		draw_line(top, Vector2.ZERO, Color.WHITE, 1.0)
 	elif _state == &"warning":
 		color = PQStyle.AMBER
-		if _reduce_flashes or int(_age * 16.0) % 2 == 0:
+		if GameState.reduce_flashes or int(_age * 16.0) % 2 == 0:
 			draw_dashed_line(top, Vector2.ZERO, color, 2.0, 6.0)
 	for y: float in [top.y, -4.0]:
 		draw_rect(Rect2(-size.x / 2.0 - 3.0, y - 2.0, size.x + 6.0, 6.0), PQStyle.CHIP)

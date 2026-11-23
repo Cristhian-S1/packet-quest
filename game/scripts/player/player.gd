@@ -76,7 +76,7 @@ func _ready() -> void:
 	collision_mask = 1
 	add_child(PQStyle.box_shape(Vector2(10, 14)))
 	health = HealthComponent.new()
-	health.max_health = max_hp + (1.0 if bool(GameState.data.get("settings", {}).get("assist_mode", false)) else 0.0)
+	health.max_health = max_hp
 	health.changed.connect(func(cur: float, maximum: float) -> void: health_changed.emit(cur, maximum))
 	health.depleted.connect(_die)
 	add_child(health)
@@ -120,6 +120,7 @@ func _ready() -> void:
 	Events.impact.connect(_impact)
 	health.changed.connect(_check_slowdown)
 	apply_progression(GameState.data)
+	GameState.settings_changed.connect(_settings_changed)
 
 ## Configura armas y mejoras desde save.json. Idempotente: parte siempre de los
 ## valores base del Inspector. Se llama al empezar el nivel, así que llena la vida.
@@ -364,14 +365,27 @@ func _die() -> void:
 	Events.player_died.emit()
 
 func _impact(_duration: float, power: float) -> void:
-	if bool(GameState.data.get("settings", {}).get("screen_shake", true)):
+	if GameState.screen_shake:
 		shake_left = 0.15
 		shake_power = power
+
+func _settings_changed(key: String) -> void:
+	if (key.is_empty() or key == "screen_shake") and not GameState.screen_shake:
+		shake_left = 0.0
+		camera.offset = Vector2.ZERO
+	if key.is_empty() or key == "assist_mode":
+		var base_health: float = float(_base["hp"]) + (1.0 if Progression.has_effect(GameState.data, &"more_health") else 0.0)
+		var maximum: float = base_health + (1.0 if GameState.assist_mode else 0.0)
+		if health.max_health != maximum:
+			var bonus: float = maxf(0.0, maximum - health.max_health) if health.current > 0.0 else 0.0
+			health.max_health = maximum
+			health.current = minf(maximum, health.current + bonus)
+			health.changed.emit(health.current, maximum)
 
 func _draw() -> void:
 	for index: int in range(trails.size()):
 		draw_rect(Rect2(to_local(trails[index]) - Vector2(8, 8), Vector2(16, 16)), Color(PQStyle.CYAN, 0.12 * (3 - index)))
-	if invulnerability > 0 and not bool(GameState.data.get("settings", {}).get("reduce_flashes", false)) and int(animation_time * 14) % 2 == 0:
+	if invulnerability > 0 and not GameState.reduce_flashes and int(animation_time * 14) % 2 == 0:
 		return
 	draw_rect(Rect2(-9, -9, 18, 18), Color("0b1a2e"))
 	draw_rect(Rect2(-8, -8, 16, 16), PQStyle.CYAN)
