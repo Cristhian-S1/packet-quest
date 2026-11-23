@@ -5,6 +5,11 @@ var errors: PackedStringArray = []
 var finished: bool = false
 
 func run(tree: SceneTree) -> PackedStringArray:
+	# Las pruebas de recorrido pueden dejar su arena como escena activa.
+	if is_instance_valid(tree.current_scene):
+		tree.current_scene.queue_free()
+		await tree.process_frame
+	tree.paused = false
 	for index: int in range(EXITS.size()):
 		GameState.current_world = index + 1
 		GameState.in_boss = false
