@@ -127,3 +127,8 @@ Validación final: import, inicio, cinco pruebas y 300 frames: exit=0, sin error
   Byte dividida por la coordenada de salida del nivel. Actualiza el valor durante el
   recorrido y al recibir la señal de muerte. Las arenas conservan el cálculo por vida
   del jefe y sus marcas de fase.
+- **Pistas de Cable y Contraseña.** Se acumula tiempo de juego dentro de la sala. Tras
+  60 s, un contorno emite un pulso suave de 1 s cada 10 s. Reducir destellos mantiene
+  el contorno fijo. En Cable señala la primera pieza que falta orientar desde la antena
+  por la ruta de solución. En Contraseña señala la primera ranura incorrecta. El reinicio
+  vuelve a contar desde cero.

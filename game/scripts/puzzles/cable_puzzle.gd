@@ -14,8 +14,11 @@ var door: PacketDoor
 var reset_node: NetworkNode
 var is_solved: bool = false
 var _caption: Label
+var _player: Node2D
+var _hint: PuzzleHint
 
 func _ready() -> void:
+	_player = get_tree().get_first_node_in_group(&"player") as Node2D
 	PQStyle.label_at(self, "REPARAR CABLES", Vector2(32, 100), 22, PQStyle.CYAN)
 	PQStyle.label_at(self, "Cada disparo gira una pieza 90°", Vector2(32, 131), 13)
 	_caption = PQStyle.label_at(self, CAPTION, Vector2(32, 154), 12, PQStyle.EDGE)
@@ -38,9 +41,14 @@ func _ready() -> void:
 	reset_node.activated.connect(reset_puzzle)
 	add_child(reset_node)
 	PQStyle.label_at(self, "↻ REINICIAR", Vector2(20, 255), 11, PQStyle.GREEN)
+	_hint = PuzzleHint.new()
+	add_child(_hint)
 	if GameState.current_world == 2 and GameState.puzzle_complete:
 		grid.restore_solution()
 	_refresh()
+
+func _process(delta: float) -> void:
+	_hint.advance(delta, _player, door.position.x, is_solved)
 
 func _rotate(cell: Vector2i) -> void:
 	if is_solved:
@@ -53,6 +61,7 @@ func _rotate(cell: Vector2i) -> void:
 
 func reset_puzzle() -> void:
 	grid.reset()
+	_hint.reset()
 	_refresh()
 
 func _refresh() -> void:
@@ -63,6 +72,12 @@ func _refresh() -> void:
 	door.set_open(is_solved)
 	_caption.text = FACT if is_solved else CAPTION
 	_caption.add_theme_color_override("font_color", PQStyle.GREEN if is_solved else PQStyle.EDGE)
+	if is_solved:
+		_hint.hide()
+	else:
+		var cell: Vector2i = grid.next_hint_cell()
+		var extent: Vector2 = Vector2.ONE * CELL_SIZE
+		_hint.point_at(Rect2(_cell_center(cell) - extent / 2.0, extent))
 	for piece: CableCell in cells:
 		piece.openings = grid.openings(piece.cell)
 		piece.connected = piece.cell in connected

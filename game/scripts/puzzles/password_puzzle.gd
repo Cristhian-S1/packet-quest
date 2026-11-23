@@ -14,8 +14,10 @@ var reset_node: NetworkNode
 var is_solved: bool = false
 var _code: Array[PasswordLogic.Symbol] = []
 var _clue_labels: Array[Label] = []
+var _unseen_clues: int = CLUES.size()
 var _caption: Label
 var _player: PacketPlayer
+var _hint: PuzzleHint
 
 func _ready() -> void:
 	_player = get_tree().get_first_node_in_group(&"player") as PacketPlayer
@@ -44,20 +46,22 @@ func _ready() -> void:
 	reset_node.activated.connect(reset_puzzle)
 	add_child(reset_node)
 	PQStyle.label_at(self, "↺ REINICIAR", Vector2(23, 256), 11, PQStyle.GREEN)
+	_hint = PuzzleHint.new()
+	add_child(_hint)
 	_code.assign(PasswordLogic.SOLUTION if GameState.current_world == 4 and GameState.puzzle_complete else PasswordLogic.INITIAL)
 	_refresh()
 	set_process(is_instance_valid(_player))
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	_hint.advance(delta, _player, door.position.x, is_solved)
+	if _unseen_clues == 0 or not is_instance_valid(_player):
+		return
 	var player_x: float = to_local(_player.global_position).x
-	var all_revealed: bool = true
 	for index: int in range(_clue_labels.size()):
 		var clue: Label = _clue_labels[index]
-		if absf(player_x - (POSTERS[index].x + 67.0)) <= 78.0:
+		if not clue.visible and absf(player_x - (POSTERS[index].x + 67.0)) <= 78.0:
 			clue.show()
-		all_revealed = all_revealed and clue.visible
-	if all_revealed:
-		set_process(false)
+			_unseen_clues -= 1
 
 func _cycle(index: int) -> void:
 	if is_solved:
@@ -70,6 +74,7 @@ func _cycle(index: int) -> void:
 
 func reset_puzzle() -> void:
 	_code.assign(PasswordLogic.INITIAL)
+	_hint.reset()
 	_refresh()
 
 func _settings_changed(key: String) -> void:
@@ -87,6 +92,13 @@ func _refresh() -> void:
 		slots[index].symbol = _code[index]
 		slots[index].accepted = is_solved
 		slots[index].queue_redraw()
+	if is_solved:
+		_hint.hide()
+	else:
+		for index: int in range(slots.size()):
+			if _code[index] != PasswordLogic.SOLUTION[index]:
+				_hint.point_at(Rect2(slots[index].position + Vector2(-26, -36), Vector2(52, 40)))
+				break
 
 func _draw() -> void:
 	for poster: Vector2 in POSTERS:
