@@ -47,7 +47,7 @@ func _ready() -> void:
 	puzzle.position.x = PUZZLE_START
 	add_child(puzzle)
 	_signs()
-	StageBuilder.hud(self)
+	StageBuilder.hud(self, EXIT_X)
 
 func _build_floor() -> void:
 	StageBuilder.platform(self, Vector2(-16, 0), Vector2(16, 360))
@@ -150,11 +150,9 @@ func _physics_process(_delta: float) -> void:
 	if is_instance_valid(_hidden_core) and not _hidden_core.visible:
 		if player.global_position.distance_squared_to(_hidden_core.global_position) <= 48.0 * 48.0:
 			_hidden_core.show()
-	if not _transitioning and player.state != PacketPlayer.State.DEAD:
-		GameState.boss_progress = clampf(player.position.x / EXIT_X, 0.0, 1.0)
-		if puzzle.is_solved and player.position.x >= EXIT_X:
-			_transitioning = true
-			GameState.enter_boss()
+	if not _transitioning and player.state != PacketPlayer.State.DEAD and puzzle.is_solved and player.position.x >= EXIT_X:
+		_transitioning = true
+		GameState.enter_boss()
 
 func _draw() -> void:
 	for pit: Vector2 in [COVERAGE_PIT, PORT_PIT, CLOUD_PIT]:

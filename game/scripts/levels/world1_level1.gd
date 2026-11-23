@@ -44,7 +44,7 @@ func _ready() -> void:
 	puzzle.position = Vector2(2240, 0)
 	add_child(puzzle)
 	_tutorial()
-	StageBuilder.hud(self)
+	StageBuilder.hud(self, EXIT_X)
 
 func _tutorial() -> void:
 	PQStyle.label_at(self, "01 / PUERTO DE ENTRADA", Vector2(40, 144), 20, PQStyle.CYAN)

@@ -2,6 +2,7 @@ class_name PacketHUD
 extends CanvasLayer
 
 var player: PacketPlayer
+var level_exit_x: float = 0.0
 var canvas: Control
 var info: Label
 var notice: Label
@@ -29,6 +30,15 @@ func _ready() -> void:
 	Events.impact.connect(_impact)
 	GameState.settings_changed.connect(_settings_changed)
 	_settings_changed("")
+	_update_level_progress()
+
+func _physics_process(_delta: float) -> void:
+	if not get_tree().paused:
+		_update_level_progress()
+
+func _update_level_progress() -> void:
+	if level_exit_x > 0.0 and not GameState.in_boss and is_instance_valid(player):
+		GameState.level_progress = clampf(player.position.x / level_exit_x, 0.0, 1.0)
 
 func _process(delta: float) -> void:
 	canvas.queue_redraw()
@@ -73,8 +83,7 @@ func _death() -> void:
 	if death_shown:
 		return
 	death_shown = true
-	if is_instance_valid(player) and not GameState.in_boss:
-		GameState.boss_progress = clampf(player.global_position.x / player.camera_width, 0, 1)
+	_update_level_progress()
 	get_tree().paused = true
 	add_child(preload("res://scenes/ui/DeathScreen.tscn").instantiate())
 

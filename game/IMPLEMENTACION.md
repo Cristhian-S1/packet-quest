@@ -123,3 +123,7 @@ Validación final: import, inicio, cinco pruebas y 300 frames: exit=0, sin error
 - **Ajustes y letreros.** El guardado registra en `settings.bindings` las acciones que difieren
   de fábrica. Una partida antigua o con remapeo inválido usa los controles de fábrica y
   conserva el progreso. Los letreros de tutorial y el HUD muestran la tecla primaria vigente.
+- **Progreso al morir.** En los cinco niveles, el HUD calcula la posición horizontal de
+  Byte dividida por la coordenada de salida del nivel. Actualiza el valor durante el
+  recorrido y al recibir la señal de muerte. Las arenas conservan el cálculo por vida
+  del jefe y sus marcas de fase.
