@@ -14,6 +14,7 @@ func _init() -> void:
 func _ready() -> void:
 	telegraph_time = 0.3
 	super._ready()
+	_warning_sfx = &"enemy_worm"
 	anchor = position
 	cable = Path2D.new()
 	cable.curve = Curve2D.new()
@@ -36,6 +37,7 @@ func advance(delta: float) -> void:
 			pending_attack = false
 			state = State.TELEGRAPH
 			timer = telegraph_time
+			_play_attack_warning()
 		return
 	timer -= delta
 	if timer > 0:

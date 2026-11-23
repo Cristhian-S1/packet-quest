@@ -6,10 +6,21 @@ const MUSIC_CACHE: String = "res://scripts/audio/music_cache.gd"
 const TRACKS: Array[StringName] = [
 	&"menu", &"world_1", &"world_2", &"world_3", &"world_4", &"world_5", &"boss", &"credits",
 ]
+const ENEMY_CUES: Dictionary[String, StringName] = {
+	"PopUp": &"enemy_popup",
+	"ArmoredPopUp": &"enemy_popup",
+	"NetworkWorm": &"enemy_worm",
+	"ArmoredWorm": &"enemy_worm",
+	"Spyware": &"enemy_spyware",
+	"Trojan": &"enemy_trojan",
+	"BotDDoS": &"enemy_ddos",
+}
+const TICK: float = 1.0 / 60.0
 const SFX: Array[StringName] = [
 	&"jump", &"dash", &"packet", &"triple", &"ping", &"impact", &"byte_hurt", &"death",
 	&"core_collected", &"puzzle_solved", &"menu_click", &"menu_focus", &"weapon_swap",
-	&"upgrade", &"cable_connected", &"firewall_connected", &"telegraph", &"boss_defeated",
+	&"upgrade", &"cable_connected", &"firewall_connected", &"boss_defeated",
+	&"enemy_popup", &"enemy_worm", &"enemy_spyware", &"enemy_trojan", &"enemy_ddos",
 	&"router_A", &"router_B", &"router_C", &"wifi_waves", &"wifi_ping", &"wifi_spiral",
 	&"wifi_teleport", &"wifi_interference", &"firewall_rule", &"firewall_laser",
 	&"trojan_jump", &"trojan_discharge", &"trojan_summon", &"trojan_mimics", &"malwarex_ring", &"malwarex_waves",
@@ -23,6 +34,7 @@ var _main_usec: int = 0
 func run(tree: SceneTree) -> PackedStringArray:
 	_test_sfx()
 	_test_mute()
+	await _test_enemy_cues(tree)
 	await _test_trojan_cues(tree)
 	await _test_music_scenes(tree)
 	await _test_music_render(tree)
@@ -58,6 +70,92 @@ func _test_sfx() -> void:
 		_check(AudioManager.last_sfx == id, "%s debe registrarse en headless" % id)
 	_check(worst_usec < 50000, "render síncrono de SFX tardó %.2f ms" % (worst_usec / 1000.0))
 	print("Audio SFX, máximo en hilo principal: %.2f ms" % (worst_usec / 1000.0))
+
+func _test_enemy_cues(tree: SceneTree) -> void:
+	var viewport: SubViewport = SubViewport.new()
+	viewport.size = Vector2i(640, 360)
+	viewport.world_2d = World2D.new()
+	tree.root.add_child(viewport)
+	var player: PacketPlayer = StageBuilder.player(viewport, Vector2.ZERO)
+	player.set_physics_process(false)
+	var camera: Camera2D = Camera2D.new()
+	camera.position = Vector2(1200, 420)
+	camera.zoom = Vector2(1.25, 1.25)
+	viewport.add_child(camera)
+	camera.make_current()
+	camera.force_update_scroll()
+	var to_world: Transform2D = viewport.get_canvas_transform().affine_inverse()
+	var center: Vector2 = to_world * Vector2(320, 180)
+	var outside: Vector2 = to_world * Vector2(674, 180)
+	var margin: Vector2 = to_world * Vector2(670, 180)
+	var idle_cue: StringName = &"menu_focus"
+	for enemy_name: String in ENEMY_CUES:
+		AudioManager._physics_process(1.0)
+		var enemy: EnemyBase = _spawn_warning_enemy(viewport, player, enemy_name, center)
+		AudioManager.last_sfx = idle_cue
+		enemy._physics_process(TICK)
+		_check(enemy.visual_pose() == &"warning" and AudioManager.last_sfx == ENEMY_CUES[enemy_name],
+			"%s debe emitir %s al avisar ante la cámara" % [enemy_name, ENEMY_CUES[enemy_name]])
+		AudioManager.last_sfx = idle_cue
+		enemy._physics_process(TICK)
+		_check(AudioManager.last_sfx == idle_cue, "%s debe avisar una vez por entrada" % enemy_name)
+		enemy.queue_free()
+
+		AudioManager._physics_process(1.0)
+		enemy = _spawn_warning_enemy(viewport, player, enemy_name, outside)
+		AudioManager.last_sfx = idle_cue
+		enemy._physics_process(TICK)
+		_check(enemy.visual_pose() == &"warning" and AudioManager.last_sfx == idle_cue,
+			"%s debe avisar en silencio más allá del margen de 32 px" % enemy_name)
+		enemy.queue_free()
+
+	var edge: EnemyBase = _spawn_warning_enemy(viewport, player, "Trojan", margin)
+	edge._physics_process(TICK)
+	_check(AudioManager.last_sfx == &"enemy_trojan", "el margen debe incluir 30 px fuera del marco")
+	edge.queue_free()
+
+	AudioManager._physics_process(1.0)
+	for index: int in range(5):
+		var enemy: EnemyBase = _spawn_warning_enemy(viewport, player, "PopUp", center)
+		AudioManager.last_sfx = idle_cue
+		enemy._physics_process(TICK)
+		var expected: StringName = &"enemy_popup" if index < 2 else idle_cue
+		_check(AudioManager.last_sfx == expected, "solo dos de cinco avisos simultáneos deben sonar (%d)" % index)
+		enemy.queue_free()
+	AudioManager._physics_process(TICK)
+	var overlapping: EnemyBase = _spawn_warning_enemy(viewport, player, "BotDDoS", center)
+	overlapping._physics_process(TICK)
+	_check(AudioManager.last_sfx == idle_cue, "el límite se mantiene en el siguiente fotograma")
+	AudioManager.play_warning(&"router_A")
+	_check(AudioManager.last_sfx == &"router_A", "el aviso de jefe debe sonar con ambas voces comunes ocupadas")
+	# Después de que habrían terminado los Pop-ups, el aviso de jefe aún protege la mezcla.
+	AudioManager._physics_process(0.25)
+	var blocked: EnemyBase = _spawn_warning_enemy(viewport, player, "PopUp", center)
+	blocked._physics_process(TICK)
+	_check(AudioManager.last_sfx == &"router_A", "un aviso común debe ceder mientras suena el jefe")
+	AudioManager._physics_process(1.0)
+	var available: EnemyBase = _spawn_warning_enemy(viewport, player, "PopUp", center)
+	available._physics_process(TICK)
+	_check(AudioManager.last_sfx == &"enemy_popup", "la voz común debe quedar disponible al terminar el aviso")
+	AudioManager._physics_process(1.0)
+	viewport.queue_free()
+	await tree.process_frame
+
+func _spawn_warning_enemy(viewport: SubViewport, player: PacketPlayer, enemy_name: String,
+		spawn: Vector2) -> EnemyBase:
+	var scene: PackedScene = load("res://scenes/enemies/%s.tscn" % enemy_name) as PackedScene
+	var enemy: EnemyBase = scene.instantiate() as EnemyBase
+	enemy.position = spawn
+	player.position = spawn + Vector2(0, 40)
+	if enemy is NetworkWorm:
+		(enemy as NetworkWorm).path_width = 0.0
+	viewport.add_child(enemy)
+	enemy.set_physics_process(false)
+	enemy.player = player
+	enemy.timer = 0.0
+	if enemy is NetworkWorm:
+		enemy.take_damage(1.0, spawn - Vector2(20, 0))
+	return enemy
 
 func _test_trojan_cues(tree: SceneTree) -> void:
 	var boss: TrojanBoss = preload("res://scenes/bosses/TrojanBoss.tscn").instantiate() as TrojanBoss

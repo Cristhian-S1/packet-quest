@@ -17,6 +17,7 @@ func _init() -> void:
 
 func _ready() -> void:
 	super._ready()
+	_warning_sfx = &"enemy_trojan"
 	_patrol_center = position.x
 
 func _runs_offscreen() -> bool:

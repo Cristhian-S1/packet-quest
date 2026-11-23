@@ -6,6 +6,7 @@ enum State { IDLE, TELEGRAPH, ACTIVE, RECOVERY, DEAD }
 const EnemyArt = preload("res://scripts/art/enemy_art.gd")
 const ArtMotion = preload("res://scripts/art/art_motion.gd")
 const ART_POSES: Array[StringName] = [&"idle", &"warning", &"active", &"recovery", &"dead"]
+const WARNING_SCREEN_MARGIN: float = 32.0
 @export var max_health: float = 3.0
 @export var telegraph_time: float = 0.4
 @export var cycle_time: float = 1.8
@@ -19,6 +20,7 @@ var age: float = 0.0
 var flash: float = 0.0
 var on_screen: bool = false
 var marked: bool = false
+var _warning_sfx: StringName = &""
 
 func _ready() -> void:
 	add_to_group("enemies")
@@ -69,6 +71,7 @@ func advance(delta: float) -> void:
 		State.IDLE:
 			state = State.TELEGRAPH
 			timer = telegraph_time
+			_play_attack_warning()
 		State.TELEGRAPH:
 			state = State.ACTIVE
 			fire()
@@ -79,6 +82,13 @@ func advance(delta: float) -> void:
 		State.RECOVERY:
 			state = State.IDLE
 			timer = 0
+
+func _play_attack_warning() -> void:
+	if _warning_sfx == &"" or not is_inside_tree():
+		return
+	var bounds: Rect2 = get_viewport_rect().grow(WARNING_SCREEN_MARGIN)
+	if bounds.has_point(get_global_transform_with_canvas().origin):
+		AudioManager.play_enemy_warning(_warning_sfx)
 
 func fire() -> void:
 	if pool != null and player != null and on_screen:

@@ -16,6 +16,7 @@ var _body: CharacterBody2D
 
 func _ready() -> void:
 	super._ready()
+	_warning_sfx = &"enemy_spyware"
 	remove_from_group(&"homing_target")
 	collision_layer = 0
 	collision_mask = 0
@@ -60,6 +61,7 @@ func _physics_process(delta: float) -> void:
 func _warn() -> void:
 	spy_state = SpyState.TELEGRAPH
 	timer = telegraph_time
+	_play_attack_warning()
 
 func _jump(delta: float) -> void:
 	_body.velocity.y += GRAVITY * delta
