@@ -63,7 +63,10 @@ func run(scene_tree: SceneTree) -> PackedStringArray:
 	if not await _world3():
 		_finish()
 		return errors
-	check(false, "recorrido a crÃ©ditos pendiente: mundos 3, 4 y 5 no implementados")
+	if not await _world4():
+		_finish()
+		return errors
+	check(false, "recorrido a créditos pendiente: mundo 5 no implementado")
 	_finish()
 	return errors
 
@@ -608,3 +611,138 @@ func _cross_port(world: World3Level1, player: PacketPlayer, x: float) -> bool:
 		check(false, "mundo 3: puerto %.0f Byte %s PV %.0f" % [x, player.position, player.health.current])
 		return false
 	return true
+
+func _world4() -> bool:
+	var map: NetworkMap = tree.current_scene as NetworkMap
+	for _i: int in range(5):
+		if map.selected_world == 4:
+			break
+		await pilot.menu_tap(&"ui_right")
+	await pilot.confirm()
+	if not await pilot.wait_until(func() -> bool: return tree.current_scene is World4Level1, 240):
+		check(false, "mundo 4: no se abre Servidor")
+		return false
+	_checkpoint("mapa al mundo 4")
+	var world: World4Level1 = tree.current_scene as World4Level1
+	var player: PacketPlayer = world.player
+	player.health.changed.connect(func(current: float, _maximum: float) -> void: print("Mundo 4: PV %.0f Byte %s" % [current, player.position]))
+	Input.action_press(&"shoot")
+	await _move_to(player, 760.0)
+	var elevator: DataElevator = world.get_node("ElevatorS2") as DataElevator
+	var riding := false
+	for _i: int in range(360):
+		await tree.physics_frame
+		if player.is_on_floor() and player.position.y <= 215.0 and elevator.position.y <= 221.0:
+			riding = true
+			break
+		if player.is_on_floor() and player.position.y > 290.0 and elevator.position.y >= 263.0:
+			Input.action_press(&"jump")
+			await pilot.physics_frames(34)
+			Input.action_release(&"jump")
+	if not riding:
+		check(false, "mundo 4: ascensor no alcanzado Byte %s PV %.0f" % [player.position, player.health.current])
+		return false
+	Input.action_press(&"jump")
+	await _move_to(player, 858.0)
+	Input.action_release(&"jump")
+	await pilot.physics_frames(24)
+	Input.action_press(&"move_right")
+	await pilot.wait_until(func() -> bool: return player.position.x >= 1170.0 or player.health.current <= 0.0, 600)
+	Input.action_release(&"move_right")
+	await _clear_trojan(world, player, 1400.0)
+	Input.action_press(&"move_right")
+	await pilot.wait_until(func() -> bool: return player.position.x >= 1300.0 or player.health.current <= 0.0, 600)
+	Input.action_press(&"jump")
+	await pilot.physics_frames(15)
+	Input.action_press(&"dash")
+	await pilot.physics_frames(2)
+	Input.action_release(&"dash")
+	await pilot.physics_frames(36)
+	Input.action_release(&"jump")
+	await pilot.wait_until(func() -> bool: return player.position.x >= 1534.0 or player.health.current <= 0.0, 900)
+	if player.health.current <= 0.0:
+		check(false, "mundo 4: Byte muere antes del foso en %s" % player.position)
+		return false
+	Input.action_release(&"move_right")
+	await pilot.wait_until(func() -> bool: return player.is_on_floor() and player.cooldown <= 0.0 or player.health.current <= 0.0, 90)
+	Input.action_press(&"move_right")
+	Input.action_press(&"jump")
+	await pilot.physics_frames(15)
+	Input.action_press(&"dash")
+	await pilot.physics_frames(2)
+	Input.action_release(&"dash")
+	await pilot.physics_frames(36)
+	Input.action_release(&"jump")
+	Input.action_release(&"move_right")
+	await pilot.wait_until(func() -> bool: return player.is_on_floor() and player.cooldown <= 0.0 or player.health.current <= 0.0, 90)
+	await _clear_trojan(world, player, 1800.0)
+	Input.action_press(&"move_right")
+	Input.action_press(&"jump")
+	await pilot.physics_frames(15)
+	Input.action_press(&"dash")
+	await pilot.physics_frames(2)
+	Input.action_release(&"dash")
+	await pilot.physics_frames(36)
+	Input.action_release(&"jump")
+	await pilot.wait_until(func() -> bool: return player.position.x >= 2560.0 or player.health.current <= 0.0, 1200)
+	Input.action_release(&"move_right")
+	Input.action_release(&"shoot")
+	if player.health.current <= 0.0 or player.position.x < 2560.0:
+		check(false, "mundo 4: no llega al puzle Byte %s PV %.0f" % [player.position, player.health.current])
+		return false
+	var puzzle: PasswordPuzzle = world.puzzle
+	for slot: PasswordSlot in puzzle.slots:
+		await _move_to(player, slot.global_position.x)
+		for _turn: int in range(3):
+			await pilot.tap(&"interact")
+			await pilot.frames(2)
+	if not puzzle.is_solved:
+		check(false, "mundo 4: contraseña no resuelta")
+		return false
+	Input.action_press(&"move_right")
+	var entered: bool = await pilot.wait_until(func() -> bool: return tree.current_scene is TrojanBoss, 600)
+	Input.action_release(&"move_right")
+	check(entered, "mundo 4: no entra en Troyano Real")
+	if not entered:
+		return false
+	_checkpoint("nivel 4-1")
+	var won: bool = await load("res://tests/bot/trojan_pilot.gd").fight(tree, tree.current_scene)
+	pilot.release_all()
+	check(won, "mundo 4: Troyano Real no vencido")
+	if not won:
+		return false
+	await _capture("10_troyano_vencido")
+	var map_reached: bool = await pilot.wait_until(func() -> bool: return tree.current_scene is NetworkMap, 600)
+	check(map_reached and GameState.is_world_unlocked(GameState.data, 5), "Troyano no vuelve al mapa o no desbloquea Centro de datos")
+	_checkpoint("Troyano y mapa")
+	return map_reached and GameState.is_world_unlocked(GameState.data, 5)
+
+func _clear_trojan(world: World4Level1, player: PacketPlayer, center: float) -> void:
+	var target: Trojan
+	for node: Node in tree.get_nodes_in_group(&"enemies"):
+		if node is Trojan and absf(float(node.get(&"_patrol_center")) - center) < 5.0:
+			target = node as Trojan
+			break
+	if target == null:
+		return
+	var jump_left := 0
+	for _i: int in range(600):
+		await tree.physics_frame
+		if not is_instance_valid(target) or target.state == EnemyBase.State.DEAD or player.health.current <= 0.0:
+			break
+		if jump_left > 0:
+			jump_left -= 1
+			if jump_left == 0:
+				Input.action_release(&"jump")
+		var danger := false
+		for bullet: Projectile in player.pool.enemy_bullets:
+			if bullet.active:
+				for tick: int in range(1, 13):
+					var future: Vector2 = bullet.position + bullet.velocity * (tick / 60.0) + bullet.acceleration * (0.5 * pow(tick / 60.0, 2))
+					if absf(future.x - player.position.x) < 9.0 and absf(future.y - player.position.y) < 10.0:
+						danger = true
+						break
+		if danger and player.is_on_floor() and jump_left == 0:
+			Input.action_press(&"jump")
+			jump_left = 35
+	Input.action_release(&"jump")

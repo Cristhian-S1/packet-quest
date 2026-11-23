@@ -47,3 +47,10 @@ El primer lanzamiento del checkout falló al no existir la caché de clases de G
 - Banco aislado del Firewall: 10/10 victorias, semillas 1–10, sin asistencia. El piloto esquiva las barras y empuja el muro con disparos antes de atacar el núcleo.
 - Ejecución observada: mapa al mundo 3 0,024 s; nivel 3-1 1,092 s; Firewall y mapa 2,593 s. Los tiempos son de reloj headless.
 - No se ha demostrado un bug del juego. Mundos 4–5 y créditos siguen pendientes.
+
+## Mundo 4 y Troyano Real
+
+- El recorrido encadenado cruzó el ascensor y el foso, resolvió las ranuras mediante interact y venció al Troyano; se verificó el desbloqueo del mundo 5.
+- Banco aislado del Troyano: 10/10 victorias, semillas 1–10, sin asistencia. Se dispara desde una posición segura y se salta ante las descargas.
+- Tiempos observados headless: mapa al mundo 4 0,015 s; nivel 4-1 1,172 s; Troyano y mapa 1,247 s. La fiabilidad de la travesía aún requiere más ejecuciones.
+- Pendiente: mundo 5, Malwarex y créditos; no se ha demostrado un bug del juego.
