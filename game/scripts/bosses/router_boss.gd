@@ -48,6 +48,7 @@ var core_spawned: bool = false
 var card: Label
 
 func _ready() -> void:
+	AudioManager.play_music(&"boss")
 	StageBuilder.background(self)
 	pool = ProjectilePool.new()
 	add_child(pool)
@@ -154,7 +155,7 @@ func _begin_attack() -> void:
 			timer = laser_telegraph
 			laser_y = player.global_position.y
 	GameState.death_cause = "router_boss_%s" % attack
-	AudioManager.play_sfx(StringName("router_" + String(attack)))
+	AudioManager.play_warning(StringName("router_" + String(attack)))
 
 func _active_attack(_delta: float) -> void:
 	match attack:
@@ -213,6 +214,7 @@ func _defeat() -> void:
 	card.visible = true
 	GameState.boss_progress = 1.0
 	defeated.emit()
+	CelebrationBurst.spawn(self, body.global_position, true)
 	Events.boss_defeated.emit(&"router_boss")
 
 func _spawn_core() -> void:

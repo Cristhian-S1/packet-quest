@@ -64,7 +64,6 @@ func _cycle(index: int) -> void:
 	_code[index] = PasswordLogic.cycle(_code[index]) as PasswordLogic.Symbol
 	_refresh()
 	if is_solved:
-		AudioManager.play_sfx(&"cable_connected")
 		Events.puzzle_solved.emit(&"w4_password")
 		solved.emit()
 

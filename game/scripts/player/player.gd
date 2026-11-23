@@ -63,6 +63,8 @@ var animation_time: float = 0.0
 var trails: Array[Vector2] = []
 var shake_left: float = 0.0
 var shake_power: float = 0.0
+var _shake_tween: Tween
+const SHAKE_TIME: float = 0.15
 var weapon_slots: Array[WeaponData] = []
 var weapon_index: int = 0
 var marker_active: bool = false
@@ -214,6 +216,7 @@ func _physics_process(delta: float) -> void:
 		invulnerability = maxf(invulnerability, dash_iframes)
 		state = State.DASH
 		trails.clear()
+		AudioManager.play_sfx(&"dash")
 	shield_active = Input.is_action_pressed("shield") and shield_broken <= 0 and shield_meter > 0 and dash_left <= 0 and hurt_left <= 0
 	_update_shield(delta)
 	if dash_left > 0:
@@ -236,6 +239,7 @@ func _physics_process(delta: float) -> void:
 			velocity.y = jump_speed
 			buffered_jump = 0
 			coyote = 0
+			AudioManager.play_sfx(&"jump")
 		if Input.is_action_just_released("jump") and velocity.y < 0:
 			velocity.y *= jump_cut
 		state = State.SHIELD if shield_active else (State.RUN if absf(velocity.x) > 1 else State.IDLE)
@@ -256,11 +260,6 @@ func _physics_process(delta: float) -> void:
 		interact()
 	if Input.is_action_just_pressed("swap_weapon"):
 		swap_weapon()
-	if shake_left > 0:
-		shake_left -= delta
-		camera.offset = Vector2(sin(animation_time * 120), cos(animation_time * 99)) * shake_power
-	else:
-		camera.offset = Vector2.ZERO
 
 func _update_aim(horizontal: float, vertical: float, locked: bool) -> void:
 	if absf(horizontal) > 0.2:
@@ -311,6 +310,8 @@ func take_damage(amount: float, origin: Vector2) -> void:
 	shield_active = false
 	velocity = Vector2((-1.0 if origin.x >= global_position.x else 1.0) * knockback, -90)
 	state = State.HURT
+	if amount > 0.0:
+		AudioManager.play_sfx(&"byte_hurt")
 	Events.impact.emit(0.05, 2.0)
 	health.damage(amount)
 
@@ -319,6 +320,7 @@ func pit_respawn() -> void:
 		health.damage(health.current)
 		return
 	# A pit always costs one HP, including during damage i-frames.
+	AudioManager.play_sfx(&"byte_hurt")
 	health.damage(1)
 	if state == State.DEAD:
 		return
@@ -365,12 +367,25 @@ func _die() -> void:
 	Events.player_died.emit()
 
 func _impact(_duration: float, power: float) -> void:
-	if GameState.screen_shake:
-		shake_left = 0.15
-		shake_power = power
+	if not GameState.screen_shake or power <= 0.0:
+		return
+	if _shake_tween != null:
+		_shake_tween.kill()
+	shake_left = SHAKE_TIME
+	shake_power = power
+	_shake_tween = create_tween().set_ignore_time_scale(true).set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	_shake_tween.tween_method(_update_shake, SHAKE_TIME, 0.0, SHAKE_TIME)
+
+func _update_shake(remaining: float) -> void:
+	shake_left = remaining
+	var elapsed: float = SHAKE_TIME - remaining
+	var amplitude: float = shake_power * remaining / SHAKE_TIME
+	camera.offset = Vector2(sin(elapsed * 120.0), cos(elapsed * 99.0)) * amplitude
 
 func _settings_changed(key: String) -> void:
 	if (key.is_empty() or key == "screen_shake") and not GameState.screen_shake:
+		if _shake_tween != null:
+			_shake_tween.kill()
 		shake_left = 0.0
 		camera.offset = Vector2.ZERO
 	if key.is_empty() or key == "assist_mode":

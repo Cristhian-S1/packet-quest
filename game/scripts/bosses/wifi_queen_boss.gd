@@ -19,6 +19,7 @@ const WAVE_LANES: Array[float] = [296.0, 256.0, 216.0]
 const SIGNAL_PATTERN: Array[Attack] = [Attack.WAVES, Attack.PING]
 const ROAMING_PATTERN: Array[Attack] = [Attack.SPIRAL, Attack.TELEPORT, Attack.WAVES, Attack.TELEPORT,
 	Attack.SPIRAL, Attack.TELEPORT, Attack.PING, Attack.TELEPORT]
+const ATTACK_SFX: Array[StringName] = [&"wifi_waves", &"wifi_ping", &"wifi_spiral", &"wifi_teleport"]
 const WARNINGS: Array[float] = [0.6, 0.8, 0.5, 0.4]
 const SPIRAL_TIME: float = 1.2
 const SPIRAL_COUNT: int = 16
@@ -70,6 +71,7 @@ static func interference_lanes(seed_index: int) -> Array[int]:
 		_: return [0, 3]
 
 func _ready() -> void:
+	AudioManager.play_music(&"boss")
 	GameState.current_world = 2
 	GameState.in_boss = true
 	GameState.death_cause = "reina_wifi"
@@ -132,6 +134,8 @@ func _advance(delta: float) -> void:
 			body.invulnerable = false
 			card.hide()
 			state = State.WAIT
+			if phase == 3:
+				AudioManager.play_warning(&"wifi_interference")
 		State.TELEGRAPH:
 			_fire_attack()
 		State.ACTIVE:
@@ -155,6 +159,7 @@ func _begin_attack(next: Attack) -> void:
 	attack = next
 	state = State.TELEGRAPH
 	timer = WARNINGS[attack]
+	AudioManager.play_warning(ATTACK_SFX[attack])
 	match attack:
 		Attack.WAVES:
 			pass
@@ -214,6 +219,7 @@ func _tick_interference(delta: float) -> void:
 		_interference_index += 1
 		_lanes = interference_lanes(_interference_index)
 		_interference_hit = false
+		AudioManager.play_warning(&"wifi_interference")
 	if previous < INTERFERENCE_END and _interference_age >= INTERFERENCE_END and state == State.WAIT:
 		_begin_attack(Attack.PING if _interference_index % 2 == 0 else Attack.SPIRAL)
 	if _interference_age < INTERFERENCE_WARNING or _interference_age >= INTERFERENCE_END or _interference_hit:
@@ -266,6 +272,7 @@ func _defeat() -> void:
 	card.show()
 	GameState.win()
 	defeated.emit()
+	CelebrationBurst.spawn(self, body.global_position, true)
 	Events.boss_defeated.emit(&"wifi_queen")
 
 func _draw() -> void:

@@ -102,6 +102,8 @@ func _physics_process(delta: float) -> void:
 			if bool(target.get("marked")):
 				amount *= MARK_BONUS
 			target.set("marked", true)
+		if not enemy:
+			AudioManager.play_sfx(&"impact")
 		if target.has_method("receive_projectile"):
 			target.call("receive_projectile", amount, global_position, velocity)
 		elif target.has_method("take_damage"):

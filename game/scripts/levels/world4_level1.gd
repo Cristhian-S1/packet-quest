@@ -15,12 +15,14 @@ var _hidden_core: DataCore
 var _transitioning: bool = false
 
 func _ready() -> void:
+	AudioManager.play_music(&"world_4")
 	GameState.current_world = 4
 	GameState.in_boss = false
 	GameState.death_cause = "nivel_4_1"
 	var backdrop: ServerBackdrop = ServerBackdrop.new()
 	backdrop.width = WIDTH
-	add_child(backdrop)
+	backdrop.draw_base = false
+	StageBuilder.parallax(self, backdrop, PQStyle.NIGHT, PQStyle.GREEN)
 	add_child(ProjectilePool.new())
 	StageBuilder.platform(self, Vector2(-16, 0), Vector2(16, 360))
 	StageBuilder.platform(self, Vector2(0, FLOOR), Vector2(800, 56))

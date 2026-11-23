@@ -63,6 +63,7 @@ static func descarga_lanes(index: int) -> Array[int]:
 	return lanes
 
 func _ready() -> void:
+	AudioManager.play_music(&"boss")
 	GameState.current_world = 4
 	GameState.in_boss = true
 	GameState.death_cause = "troyano_real"
@@ -120,6 +121,8 @@ func _physics_process(delta: float) -> void:
 				_state = State.JUMP
 				_timer = JUMP_TIME
 				_jump_origin = body.position
+				if phase == 2:
+					AudioManager.play_warning(&"trojan_summon")
 			State.JUMP:
 				_open()
 			State.OPEN:
@@ -138,6 +141,7 @@ func _physics_process(delta: float) -> void:
 func _begin_cycle() -> void:
 	_state = State.WARNING
 	_timer = WARNING_TIME
+	AudioManager.play_warning(&"trojan_mimics" if phase == 3 else &"trojan_jump")
 	_target = true_chest(_step) if phase == 3 else posmod(_step, CHEST_SPOTS.size())
 	_lanes = descarga_lanes(_step)
 
@@ -149,6 +153,7 @@ func _open() -> void:
 	_timer = open_window(phase, _minions_killed)
 	_shot_direction = -1.0 if player.position.x < body.position.x else 1.0
 	_shot_warning = WARNING_TIME
+	AudioManager.play_warning(&"trojan_discharge")
 	if phase == 2:
 		for offset: Vector2 in TrojanPortal.spawn_offsets():
 			var minion: PopUp = POPUP.instantiate() as PopUp
@@ -229,6 +234,7 @@ func _defeat() -> void:
 	GameState.collect_core(&"w4_trojan_boss")
 	GameState.win()
 	defeated.emit()
+	CelebrationBurst.spawn(self, body.global_position, true)
 	Events.boss_defeated.emit(&"troyano_real")
 
 func _draw() -> void:

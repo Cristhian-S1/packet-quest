@@ -65,6 +65,7 @@ static func wall_x(elapsed: float, hits: int) -> float:
 	return clampf(WALL_START - WALL_SPEED * elapsed + 8.0 * hits, WALL_LIMIT, WALL_START)
 
 func _ready() -> void:
+	AudioManager.play_music(&"boss")
 	GameState.current_world = 3
 	GameState.in_boss = true
 	GameState.death_cause = "firewall_corrupto"
@@ -210,7 +211,7 @@ func _begin_attack() -> void:
 	if _attack == Attack.LASER:
 		_timer = LASER_WARNING
 		_laser_y = player.position.y
-		AudioManager.play_sfx(&"firewall_laser")
+		AudioManager.play_warning(&"firewall_laser")
 	else:
 		_timer = RuleBar.SWEEP_WARNING
 		var lanes: Array[int] = [rule_gap_lane(_rule_index)]
@@ -221,7 +222,7 @@ func _begin_attack() -> void:
 				rule.start_sweep(_wall.position.x - RuleBar.SIZE.x / 2.0, 140.0 if phase == 1 else 170.0, lanes)
 				break
 		_rule_index += 1
-		AudioManager.play_sfx(&"firewall_rule")
+		AudioManager.play_warning(&"firewall_rule")
 
 func _recover() -> void:
 	_state = State.RECOVERY
@@ -287,9 +288,11 @@ func _clear_attacks() -> void:
 func _defeat() -> void:
 	_state = State.DEFEATED
 	_timer = 0.8
+	var origin: Vector2 = _wall.to_global(Vector2(14, _port_y if _port_y >= 0.0 else CENTER_PORT))
 	_set_port(-1.0)
 	_clear_attacks()
 	_wall.hide()
+	CelebrationBurst.spawn(self, origin, true)
 	card.text = "SEGMENTO RESTAURADO"
 	card.modulate = PQStyle.GREEN
 	card.show()

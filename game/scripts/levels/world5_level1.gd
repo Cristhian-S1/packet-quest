@@ -22,12 +22,13 @@ var _hidden_core: DataCore
 var _transitioning: bool = false
 
 func _ready() -> void:
+	AudioManager.play_music(&"world_5")
 	GameState.current_world = 5
 	GameState.in_boss = false
 	GameState.death_cause = "nivel_5_1"
 	var backdrop: DataCenterBackdrop = DataCenterBackdrop.new()
 	backdrop.width = WIDTH
-	add_child(backdrop)
+	StageBuilder.parallax(self, backdrop, DataCenterBackdrop.COLD, PQStyle.MAGENTA)
 	add_child(ProjectilePool.new())
 	_build_floor()
 	player = StageBuilder.player(self, GameState.checkpoint, WIDTH)
