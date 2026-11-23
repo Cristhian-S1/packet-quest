@@ -1,0 +1,75 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+[   0% ] [90m[1mfirst_scan_filesystem[22m | Started Project initialization (5 steps)[39m[0m
+[   0% ] [90m[1mfirst_scan_filesystem[22m | Scanning file structure...[39m[0m
+[  16% ] [90m[1mfirst_scan_filesystem[22m | Loading global class names...[39m[0m
+[  33% ] [90m[1mfirst_scan_filesystem[22m | Verifying GDExtensions...[39m[0m
+[  50% ] [90m[1mfirst_scan_filesystem[22m | Creating autoload scripts...[39m[0m
+[  66% ] [90m[1mfirst_scan_filesystem[22m | Initializing plugins...[39m[0m
+[  83% ] [90m[1mfirst_scan_filesystem[22m | Starting file scan...[39m[0m
+[92m[ DONE ][39m [1mfirst_scan_filesystem[22m
+[0m
+[   0% ] [90m[1mloading_editor_layout[22m | Started Loading editor (5 steps)[39m[0m
+[   0% ] [90m[1mloading_editor_layout[22m | Loading editor layout...[39m[0m
+[  16% ] [90m[1mloading_editor_layout[22m | Loading docks...[39m[0m
+[92m[ DONE ][39m [1mloading_editor_layout[22m
+[0m
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+Opciones e2e: assist_mode=false reduce_flashes=true
+Fase inicio y menú: 0.030 s
+Fase menú y mapa al mundo 1: 0.023 s
+Fase nivel 1-1: 0.726 s
+Fase Router: 0.447 s
+Fase victoria Router y mapa: 0.011 s
+Fase mapa al mundo 2: 0.058 s
+Fase nivel 2-1: 0.609 s
+Reina fase 1 frame 1 PV 90
+Reina fase 2 frame 362 PV 63
+Reina: frame 958 Byte (602.6161, 291.3565) PV 2 estado 4 ataque 3 interferencia 0.00 carriles []
+  bala (639.9, 296.0) velocidad (-160.0, 0.0)
+  bala (623.8999, 296.0) velocidad (-160.0, 0.0)
+  bala (610.5665, 296.0) velocidad (-160.0, 0.0)
+  bala (583.8996, 296.0) velocidad (-160.0, 0.0)
+Reina: frame 1163 Byte (602.4246, 290.9744) PV 1 estado 3 ataque 2 interferencia 0.00 carriles []
+  bala (557.6996, 296.0) velocidad (160.0, 0.0)
+  bala (571.033, 296.0) velocidad (160.0, 0.0)
+  bala (584.3665, 296.0) velocidad (160.0, 0.0)
+Reina fase 3 frame 1407 PV 36
+Fase Reina y mapa: 0.921 s
+Fase mapa al mundo 3: 0.019 s
+Mundo 3: PV 2 Byte (1580.002, 296.9252)
+Mundo 3: PV 1 Byte (1856.989, 279.4243)
+Mundo 3: PV 3 Byte (1906.522, 296.9253)
+Mundo 3: PV 2 Byte (2261.522, 296.9253)
+Mundo 3: PV 1 Byte (2336.155, 296.9788)
+Mundo 3: PV 3 Byte (2385.762, 296.9253)
+Mundo 3: PV 2 Byte (2619.762, 296.9253)
+Fase nivel 3-1: 0.648 s
+Fase Firewall y mapa: 2.105 s
+Fase mapa al mundo 4: 0.017 s
+Mundo 4: PV 2 Byte (1230.46, 296.9252)
+Mundo 4: PV 1 Byte (1846.331, 288.4496)
+Mundo 4: PV 3 Byte (1906.09, 296.9252)
+Mundo 4: PV 2 Byte (1968.715, 296.9252)
+Mundo 4: PV 1 Byte (2040.748, 296.9253)
+Mundo 4: PV 3 Byte (2547.781, 296.9788)
+Fase nivel 4-1: 0.647 s
+Troyano frame 1871 Byte (64.33335, 249.0748) PV 2 jefe 73 fase 2
+Fase Troyano y mapa: 0.997 s
+Fase mapa al mundo 5: 0.018 s
+Mundo 5: PV 2 Byte (2373.987, 296.9251)
+Mundo 5: PV 3 Byte (2546.144, 296.9253)
+Mundo 5: PV 2 Byte (2631.478, 281.174)
+Mundo 5: PV 0 Byte (2701.111, 390.6419)
+Nube 2708: Byte (2701.111, 390.6419) suelo false estado solid edad 25.03 PV 0
+Mundo 5: intento de nubes 1 fallido en (2701.111, 390.6419)
+Nube 2708: Byte (2707.834, 288.9991) suelo true estado solid edad 4.75 PV 3
+Nube 2780: Byte (2821.006, 288.9941) suelo true estado solid edad 4.75 PV 3
+Nube 2852: Byte (2826.921, 288.9927) suelo true estado solid edad 4.90 PV 2
+Fase nivel 5-1: 0.963 s
+Malwarex frame 1798 Byte (319.7216, 295.6749) PV 2 jefe 107 fase 2 ataque 2 estado 2
+Malwarex frame 2899 Byte (176.2431, 295.6749) PV 1 jefe 57 fase 3 ataque 4 estado 2
+Créditos: Núcleos de datos: 8/12
+Fase Malwarex y créditos: 2.228 s
+PASS e2e
