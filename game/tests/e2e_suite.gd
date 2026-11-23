@@ -66,7 +66,9 @@ func run(scene_tree: SceneTree) -> PackedStringArray:
 	if not await _world4():
 		_finish()
 		return errors
-	check(false, "recorrido a créditos pendiente: mundo 5 no implementado")
+	if not await _world5():
+		_finish()
+		return errors
 	_finish()
 	return errors
 
@@ -591,7 +593,7 @@ func _world3() -> bool:
 	_checkpoint("Firewall y mapa")
 	return map_reached and GameState.is_world_unlocked(GameState.data, 4)
 
-func _cross_port(world: World3Level1, player: PacketPlayer, x: float) -> bool:
+func _cross_port(world: Node2D, player: PacketPlayer, x: float) -> bool:
 	Input.action_press(&"move_right")
 	await pilot.wait_until(func() -> bool: return player.position.x >= x - 30.0 or player.health.current <= 0.0, 1200)
 	Input.action_release(&"move_right")
@@ -746,3 +748,130 @@ func _clear_trojan(world: World4Level1, player: PacketPlayer, center: float) -> 
 			Input.action_press(&"jump")
 			jump_left = 35
 	Input.action_release(&"jump")
+
+func _world5() -> bool:
+	var map: NetworkMap = tree.current_scene as NetworkMap
+	for _i: int in range(5):
+		if map.selected_world == 5:
+			break
+		await pilot.menu_tap(&"ui_right")
+	await pilot.confirm()
+	if not await pilot.wait_until(func() -> bool: return tree.current_scene is World5Level1, 240):
+		check(false, "mundo 5: no se abre Centro de datos")
+		return false
+	_checkpoint("mapa al mundo 5")
+	var world: World5Level1 = tree.current_scene as World5Level1
+	var player: PacketPlayer = world.player
+	player.health.changed.connect(func(current: float, _maximum: float) -> void: print("Mundo 5: PV %.0f Byte %s" % [current, player.position]))
+	Input.action_press(&"shoot")
+	await _move_to(player, 168.0)
+	await pilot.wait_until(func() -> bool: return player.is_on_floor() and player.position.y < 184.0, 180)
+	await _move_to(player, 779.0)
+	await _jump_to_x(player, 827.0)
+	await _move_to(player, 1065.0)
+	if player.health.current <= 0.0 or player.position.x < 1040.0:
+		check(false, "mundo 5: foso de cobertura Byte %s PV %.0f" % [player.position, player.health.current])
+		return false
+	for port_x: float in [1376.0, 1512.0]:
+		if not await _cross_port(world, player, port_x):
+			return false
+	await _move_to(player, 1587.0)
+	Input.action_press(&"move_right")
+	Input.action_press(&"jump")
+	await pilot.physics_frames(16)
+	Input.action_press(&"dash")
+	await pilot.physics_frames(2)
+	Input.action_release(&"dash")
+	await pilot.physics_frames(40)
+	Input.action_release(&"jump")
+	Input.action_release(&"move_right")
+	if not await _cross_port(world, player, 1848.0):
+		return false
+	for _attempt: int in range(3):
+		await _move_to(player, 2629.0)
+		if player.position.x >= 2600.0 or player.health.current <= 0.0:
+			break
+	if player.health.current <= 0.0 or player.position.x < 2600.0:
+		check(false, "mundo 5: no llega a las nubes Byte %s PV %.0f" % [player.position, player.health.current])
+		return false
+	var crossed := false
+	for attempt: int in range(5):
+		var first: CloudPlatform = world.clouds[0]
+		await pilot.wait_until(func() -> bool: return fposmod(float(first.get(&"_age")), 4.0) < 0.12, 240)
+		for cloud: CloudPlatform in world.clouds:
+			await _jump_to_x(player, cloud.position.x)
+			if player.health.current <= 0.0 or absf(player.position.x - cloud.position.x) > 20.0:
+				break
+		if player.health.current > 0.0:
+			await _jump_to_x(player, 2938.0)
+		crossed = player.health.current > 0.0 and player.position.x >= 2920.0
+		if crossed:
+			break
+		print("Mundo 5: intento de nubes %d fallido en %s" % [attempt + 1, player.position])
+		if player.health.current > 0.0:
+			await pilot.wait_until(func() -> bool: return player.health.current <= 0.0, 120)
+		if player.health.current > 0.0:
+			break
+		pilot.release_all()
+		var previous: Node = tree.current_scene
+		await pilot.confirm()
+		if not await _await_scene_change(previous, 240):
+			break
+		world = tree.current_scene as World5Level1
+		player = world.player
+		Input.action_press(&"shoot")
+		await _move_to(player, 2629.0)
+	if not crossed:
+		check(false, "mundo 5: nubes no cruzadas Byte %s PV %.0f" % [player.position, player.health.current])
+		return false
+	await _move_to(player, 3070.0)
+	Input.action_release(&"shoot")
+	if player.health.current <= 0.0 or player.position.x < 3040.0:
+		check(false, "mundo 5: no llega al QoS Byte %s PV %.0f" % [player.position, player.health.current])
+		return false
+	var puzzle: QosRoom = world.puzzle
+	for id: StringName in QosPuzzle.PRIORITY:
+		for node: QosNode in puzzle.nodes:
+			if StringName(node.traffic_id) == id:
+				await _move_to(player, node.global_position.x)
+				await pilot.tap(&"interact")
+				await pilot.frames(2)
+				break
+	if not puzzle.is_solved:
+		check(false, "mundo 5: QoS no resuelto")
+		return false
+	Input.action_press(&"move_right")
+	var entered: bool = await pilot.wait_until(func() -> bool: return tree.current_scene is MalwarexBoss, 600)
+	Input.action_release(&"move_right")
+	check(entered, "mundo 5: no entra en Malwarex")
+	if not entered:
+		return false
+	_checkpoint("nivel 5-1")
+	var won: bool = await load("res://tests/bot/malwarex_pilot.gd").fight(tree, tree.current_scene)
+	pilot.release_all()
+	check(won, "mundo 5: Malwarex no vencido")
+	if not won:
+		return false
+	await _capture("11_malwarex_vencido")
+	var reached: bool = await pilot.wait_until(func() -> bool: return tree.current_scene is CreditsScreen, 600)
+	check(reached, "Malwarex no muestra los créditos")
+	if not reached:
+		return false
+	var credits: CreditsScreen = tree.current_scene as CreditsScreen
+	var expected: String = CreditsScreen.cores_line(GameState.data)
+	var found := false
+	for child: Node in credits.panel.get_children():
+		if child is Label and (child as Label).text == expected:
+			found = true
+	check(found and expected.ends_with("/12"), "créditos no muestran el recuento %s" % expected)
+	print("Créditos: %s" % expected)
+	await _capture("12_creditos")
+	_checkpoint("Malwarex y créditos")
+	return found and expected.ends_with("/12")
+
+func _jump_to_x(player: PacketPlayer, x: float) -> void:
+	Input.action_press(&"jump")
+	await _move_to(player, x)
+	await pilot.wait_until(func() -> bool: return player.is_on_floor() or player.health.current <= 0.0, 100)
+	Input.action_release(&"jump")
+	await pilot.physics_frames(2)

@@ -54,3 +54,15 @@ El primer lanzamiento del checkout falló al no existir la caché de clases de G
 - Banco aislado del Troyano: 10/10 victorias, semillas 1–10, sin asistencia. Se dispara desde una posición segura y se salta ante las descargas.
 - Tiempos observados headless: mapa al mundo 4 0,015 s; nivel 4-1 1,172 s; Troyano y mapa 1,247 s. La fiabilidad de la travesía aún requiere más ejecuciones.
 - Pendiente: mundo 5, Malwarex y créditos; no se ha demostrado un bug del juego.
+
+## Resultado final de la continuación
+
+Este resultado actualiza el estado parcial descrito al inicio: se alcanzaron los créditos jugando desde el menú, con controles de jugador y sin `assist_mode`. El cruce de nubes admite hasta cinco reintentos mediante la pantalla de muerte y el checkpoint del juego; la ejecución que pasó no necesitó reintento. No se escribieron posiciones, velocidades, vida ni fases de Byte o de los jefes. Los cambios de vida registrados en este informe incluyen la recuperación normal de los checkpoints.
+
+- Bancos aislados, semillas 1–10: Router 10/10, Reina 10/10, Firewall 10/10, Troyano 10/10 y Malwarex 10/10. Los patrones observados son mayormente deterministas y estas diez ejecuciones no cubren todas las posibles condiciones de partida.
+- Malwarex: se esquivan los cables con movimiento y dash, se activan los tres nodos mediante `interact` y se preserva una posición sobre el suelo que permanece. La última ejecución encadenada terminó con 1 PV.
+- Créditos verificados en pantalla: `Núcleos de datos: 7/12`. El requisito es comprobar el recuento, no recoger los doce núcleos.
+- Tiempos observados de la ejecución e2e aprobada, en segundos de reloj headless: inicio/menú 0,030; menú/mapa mundo 1 0,028; nivel 1-1 1,113; Router 0,596; victoria y mapa 0,013; mapa mundo 2 0,062; nivel 2-1 0,896; Reina y mapa 1,064; mapa mundo 3 0,019; nivel 3-1 0,991; Firewall y mapa 2,391; mapa mundo 4 0,017; nivel 4-1 1,156; Troyano y mapa 1,291; mapa mundo 5 0,019; nivel 5-1 1,351; Malwarex y créditos 2,580.
+- `bash tools/run-e2e.sh`: `PASS e2e`.
+- `bash tools/run-tests.sh --integration`: `RESULTADO: 17/17 PASS` y `PASS integration: física, controles, escudo, vacío, pools, puzle, enemigos, ataques y persistencia`.
+- No se ha demostrado ningún ataque imposible ni otra falla del juego. El recorrido de los niveles 3–5 mostró variabilidad durante el desarrollo; una ejecución completa aprobada no demuestra fiabilidad estadística de toda la ruta. No se generaron capturas: el lanzador actual es headless y la captura existente espera un frame renderizado.
