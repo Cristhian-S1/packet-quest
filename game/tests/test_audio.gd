@@ -4,7 +4,13 @@ const SFX_CATALOG: String = "res://scripts/audio/sfx_catalog.gd"
 const MUSIC_CATALOG: String = "res://scripts/audio/music_catalog.gd"
 const MUSIC_CACHE: String = "res://scripts/audio/music_cache.gd"
 const TRACKS: Array[StringName] = [
-	&"menu", &"world_1", &"world_2", &"world_3", &"world_4", &"world_5", &"boss", &"credits",
+	&"menu", &"world_1", &"world_2", &"world_3", &"world_4", &"world_5", &"credits",
+]
+const BOSS_TRACKS: Array[StringName] = [
+	&"boss_router", &"boss_wifi_queen", &"boss_firewall", &"boss_trojan", &"boss_malwarex",
+]
+const MALWAREX_PHASES: Array[StringName] = [
+	&"boss_malwarex", &"boss_malwarex_cables", &"boss_malwarex_shield", &"boss_malwarex_erasure",
 ]
 const ENEMY_CUES: Dictionary[String, StringName] = {
 	"PopUp": &"enemy_popup",
@@ -37,6 +43,7 @@ func run(tree: SceneTree) -> PackedStringArray:
 	await _test_enemy_cues(tree)
 	await _test_trojan_cues(tree)
 	await _test_music_scenes(tree)
+	await _test_malwarex_music(tree)
 	await _test_music_render(tree)
 	finished = true
 	return errors
@@ -195,7 +202,7 @@ func _test_music_scenes(tree: SceneTree) -> void:
 	for index: int in range(GameState.WORLDS.size()):
 		var world: Dictionary = GameState.WORLDS[index]
 		scenes[world["level"]] = TRACKS[index + 1]
-		scenes[world["boss"]] = &"boss"
+		scenes[world["boss"]] = BOSS_TRACKS[index]
 	var start: int
 	for path: String in scenes:
 		AudioManager.set("last_music", &"")
@@ -212,18 +219,41 @@ func _test_music_scenes(tree: SceneTree) -> void:
 	GameState.current_world = 1
 	GameState.in_boss = false
 
+func _test_malwarex_music(tree: SceneTree) -> void:
+	var boss: MalwarexBoss = preload("res://scenes/bosses/MalwarexBoss.tscn").instantiate() as MalwarexBoss
+	tree.root.add_child(boss)
+	boss.set_physics_process(false)
+	_check(AudioManager.last_music == MALWAREX_PHASES[0], "Malwarex debe empezar con Remezcla")
+	boss._advance(boss.timer)
+	for index: int in range(1, MALWAREX_PHASES.size()):
+		boss.body.take_damage(50.0, Vector2.ZERO)
+		_check(boss.phase == index + 1 and AudioManager.last_music == MALWAREX_PHASES[index],
+			"Malwarex debe pedir %s al entrar en fase %d" % [MALWAREX_PHASES[index], index + 1])
+		boss._advance(boss.timer)
+		for node: NetworkNode in boss.network_nodes:
+			node.interact()
+	boss.queue_free()
+	await tree.process_frame
+	GameState.current_world = 1
+	GameState.in_boss = false
+
 func _test_music_render(tree: SceneTree) -> void:
 	if not FileAccess.file_exists(MUSIC_CACHE) or not FileAccess.file_exists(MUSIC_CATALOG):
 		errors.append("faltan el catálogo o la caché de música procedural")
 		return
 	var cache: RefCounted = (load(MUSIC_CACHE) as GDScript).new() as RefCounted
 	var catalog: GDScript = load(MUSIC_CATALOG) as GDScript
+	var scores: Dictionary = catalog.get_script_constant_map()["SCORES"]
 	var rendered: Dictionary[StringName, AudioStreamWAV] = {}
 	var fingerprints: Dictionary[int, StringName] = {}
+	var boss_motifs: Array[Array] = []
 	var worker_usec: int = 0
 	# Cambiar de escena mientras el primer tema se prepara prioriza la última petición.
 	cache.call("request", &"menu")
-	for id: StringName in TRACKS.slice(1) + [&"menu"]:
+	for id: StringName in TRACKS.slice(1) + BOSS_TRACKS + MALWAREX_PHASES.slice(1) + [&"menu"]:
+		if not scores.has(id):
+			errors.append("falta el tema %s en el catálogo" % id)
+			continue
 		var start: int = Time.get_ticks_usec()
 		cache.call("request", id)
 		_main_usec = maxi(_main_usec, Time.get_ticks_usec() - start)
@@ -243,13 +273,26 @@ func _test_music_render(tree: SceneTree) -> void:
 		var bpm: int = catalog.bpm(id)
 		var frames: int = stream.data.size() / 2
 		var bars: float = frames * bpm / (240.0 * stream.mix_rate)
-		_check(bpm >= 120 and bpm <= 140 and absf(bars - roundf(bars)) < 0.001 and bars > 7.999 and bars < 16.001,
-			"%s debe durar 8 a 16 compases a 120–140 BPM" % id)
+		var boss_score: bool = String(id).begins_with("boss_")
+		var min_bpm: int = 130 if boss_score else 120
+		var max_bpm: int = 150 if boss_score else 140
+		_check(bpm >= min_bpm and bpm <= max_bpm and absf(bars - roundf(bars)) < 0.001
+			and bars > 7.999 and bars < 16.001,
+			"%s debe durar 8 a 16 compases a %d–%d BPM" % [id, min_bpm, max_bpm])
+		if BOSS_TRACKS.has(id):
+			var motif: Array = scores[id][4]
+			_check(not boss_motifs.has(motif), "%s debe tener su propio motivo melódico" % id)
+			boss_motifs.append(motif)
 		_check(stream.mix_rate == 22050 and stream.loop_begin == 0 and stream.loop_end == frames
 			and stream.loop_mode == AudioStreamWAV.LOOP_FORWARD, "%s debe repetir el PCM completo" % id)
 		var pcm: PackedByteArray = stream.data
-		_check(abs(pcm.decode_s16(0)) <= 1 and abs(pcm.decode_s16(pcm.size() - 2)) <= 1,
+		var first: int = pcm.decode_s16(0)
+		var last: int = pcm.decode_s16(pcm.size() - 2)
+		_check(absi(first) <= 1 and absi(last) <= 1,
 			"%s debe empezar y acabar cerca de cero" % id)
+		_check(absi(first - last) <= 2 and absi(pcm.decode_s16(2) - first) <= 16
+			and absi(last - pcm.decode_s16(pcm.size() - 4)) <= 16,
+			"%s debe cruzar el empalme del bucle sin salto audible de amplitud" % id)
 		var peak: int = 0
 		for frame: int in range(0, frames, 97):
 			peak = maxi(peak, absi(pcm.decode_s16(frame * 2)))
@@ -264,7 +307,8 @@ func _test_music_render(tree: SceneTree) -> void:
 		_main_usec = maxi(_main_usec, Time.get_ticks_usec() - start)
 		_check(cached == rendered[id], "%s debe reutilizar el WAV renderizado" % id)
 	cache.call("close")
-	_check(_main_usec < 50000, "la petición/caché bloqueó %.2f ms en hilo principal" % (_main_usec / 1000.0))
+	_check(_main_usec < TICK * 1000000.0,
+		"la petición/caché agotó un fotograma a 60 Hz (%.2f ms)" % (_main_usec / 1000.0))
 	print("Audio música, máximo en hilo principal: %.2f ms, espera máxima asíncrona: %.2f ms"
 		% [_main_usec / 1000.0, worker_usec / 1000.0])
 
