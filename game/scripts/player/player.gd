@@ -3,7 +3,6 @@ extends CharacterBody2D
 
 signal health_changed(current: float, maximum: float)
 signal shield_changed(current: float, maximum: float)
-signal died
 enum State { IDLE, RUN, JUMP, FALL, DASH, SHIELD, HURT, DEAD }
 
 @export var speed: float = 150.0
@@ -363,7 +362,6 @@ func _die() -> void:
 	state = State.DEAD
 	velocity = Vector2.ZERO
 	GameState.record_death()
-	died.emit()
 	Events.player_died.emit()
 
 func _impact(_duration: float, power: float) -> void:
