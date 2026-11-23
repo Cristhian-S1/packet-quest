@@ -7,6 +7,9 @@ const MALWAREX_THRESHOLDS: Array[float] = [0.25, 0.5, 0.75]
 
 func _ready() -> void:
 	super._ready()
+	backdrop.color.a = 0.24
+	var fade: Tween = create_tween().set_ignore_time_scale(true)
+	fade.tween_property(backdrop, "color:a", 0.93, 0.42)
 	title("Conexión perdida", PQStyle.MAGENTA)
 	subtitle("Cada paquete cuenta. Vuelve a intentarlo.")
 	var progress: ProgressBar = ProgressBar.new()
