@@ -23,6 +23,7 @@ var _main_usec: int = 0
 func run(tree: SceneTree) -> PackedStringArray:
 	_test_sfx()
 	_test_mute()
+	await _test_trojan_cues(tree)
 	await _test_music_scenes(tree)
 	await _test_music_render(tree)
 	finished = true
@@ -34,6 +35,7 @@ func _test_sfx() -> void:
 		return
 	var catalog: GDScript = load(SFX_CATALOG) as GDScript
 	var presets: Dictionary = catalog.get_script_constant_map()["PRESETS"]
+	_check(presets.size() == SFX.size(), "la prueba debe incluir todos los IDs de SFX")
 	var worst_usec: int = 0
 	var sounds: Dictionary[int, StringName] = {}
 	for id: StringName in SFX:
@@ -56,6 +58,22 @@ func _test_sfx() -> void:
 		_check(AudioManager.last_sfx == id, "%s debe registrarse en headless" % id)
 	_check(worst_usec < 50000, "render síncrono de SFX tardó %.2f ms" % (worst_usec / 1000.0))
 	print("Audio SFX, máximo en hilo principal: %.2f ms" % (worst_usec / 1000.0))
+
+func _test_trojan_cues(tree: SceneTree) -> void:
+	var boss: TrojanBoss = preload("res://scenes/bosses/TrojanBoss.tscn").instantiate() as TrojanBoss
+	tree.root.add_child(boss)
+	boss.set_physics_process(false)
+	boss.phase = 2
+	boss._begin_cycle()
+	_check(AudioManager.last_sfx == &"trojan_jump", "el aviso abre el salto del Troyano")
+	boss._physics_process(TrojanBoss.WARNING_TIME)
+	_check(AudioManager.last_sfx == &"trojan_summon" and boss._minions.is_empty(),
+		"la invocación debe avisar antes de que aparezcan los Pop-ups")
+	boss._physics_process(TrojanBoss.JUMP_TIME)
+	_check(AudioManager.last_sfx == &"trojan_discharge" and not boss._minions.is_empty(),
+		"la descarga tiene un aviso propio al abrirse el cofre")
+	boss.queue_free()
+	await tree.process_frame
 
 func _test_mute() -> void:
 	for bus: StringName in [&"Music", &"SFX"]:

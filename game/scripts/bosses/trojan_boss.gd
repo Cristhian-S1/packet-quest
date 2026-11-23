@@ -121,6 +121,8 @@ func _physics_process(delta: float) -> void:
 				_state = State.JUMP
 				_timer = JUMP_TIME
 				_jump_origin = body.position
+				if phase == 2:
+					AudioManager.play_warning(&"trojan_summon")
 			State.JUMP:
 				_open()
 			State.OPEN:
@@ -153,7 +155,6 @@ func _open() -> void:
 	_shot_warning = WARNING_TIME
 	AudioManager.play_warning(&"trojan_discharge")
 	if phase == 2:
-		AudioManager.play_warning(&"trojan_summon")
 		for offset: Vector2 in TrojanPortal.spawn_offsets():
 			var minion: PopUp = POPUP.instantiate() as PopUp
 			minion.position = body.position + offset
