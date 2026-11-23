@@ -210,7 +210,7 @@ func _begin_attack() -> void:
 	if _attack == Attack.LASER:
 		_timer = LASER_WARNING
 		_laser_y = player.position.y
-		AudioManager.play_sfx(&"firewall_laser")
+		AudioManager.play_warning(&"firewall_laser")
 	else:
 		_timer = RuleBar.SWEEP_WARNING
 		var lanes: Array[int] = [rule_gap_lane(_rule_index)]
@@ -221,7 +221,7 @@ func _begin_attack() -> void:
 				rule.start_sweep(_wall.position.x - RuleBar.SIZE.x / 2.0, 140.0 if phase == 1 else 170.0, lanes)
 				break
 		_rule_index += 1
-		AudioManager.play_sfx(&"firewall_rule")
+		AudioManager.play_warning(&"firewall_rule")
 
 func _recover() -> void:
 	_state = State.RECOVERY

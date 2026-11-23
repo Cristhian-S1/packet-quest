@@ -86,7 +86,6 @@ func _decide(pass_packet: bool) -> void:
 			GameState.puzzle_complete = true
 			door.set_open()
 			_feedback.text = FACT
-			AudioManager.play_sfx(&"firewall_connected")
 			solved.emit()
 			Events.puzzle_solved.emit(&"w3_firewall")
 		else:

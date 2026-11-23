@@ -55,6 +55,7 @@ func _add_toggle(label: String, key: String) -> void:
 	toggle.add_theme_stylebox_override("hover_pressed", PQStyle.panel(PQStyle.BOARD, PQStyle.CYAN))
 	toggle.add_theme_stylebox_override("focus", _focus_border())
 	toggle.set_pressed_no_signal(bool(GameState.settings[key]))
+	PQStyle.menu_feedback(toggle)
 	toggle.toggled.connect(_toggle_changed.bind(key, toggle))
 	_rows.add_child(toggle)
 	_focus_order.append(toggle)
@@ -85,6 +86,7 @@ func _add_slider(label: String, key: String) -> void:
 	outline.offset_right = 4.0
 	outline.hide()
 	slider.add_child(outline)
+	PQStyle.menu_feedback(slider)
 	slider.focus_entered.connect(outline.show)
 	slider.focus_exited.connect(outline.hide)
 	var value_label: Label = PQStyle.label_at(row, _percent(slider.value), Vector2.ZERO, 13)

@@ -23,13 +23,9 @@ func _check_buses_at_restore() -> void:
 	GameState.restore()
 	_check_bus(&"Music", 0.3)
 	_check_bus(&"SFX", 0.0)
-	var tone: AudioStreamWAV = AudioStreamWAV.new()
-	tone.data = PackedByteArray([0, 0, 0, 0])
-	AudioManager.play_sfx(&"test", tone)
-	var voice: AudioStreamPlayer = AudioManager.get_child(-1) as AudioStreamPlayer
-	_check(voice != null and voice.bus == &"SFX", "los efectos se reproducen en SFX")
-	if voice != null:
-		voice.queue_free()
+	AudioManager.play_sfx(&"menu_click")
+	_check(AudioManager.last_sfx == &"menu_click" and AudioManager.get_child_count() == 0,
+		"headless registra efectos sin crear reproductores")
 	GameState.data = SaveManager.defaults()
 	SaveManager.save_game(GameState.data)
 	GameState.restore()

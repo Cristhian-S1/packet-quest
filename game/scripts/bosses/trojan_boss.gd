@@ -138,6 +138,7 @@ func _physics_process(delta: float) -> void:
 func _begin_cycle() -> void:
 	_state = State.WARNING
 	_timer = WARNING_TIME
+	AudioManager.play_warning(&"trojan_mimics" if phase == 3 else &"trojan_jump")
 	_target = true_chest(_step) if phase == 3 else posmod(_step, CHEST_SPOTS.size())
 	_lanes = descarga_lanes(_step)
 
@@ -149,7 +150,9 @@ func _open() -> void:
 	_timer = open_window(phase, _minions_killed)
 	_shot_direction = -1.0 if player.position.x < body.position.x else 1.0
 	_shot_warning = WARNING_TIME
+	AudioManager.play_warning(&"trojan_discharge")
 	if phase == 2:
+		AudioManager.play_warning(&"trojan_summon")
 		for offset: Vector2 in TrojanPortal.spawn_offsets():
 			var minion: PopUp = POPUP.instantiate() as PopUp
 			minion.position = body.position + offset

@@ -214,6 +214,7 @@ func _physics_process(delta: float) -> void:
 		invulnerability = maxf(invulnerability, dash_iframes)
 		state = State.DASH
 		trails.clear()
+		AudioManager.play_sfx(&"dash")
 	shield_active = Input.is_action_pressed("shield") and shield_broken <= 0 and shield_meter > 0 and dash_left <= 0 and hurt_left <= 0
 	_update_shield(delta)
 	if dash_left > 0:
@@ -236,6 +237,7 @@ func _physics_process(delta: float) -> void:
 			velocity.y = jump_speed
 			buffered_jump = 0
 			coyote = 0
+			AudioManager.play_sfx(&"jump")
 		if Input.is_action_just_released("jump") and velocity.y < 0:
 			velocity.y *= jump_cut
 		state = State.SHIELD if shield_active else (State.RUN if absf(velocity.x) > 1 else State.IDLE)
@@ -311,6 +313,8 @@ func take_damage(amount: float, origin: Vector2) -> void:
 	shield_active = false
 	velocity = Vector2((-1.0 if origin.x >= global_position.x else 1.0) * knockback, -90)
 	state = State.HURT
+	if amount > 0.0:
+		AudioManager.play_sfx(&"byte_hurt")
 	Events.impact.emit(0.05, 2.0)
 	health.damage(amount)
 
@@ -319,6 +323,7 @@ func pit_respawn() -> void:
 		health.damage(health.current)
 		return
 	# A pit always costs one HP, including during damage i-frames.
+	AudioManager.play_sfx(&"byte_hurt")
 	health.damage(1)
 	if state == State.DEAD:
 		return

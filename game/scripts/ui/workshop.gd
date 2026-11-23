@@ -27,6 +27,7 @@ func _ready() -> void:
 
 func _row_button(pos: Vector2) -> Button:
 	var button: Button = Button.new()
+	PQStyle.menu_feedback(button)
 	button.position = pos
 	button.size = Vector2(400, 26)
 	button.alignment = HORIZONTAL_ALIGNMENT_LEFT

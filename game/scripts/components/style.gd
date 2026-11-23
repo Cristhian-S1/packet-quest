@@ -51,9 +51,15 @@ static func button(parent: Node, text: String, pos: Vector2, action: Callable, w
 	node.add_theme_stylebox_override("hover", panel(CHIP, CYAN))
 	node.add_theme_stylebox_override("focus", panel(CHIP, CYAN))
 	node.add_theme_stylebox_override("pressed", panel(BOARD, GREEN))
+	menu_feedback(node)
 	node.pressed.connect(action)
 	parent.add_child(node)
 	return node
+
+static func menu_feedback(control: Control) -> void:
+	control.focus_entered.connect(AudioManager.play_sfx.bind(&"menu_focus"))
+	if control is BaseButton:
+		(control as BaseButton).pressed.connect(AudioManager.play_sfx.bind(&"menu_click"))
 
 static func bar(color: Color) -> StyleBoxFlat:
 	var style: StyleBoxFlat = StyleBoxFlat.new()

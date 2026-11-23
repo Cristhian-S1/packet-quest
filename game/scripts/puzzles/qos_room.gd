@@ -54,7 +54,6 @@ func _on_pressed(id: StringName) -> void:
 	if activated.size() == QosPuzzle.PRIORITY.size():
 		if QosPuzzle.is_correct_order(activated):
 			_set_solved(true)
-			AudioManager.play_sfx(&"cable_connected")
 			Events.puzzle_solved.emit(&"w5_qos")
 			solved.emit()
 		else:

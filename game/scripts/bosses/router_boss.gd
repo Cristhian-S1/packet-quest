@@ -154,7 +154,7 @@ func _begin_attack() -> void:
 			timer = laser_telegraph
 			laser_y = player.global_position.y
 	GameState.death_cause = "router_boss_%s" % attack
-	AudioManager.play_sfx(StringName("router_" + String(attack)))
+	AudioManager.play_warning(StringName("router_" + String(attack)))
 
 func _active_attack(_delta: float) -> void:
 	match attack:
