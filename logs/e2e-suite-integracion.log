@@ -1,0 +1,23 @@
+PASS test_components_objects
+PASS test_state_edges
+PASS test_save_edge
+PASS test_player_edges
+PASS test_performance
+PASS test_health_component
+PASS test_route_puzzle
+PASS test_boss_phases
+PASS test_save_manager
+PASS test_scenes_load
+PASS test_progression
+PASS test_weapons
+PASS test_world2
+PASS test_world3
+PASS test_world4
+PASS test_world5
+PASS test_options
+PASS test_audio
+PASS test_visual_polish
+PASS test_hit_stop
+PASS test_fuzz
+RESULTADO: 21/21 PASS
+PASS integration: física, controles, escudo, vacío, pools, puzle, enemigos, ataques y persistencia
