@@ -6,8 +6,10 @@ var canvas: Control
 var info: Label
 var notice: Label
 var notice_time: float = 0.0
-var hit_stop_until: int = 0
+## Fotogramas de hit-stop restantes (no milisegundos: así es determinista con --fixed-fps).
+var hit_stop_frames: int = 0
 var death_shown: bool = false
+var _stopping: bool = false
 
 func _ready() -> void:
 	layer = 10
@@ -31,8 +33,10 @@ func _process(delta: float) -> void:
 	info.text = "%s   ·   NÚCLEOS %02d   ·   ESC pausa" % [weapon_name, int(GameState.data.get("data_cores", 0))]
 	notice_time = maxf(0, notice_time - delta)
 	notice.visible = notice_time > 0
-	if hit_stop_until > 0 and Time.get_ticks_msec() >= hit_stop_until:
-		hit_stop_until = 0
+	if hit_stop_frames > 0:
+		hit_stop_frames -= 1
+	if _stopping and hit_stop_frames == 0:
+		_stopping = false
 		GameState.restore_speed()
 
 func _draw_hud() -> void:
@@ -77,7 +81,8 @@ func _core(_id: StringName) -> void:
 func _impact(duration: float, _shake: float) -> void:
 	if duration <= 0 or get_tree().paused:
 		return
-	hit_stop_until = maxi(hit_stop_until, Time.get_ticks_msec() + int(duration * 1000))
+	hit_stop_frames = maxi(hit_stop_frames, ceili(duration * 60.0))
+	_stopping = true
 	Engine.time_scale = 0.05
 
 func _exit_tree() -> void:
