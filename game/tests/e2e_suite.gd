@@ -2,7 +2,7 @@ class_name E2ESuite
 extends RefCounted
 
 ## Suite de extremo a extremo: un BOT conduce a Byte de verdad (solo
-## entrada de jugador) desde el menú principal hasta la arena de la Reina Wi-Fi,
+## entrada de jugador) desde el menÃº principal hasta la arena de la Reina Wi-Fi,
 ## pasando por el Router Furioso. No teletransporta a Byte ni toca
 ## posiciones/velocidades salvo para fijar el estado inicial de la partida.
 
@@ -14,6 +14,7 @@ var errors: PackedStringArray = []
 var finished: bool = false
 var save_path: String
 var original_save_path: String
+var phase_started_ms: int
 
 # --- API del runner ------------------------------------------------------
 
@@ -22,30 +23,50 @@ func run(scene_tree: SceneTree) -> PackedStringArray:
 	pilot = BotPilot.new(tree)
 	errors = []
 	finished = false
+	phase_started_ms = Time.get_ticks_msec()
 	_reset_state()
 	await _boot_to_menu()
+	_checkpoint("inicio y menú")
 	if not await _menu_to_world1():
 		_finish()
 		return errors
+	_checkpoint("menú y mapa al mundo 1")
 	if not await _traverse_level1():
 		_finish()
 		return errors
+	_checkpoint("nivel 1-1")
 	if not await _fight_router():
 		_finish()
 		return errors
+	_checkpoint("Router")
 	if not await _router_victory_to_map():
 		_finish()
 		return errors
+	_checkpoint("victoria Router y mapa")
 	check(GameState.is_world_unlocked(GameState.data, 2), "derrotar al Router no desbloquea Wi-Fi")
 	if not await _map_to_world2():
 		_finish()
 		return errors
+	_checkpoint("mapa al mundo 2")
 	if not await _traverse_level2():
 		_finish()
 		return errors
+	_checkpoint("nivel 2-1")
 	await _capture("07_reina_wifi")
+	if not await _fight_queen():
+		_checkpoint("Reina Wi-Fi (FAIL)")
+		_finish()
+		return errors
+	await _capture("08_reina_vencida")
+	await _queen_victory()
+	check(false, "recorrido a crÃ©ditos pendiente: mundos 3, 4 y 5 no implementados")
 	_finish()
 	return errors
+
+func _checkpoint(label: String) -> void:
+	var now := Time.get_ticks_msec()
+	print("Fase %s: %.3f s" % [label, float(now - phase_started_ms) / 1000.0])
+	phase_started_ms = now
 
 func _finish() -> void:
 	pilot.release_all()
@@ -104,13 +125,13 @@ func _await_scene_change(initial: Node, max_frames: int = 240) -> bool:
 func _player() -> PacketPlayer:
 	return tree.get_first_node_in_group(&"player") as PacketPlayer
 
-# --- Menú → mapa → Mundo 1 ---------------------------------------------
+# --- MenÃº â†’ mapa â†’ Mundo 1 ---------------------------------------------
 
 func _menu_to_world1() -> bool:
 	var initial: Node = tree.current_scene
 	await pilot.confirm()
 	if not await _await_scene_change(initial):
-		check(false, "el menú no abre el mapa al pulsar Jugar")
+		check(false, "el menÃº no abre el mapa al pulsar Jugar")
 		return false
 	check(tree.current_scene is NetworkMap, "Jugar no lleva al mapa")
 	var map: NetworkMap = tree.current_scene as NetworkMap
@@ -118,7 +139,7 @@ func _menu_to_world1() -> bool:
 		return false
 	await _capture("02_mapa")
 	await tree.process_frame
-	# El botón Entrar tiene el foco; Enter entra en el mundo seleccionado (1).
+	# El botÃ³n Entrar tiene el foco; Enter entra en el mundo seleccionado (1).
 	initial = tree.current_scene
 	await pilot.confirm()
 	if not await _await_scene_change(initial):
@@ -127,7 +148,7 @@ func _menu_to_world1() -> bool:
 	check(tree.current_scene is World1Level1, "Entrar no carga el nivel 1-1")
 	return tree.current_scene is World1Level1
 
-# --- Travesía del nivel 1-1 ---------------------------------------------
+# --- TravesÃ­a del nivel 1-1 ---------------------------------------------
 
 func _traverse_level1() -> bool:
 	var world: World1Level1 = tree.current_scene as World1Level1
@@ -182,7 +203,7 @@ func _cross_world1_gap(player: PacketPlayer) -> void:
 			func() -> bool: return player.is_on_floor() and player.global_position.x >= 860.0, 240)
 		if landed:
 			return
-		# Reaparece en safe_position; se reengancha moviéndose a la derecha.
+		# Reaparece en safe_position; se reengancha moviÃ©ndose a la derecha.
 		Input.action_press(&"move_right")
 		var back: bool = await pilot.wait_until(
 			func() -> bool: return player.global_position.x >= 720.0 and player.is_on_floor(), 400)
@@ -205,7 +226,7 @@ func _solve_route_puzzle(world: World1Level1, player: PacketPlayer) -> void:
 		var target: Vector2 = targets[index]
 		await _move_to(player, target.x)
 		if index == 2:
-			# Sube a la plataforma para quedar a ≤ 24 px del nodo superior.
+			# Sube a la plataforma para quedar a â‰¤ 24 px del nodo superior.
 			Input.action_press(&"jump")
 			await pilot.wait_until(func() -> bool: return player.is_on_floor() and player.global_position.y < 270.0, 90)
 			Input.action_release(&"jump")
@@ -213,7 +234,7 @@ func _solve_route_puzzle(world: World1Level1, player: PacketPlayer) -> void:
 		for _turn: int in range(needed):
 			await pilot.tap(&"interact")
 			await pilot.frames(2)
-	check(puzzle.is_solved, "interact no conecta la ruta emisor→receptor")
+	check(puzzle.is_solved, "interact no conecta la ruta emisorâ†’receptor")
 
 func _move_to(player: PacketPlayer, target_x: float) -> void:
 	var direction: StringName = &"move_right" if target_x >= player.global_position.x else &"move_left"
@@ -231,8 +252,8 @@ func _fight_router() -> bool:
 		return false
 	var player: PacketPlayer = boss.player
 	await _capture("04_router")
-	# Apunta recto hacia arriba y dispárame sin moverte: el cuerpo del Router
-	# ocupa x 240–400, así que disparar bajo x=248 lo alcanza de lleno.
+	# Apunta recto hacia arriba y dispÃ¡rame sin moverte: el cuerpo del Router
+	# ocupa x 240â€“400, asÃ­ que disparar bajo x=248 lo alcanza de lleno.
 	await _move_to(player, 300.0)
 	Input.action_press(&"aim_up")
 	Input.action_press(&"shoot")
@@ -263,21 +284,21 @@ func _fight_router() -> bool:
 			match boss.attack:
 				&"B":  # estampida de paquetes por el suelo: salta cuando lleguen.
 					pending_jump = 58
-				&"C":  # láser horizontal a la altura de Byte: cambia de altura.
+				&"C":  # lÃ¡ser horizontal a la altura de Byte: cambia de altura.
 					pending_jump = 1
 		prev_state = boss.state
 	var won: bool = boss.state == RouterBoss.State.DEFEATED
 	if won:
-		# Recoge el núcleo que suelta el jefe (aparece a los 0,6 s en x=320).
+		# Recoge el nÃºcleo que suelta el jefe (aparece a los 0,6 s en x=320).
 		await pilot.wait_until(func() -> bool: return boss.core_spawned, 120)
 		if not tree.paused:
-			# El núcleo puede quedar a cualquiera de los lados tras el retroceso.
+			# El nÃºcleo puede quedar a cualquiera de los lados tras el retroceso.
 			var direction: StringName = &"move_right" if player.global_position.x < 320.0 else &"move_left"
 			Input.action_press(direction)
 			await pilot.wait_until(func() -> bool: return tree.paused, 400)
 			Input.action_release(direction)
 		if not tree.paused:
-			check(false, "Byte no recoge el núcleo del Router (posición %s)" % player.global_position)
+			check(false, "Byte no recoge el nÃºcleo del Router (posiciÃ³n %s)" % player.global_position)
 			won = false
 	else:
 		check(false, "el bot no derrota al Router (PV restantes %.0f, fase %d, frame %d, Byte %s, PV %.0f, estado %d)" % [boss.health.current, boss.phase, guard, player.global_position, player.health.current, player.state])
@@ -296,7 +317,7 @@ func _router_victory_to_map() -> bool:
 		await _capture("05_wifi_desbloqueado")
 	return reached
 
-# --- Mapa → Mundo 2 -----------------------------------------------------
+# --- Mapa â†’ Mundo 2 -----------------------------------------------------
 
 func _map_to_world2() -> bool:
 	var map: NetworkMap = tree.current_scene as NetworkMap
@@ -304,12 +325,12 @@ func _map_to_world2() -> bool:
 		return false
 	await tree.process_frame
 	await tree.process_frame
-	# Con el Mundo 2 desbloqueado ya hay 2 mundos jugables: pulsa → para elegir Wi-Fi.
+	# Con el Mundo 2 desbloqueado ya hay 2 mundos jugables: pulsa â†’ para elegir Wi-Fi.
 	var selected2: bool = await pilot.wait_until(
 		func() -> bool: return int(map.get(&"selected_world")) == 2, 120)
 	if not selected2:
-		# Intenta desplazar la selección con derecha (igual que el jugador).
-		await pilot.key_tap(KEY_RIGHT)
+		# Intenta desplazar la selecciÃ³n con derecha (igual que el jugador).
+		await pilot.menu_tap(&"ui_right")
 		selected2 = await pilot.wait_until(
 			func() -> bool: return int(map.get(&"selected_world")) == 2, 120)
 	check(selected2, "el mapa no permite elegir Wi-Fi")
@@ -321,7 +342,7 @@ func _map_to_world2() -> bool:
 	check(entered and tree.current_scene is World2Level1, "Entrar no carga el nivel 2-1")
 	return entered and tree.current_scene is World2Level1
 
-# --- Travesía del nivel 2-1 ---------------------------------------------
+# --- TravesÃ­a del nivel 2-1 ---------------------------------------------
 
 func _traverse_level2() -> bool:
 	var world: World2Level1 = tree.current_scene as World2Level1
@@ -337,7 +358,7 @@ func _traverse_level2() -> bool:
 	# Avanza combatiendo Spyware y Pop-ups hasta el puzle de cables.
 	await _cross_combat_section(player)
 	if player.health.current <= 0.0:
-		check(false, "el bot muere en la sección de combate")
+		check(false, "el bot muere en la secciÃ³n de combate")
 		return false
 	Input.action_release(&"shoot")
 	# Resuelve el puzle de cables disparando a las celdas.
@@ -417,11 +438,11 @@ func _solve_cable_puzzle(world: World2Level1, player: PacketPlayer) -> void:
 			if piece.openings != before:
 				break
 		if piece.openings == before:
-			check(false, "disparo no alcanzó celda %s: Byte %s" % [cell, player.global_position])
+			check(false, "disparo no alcanzÃ³ celda %s: Byte %s" % [cell, player.global_position])
 			return
 
 func _shoot_cell(player: PacketPlayer, piece: CableCell) -> void:
-	# Sitúa a Byte bajo la celda y dispara hacia arriba.
+	# SitÃºa a Byte bajo la celda y dispara hacia arriba.
 	await pilot.wait_until(func() -> bool: return player.is_on_floor(), 120)
 	await _move_to(player, piece.global_position.x)
 	await pilot.wait_until(func() -> bool: return player.shoot_wait <= 0.0, 60)
@@ -454,9 +475,13 @@ func _fight_queen() -> bool:
 	var prev_state: WifiQueenBoss.State = queen.state
 	var prev_phase: int = queen.phase
 	var guard := 0
+	var previous_health: float = player.health.current
 	while queen.state != WifiQueenBoss.State.DEFEATED and player.health.current > 0.0:
 		await tree.physics_frame
 		guard += 1
+		if player.health.current < previous_health:
+			print("Reina: frame %d Byte %s PV %.0f estado %d ataque %d oleada %d" % [guard, player.global_position, player.health.current, queen.state, queen.attack, queen.get(&"_wave_index")])
+			previous_health = player.health.current
 		if guard > 12000:
 			break
 		if jump_frames > 0:
@@ -485,7 +510,8 @@ func _fight_queen() -> bool:
 		if queen.state == WifiQueenBoss.State.TELEGRAPH and prev_state != WifiQueenBoss.State.TELEGRAPH:
 			match queen.attack:
 				WifiQueenBoss.Attack.WAVES:
-					pending_jump = 40
+					if 0 in WifiQueenBoss.wave_lanes(int(queen.get(&"_wave_index"))):
+						pending_jump = 40
 				WifiQueenBoss.Attack.PING:
 					# Aléjate de la columna que marca el aviso.
 					if player.global_position.x <= queen.get(&"_ping_x"):
@@ -498,7 +524,7 @@ func _fight_queen() -> bool:
 		prev_phase = queen.phase
 	var won: bool = queen.state == WifiQueenBoss.State.DEFEATED
 	if not won:
-		check(false, "el bot no derrota a la Reina (PV %.0f, fase %d)" % [queen.health.current, queen.phase])
+		check(false, "el bot no derrota a la Reina (PV %.0f, fase %d, frame %d, Byte %s, PV %.0f, estado %d, ataque %d, oleada %d)" % [queen.health.current, queen.phase, guard, player.global_position, player.health.current, queen.state, queen.attack, queen.get(&"_wave_index")])
 	pilot.release_all()
 	return won
 

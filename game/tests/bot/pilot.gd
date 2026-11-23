@@ -81,19 +81,18 @@ func wait_until_or(condition: Callable, abort: Callable, max_frames: int) -> boo
 
 # --- Menús ---------------------------------------------------------------
 
-## Activa el botón enfocado como pulsar Enter/Espacio (ui_accept).
+## Envía acciones reales a la interfaz y a los nodos que reciben _input.
 func confirm() -> void:
-	await key_tap(KEY_ENTER)
+	await menu_tap(&"ui_accept")
 
-## Envía eventos reales a la interfaz, incluidos los nodos que reciben _input.
-func key_tap(key: Key) -> void:
-	var event: InputEventKey = InputEventKey.new()
-	event.keycode = key
+func menu_tap(action: StringName) -> void:
+	var event := InputEventAction.new()
+	event.action = action
 	event.pressed = true
 	Input.parse_input_event(event)
 	await tree.process_frame
-	var released: InputEventKey = InputEventKey.new()
-	released.keycode = key
+	var released := InputEventAction.new()
+	released.action = action
 	released.pressed = false
 	Input.parse_input_event(released)
 	await tree.process_frame

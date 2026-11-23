@@ -1,0 +1,35 @@
+﻿# E2E hasta créditos: avance parcial
+
+Fecha: 2026-11-23. No se alcanzaron los créditos; el e2e termina en FAIL.
+
+## Cambios y límites
+
+- El piloto envía `InputEventAction` para confirmar y seleccionar mundos en el mapa.
+- El recorrido intenta el combate contra la Reina. Para las oleadas consulta `wave_lanes`; registra golpes, frame, posición y estado de Byte y de la jefa.
+- Tras vencer a la Reina se deja un FAIL explícito: falta implementar mundos 3, 4 y 5 y verificar créditos. No se ha activado `assist_mode`.
+- No se han obtenido capturas nuevas ni se han hecho commits.
+
+## Ejecución e2e observada
+
+Tiempos de reloj en ejecución headless a 60 FPS fijos, no duración jugada:
+
+| Fase | Segundos |
+| --- | ---: |
+| Inicio y menú | 0,026 |
+| Menú y mapa al mundo 1 | 0,029 |
+| Nivel 1-1 | 1,070 |
+| Router | 0,578 |
+| Victoria Router y mapa | 0,012 |
+| Mapa al mundo 2 | 0,062 |
+| Nivel 2-1 | 0,866 |
+| Reina Wi-Fi, FAIL | 0,526 |
+
+En esa ejecución Byte recibió daño en los frames 205, 419 y 1299; el último en `(158.7658, 296.9252)`, con la Reina en fase 3 y 28 PV. La estrategia actual no demuestra que el ataque sea imposible de esquivar, por lo que no se clasifica como bug del juego. Los frames pueden variar entre ejecuciones.
+
+El primer lanzamiento del checkout falló al no existir la caché de clases de Godot; la importación incluida en `run-tests.sh` permitió ejecutar el bot. El lanzador e2e por sí solo sigue sin importar automáticamente en un checkout sin caché.
+
+## Validación
+
+- `bash tools/run-e2e.sh`: FAIL en Reina; no hay victoria ni créditos verificados.
+- `bash tools/run-tests.sh --integration`: `RESULTADO: 17/17 PASS` y `PASS integration`.
+- Pendiente: estrategia de combate fiable, mundos 3–5, capturas de jefes vencidos y comprobación de `Núcleos de datos: N/12`.
