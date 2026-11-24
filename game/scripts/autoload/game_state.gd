@@ -30,6 +30,10 @@ var puzzle_complete: bool = false
 var playing: bool = false
 var death_cause: String = "nivel_1_1"
 var save_error: Error = OK
+var level_record: bool = false
+var boss_record: bool = false
+var _stage_time: float = 0.0
+var _boss_cleared: bool = false
 var settings: Dictionary:
 	get:
 		return data.get("settings", {})
@@ -71,8 +75,12 @@ func restore_speed() -> void:
 	Engine.time_scale = 0.8 if assist_mode else 1.0
 
 func _process(delta: float) -> void:
-	if playing and not data.is_empty():
-		data["stats"]["play_time_s"] = float(data["stats"]["play_time_s"]) + delta
+	var scene: Node = get_tree().current_scene
+	if not playing or scene == null or scene.scene_file_path != current_level:
+		return
+	data["stats"]["play_time_s"] = float(data["stats"]["play_time_s"]) + delta
+	if not _boss_cleared:
+		_stage_time += delta
 
 static func is_world_unlocked(progress: Dictionary, world: int) -> bool:
 	var unlocked: Array = progress.get("unlocked_worlds", [])
@@ -97,17 +105,26 @@ func start_run(world: int = 1) -> void:
 	puzzle_complete = false
 	boss_progress = 0.0
 	level_progress = 0.0
+	level_record = false
+	_reset_attempt()
 	playing = true
 	change_scene(current_level)
 
 func retry() -> void:
+	_reset_attempt()
 	playing = true
 	boss_progress = 0.0
 	level_progress = 0.0
 	change_scene(current_level)
 
 func enter_boss() -> void:
+	if in_boss:
+		return
+	if playing:
+		level_record = _record_clear(false)
+		save()
 	in_boss = true
+	_reset_attempt()
 	checkpoint = Vector2(64, 296)
 	Events.checkpoint_reached.emit(checkpoint)
 	change_scene(current_level)
@@ -123,6 +140,8 @@ func collect_core(id: StringName) -> bool:
 		return false
 	cores.append(String(id))
 	data["data_cores"] = int(data["data_cores"]) + 1
+	if String(id) in StageStats.LEVEL_CORES[current_world - 1]:
+		StageStats.entry(data, current_world, false)["cores_collected"] = StageStats.core_count(data, current_world)
 	Events.core_collected.emit(id)
 	save_error = SaveManager.save_game(data)
 	return true
@@ -131,7 +150,30 @@ func record_death() -> void:
 	playing = false
 	var deaths: Dictionary = data["stats"]["deaths"]
 	deaths[death_cause] = int(deaths.get(death_cause, 0)) + 1
+	var stats: Dictionary = StageStats.entry(data, current_world, in_boss)
+	stats["deaths"] = int(stats.get("deaths", 0)) + 1
 	save_error = SaveManager.save_game(data)
+
+func _reset_attempt() -> void:
+	_stage_time = 0.0
+	_boss_cleared = false
+	boss_record = false
+
+func _record_clear(boss: bool) -> bool:
+	var stats: Dictionary = StageStats.entry(data, current_world, boss)
+	stats["completions"] = int(stats.get("completions", 0)) + 1
+	var best: Variant = stats.get("best_time_s")
+	if _stage_time <= 0.0 or (best != null and _stage_time >= float(best)):
+		return false
+	stats["best_time_s"] = _stage_time
+	return true
+
+func record_boss_clear() -> void:
+	if playing and not _boss_cleared:
+		boss_record = _record_clear(true)
+		_boss_cleared = true
+		if current_world == 1:
+			save()
 
 func win() -> void:
 	playing = false

@@ -50,6 +50,8 @@ var core_spawned: bool = false
 var card: Label
 
 func _ready() -> void:
+	GameState.current_world = 1
+	GameState.in_boss = true
 	AudioManager.play_music(&"boss_router")
 	StageBuilder.background(self)
 	pool = ProjectilePool.new()
@@ -213,6 +215,7 @@ func _defeat() -> void:
 	body.collision_layer = 0
 	BossArt.show_restoration(card)
 	GameState.boss_progress = 1.0
+	GameState.record_boss_clear()
 	defeated.emit()
 	CelebrationBurst.spawn(self, body.global_position, true)
 	Events.boss_defeated.emit(&"router_boss")

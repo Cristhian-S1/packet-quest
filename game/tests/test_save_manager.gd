@@ -12,12 +12,15 @@ func run(tree: SceneTree) -> PackedStringArray:
 	data["equipped"] = {"weapons": ["packet", "triple"], "passive": ""}
 	data["stats"]["deaths"] = {"router_boss": 4}
 	data["stats"]["play_time_s"] = 812
+	data["stats"]["levels"]["w1_l1"]["cores_collected"] = 1
+	data["stats"]["levels"]["w1_l1"]["completions"] = 1
+	data["stats"]["levels"]["w1_boss"]["deaths"] = 4
 	var result: Error = manager.call("save_game", data, PATH)
 	if result != OK: errors.append("escritura")
 	var loaded: Dictionary = manager.call("load_game", PATH)
 	# JSON has a single number type; compare decoded values, not int/float spelling.
 	var expected: Dictionary = JSON.parse_string(JSON.stringify(data)) as Dictionary
-	if loaded != expected: errors.append("roundtrip del esquema completo")
+	if JSON.parse_string(JSON.stringify(loaded)) != expected: errors.append("roundtrip del esquema completo")
 	for corrupt: String in ["{roto", "null", "[]", "{\"version\":99}", "{\"version\":1,\"data_cores\":\"incorrecto\"}"]:
 		var file: FileAccess = FileAccess.open(PATH, FileAccess.WRITE)
 		file.store_string(corrupt)

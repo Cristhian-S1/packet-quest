@@ -5,7 +5,7 @@ extends Node
 const WORLD_COUNT: int = 5
 
 func defaults() -> Dictionary:
-	return {
+	var data: Dictionary = {
 		"version": 1, "unlocked_worlds": [1], "completed_levels": [], "finished": false,
 		"data_cores": 0, "collected_cores": [], "owned_upgrades": [],
 		"equipped": {"weapons": ["packet"], "passive": ""},
@@ -13,13 +13,15 @@ func defaults() -> Dictionary:
 			"assist_mode": false, "music_volume": 0.8, "sfx_volume": 0.9, "bindings": {}},
 		"stats": {"deaths": {}, "play_time_s": 0.0}
 	}
+	_migrate_levels(data)
+	return data
 
 func save_game(data: Dictionary, path: String = "") -> Error:
 	var target: String = save_path if path.is_empty() else path
 	var file: FileAccess = FileAccess.open(target + ".tmp", FileAccess.WRITE)
 	if file == null:
 		return FileAccess.get_open_error()
-	file.store_string(JSON.stringify(data, "\t"))
+	file.store_string(JSON.stringify(data, "\t", true, true))
 	file.close()
 	return DirAccess.rename_absolute(target + ".tmp", target)
 
@@ -80,7 +82,37 @@ func load_game(path: String = "") -> Dictionary:
 	var finished: Variant = data.get("finished", false)
 	data["finished"] = finished if finished is bool else false
 	data["settings"]["bindings"] = InputBindings.validated(data["settings"].get("bindings", {}))
+	_migrate_levels(data)
 	return data
+
+func _migrate_levels(data: Dictionary) -> void:
+	var stats: Dictionary = data["stats"]
+	var legacy_deaths: Dictionary = stats["deaths"]
+	var completed: Array = data["completed_levels"]
+	var levels: Variant = stats.get("levels")
+	var normalized: Dictionary = {}
+	for world: int in range(1, WORLD_COUNT + 1):
+		var boss_completed: bool = StageStats.id(world, true) in completed
+		for boss: bool in [false, true]:
+			var id: String = StageStats.id(world, boss)
+			var stored: Variant = levels.get(id) if levels is Dictionary else null
+			var entry: Dictionary = stored if stored is Dictionary else {}
+			var deaths: int = 0
+			var causes: Array = StageStats.LEGACY_BOSS_DEATHS[world - 1] if boss else ["nivel_%d_1" % world]
+			for cause: String in causes:
+				deaths += int(legacy_deaths.get(cause, 0))
+			var completions: int = 1 if boss_completed or id in completed else 0
+			var time: Variant = entry.get("best_time_s")
+			var row: Dictionary = {
+				"best_time_s": float(time) if _is_number(time) and float(time) > 0.0 else null,
+				"deaths": int(entry["deaths"]) if _is_count(entry.get("deaths")) else deaths,
+				"completions": int(entry["completions"]) if _is_count(entry.get("completions")) else completions,
+			}
+			if not boss:
+				row["cores_collected"] = StageStats.core_count(data, world)
+				row["cores_available"] = StageStats.LEVEL_CORES[world - 1].size()
+			normalized[id] = row
+	stats["levels"] = normalized
 
 func _is_number(value: Variant) -> bool:
 	return (value is int or value is float) and is_finite(float(value))

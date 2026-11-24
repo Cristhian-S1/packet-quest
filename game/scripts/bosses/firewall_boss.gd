@@ -300,8 +300,10 @@ func _defeat() -> void:
 	_wall.hide()
 	CelebrationBurst.spawn(self, origin, true)
 	BossArt.show_restoration(card)
+	GameState.record_boss_clear()
 	GameState.collect_core(&"w3_firewall_boss")
 	GameState.win()
+	StageBuilder.show_victory_stats(card)
 	defeated.emit()
 	Events.boss_defeated.emit(&"firewall_corrupto")
 

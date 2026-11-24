@@ -7,12 +7,22 @@ var age: float = 0.0
 var selected_world: int = 1
 var enter_button: Button
 var _playable: Array[int] = []
+var _level_stats: Label
+var _boss_stats: Label
 
 func _ready() -> void:
 	AudioManager.play_music(&"menu")
 	StageBuilder.background(self)
 	PQStyle.label_at(self, "MAPA DE LA RED", Vector2(36, 28), 22, PQStyle.CYAN)
 	PQStyle.label_at(self, "NÚCLEOS: %d" % int(GameState.data.get("data_cores", 0)), Vector2(500, 36), 12, PQStyle.AMBER)
+	var stats_panel: Panel = Panel.new()
+	stats_panel.position = Vector2(36, 66)
+	stats_panel.size = Vector2(568, 52)
+	stats_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	stats_panel.add_theme_stylebox_override("panel", PQStyle.panel(PQStyle.NIGHT, PQStyle.CHIP))
+	add_child(stats_panel)
+	_level_stats = PQStyle.label_at(stats_panel, "", Vector2(14, 7), 12, Color.WHITE)
+	_boss_stats = PQStyle.label_at(stats_panel, "", Vector2(14, 27), 12, PQStyle.BLUE.lightened(0.3))
 	for index: int in range(WORLDS.size()):
 		var world: int = index + 1
 		var x: float = node_x(index)
@@ -42,6 +52,7 @@ func _ready() -> void:
 	enter_button.disabled = _playable.is_empty()
 	if enter_button.disabled:
 		enter_button.text = "Entrar"
+		_update_stats()
 		workshop.grab_focus()
 	else:
 		selected_world = GameState.current_world if GameState.current_world in _playable else _playable[0]
@@ -64,6 +75,11 @@ func _input(event: InputEvent) -> void:
 
 func _update_entry() -> void:
 	enter_button.text = "Entrar: %s  →" % WORLDS[selected_world - 1]
+	_update_stats()
+
+func _update_stats() -> void:
+	_level_stats.text = StageStats.summary(GameState.data, selected_world, false)
+	_boss_stats.text = StageStats.summary(GameState.data, selected_world, true)
 
 func _enter_world() -> void:
 	GameState.start_run(selected_world)
