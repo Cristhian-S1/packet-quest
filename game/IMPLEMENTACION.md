@@ -151,3 +151,29 @@ Validación final: import, inicio, cinco pruebas y 300 frames: exit=0, sin error
 - **Forma.** La revisión en escala de grises, con destellos reducidos, confirmó la barra de progreso y las dos marcas laterales de M13 en las siete variantes. El Bot DDoS añade los trazos del abanico.
 - **Música.** Cada jefe tiene su propio motivo y un bucle de ocho compases a 134–148 BPM. Malwarex pide un arreglo de su motivo al entrar en cada fase. El arreglo previo sigue mientras el hilo prepara el siguiente y el fundido de 280 ms comienza cuando ese WAV está listo. La caché de M12 reutiliza cada sección durante la sesión. El WAV de muestra concatena las cuatro secciones de Malwarex.
 - **Medición.** En Godot 4.7.2 con Compatibility y límite de 60 FPS, el callback de música alcanzó 0,18 ms y el tema en caché arrancó en el siguiente fotograma, a 16,71 ms. Los cambios de fase de Malwarex tuvieron un p95 de 16,75 ms por fotograma frente a 16,85 ms en reposo. En esa pasada, la entrada al Router tuvo un primer intervalo de 31,74 ms y el control sin petición de pista nueva tuvo 23,84 ms. Los empalmes se comprobaron sobre las muestras PCM.
+
+## Decisiones M15
+
+- **Guardado.** `stats.levels` usa `w<N>_l1` para los tramos y `w<N>_boss` para las arenas.
+  El esquema sigue en versión 1. La migración recupera las muertes conocidas, las
+  finalizaciones demostrables y los núcleos únicos del nivel. Los tiempos históricos
+  sin registro se muestran con un guion.
+- **Reloj.** `GameState` acumula el `delta` del escenario activo. Al cruzar la salida se
+  registra el nivel y al derrotar al jefe se registra la arena. El reintento desde un
+  checkpoint del nivel conserva lo jugado. El reintento de la arena comienza con un
+  tiempo nuevo. El tiempo de combate del Router se fija antes de recoger su núcleo.
+- **Interfaz de campaña.** El mapa muestra ambos registros del mundo seleccionado. La
+  victoria del Router y las tarjetas de los demás jefes indican qué marcas mejoraron.
+  Los créditos suman los mejores tiempos de los diez tramos y muestran cuántas marcas
+  hay cuando falta alguna.
+- **Boss Rush.** La primera visita a los créditos guarda `unlocked_boss_rush`. Una partida
+  anterior obtiene el acceso al volver a ver los créditos. La ronda usa las arenas en
+  el orden del mapa y aplica el equipo y los PV máximos de Byte. Cada victoria cura un
+  PV y transmite la vida resultante a la siguiente arena. El reloj se detiene durante
+  la pausa, la celebración de cada victoria y la transición.
+- **Marcas de la ronda.** `stats.boss_rush` guarda el máximo de jefes vencidos y el mejor
+  tiempo de una ronda completa. Morir o terminar la ronda desde la pausa abre los
+  resultados. Reintentar comienza en el Router con los PV completos. La partida nueva
+  de M11 reinicia el desbloqueo y las marcas junto con el resto del progreso.
+- **Captura.** `capture_preview.gd -- --m15` renderiza unos resultados de ejemplo en
+  [bossrush.png](../docs/capturas/bossrush.png).
