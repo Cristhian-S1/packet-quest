@@ -8,6 +8,8 @@ func capture() -> void:
 	var args: PackedStringArray = OS.get_cmdline_user_args()
 	if "--m13-before" in args or "--m13-after" in args:
 		await suite.call("capture_m13", self, "--m13-before" in args)
+	elif "--m15" in args:
+		await suite.call("capture_m15", self)
 	elif "--options" in args:
 		await suite.call("capture_options", self)
 	elif "--m11" in args:

@@ -33,6 +33,9 @@ static func player(parent: Node, pos: Vector2, width: int = 2720) -> PacketPlaye
 	byte.position = pos
 	byte.camera_width = width
 	parent.add_child(byte)
+	if GameState.boss_rush_active and GameState.boss_rush_hp > 0.0:
+		byte.health.current = minf(GameState.boss_rush_hp, byte.health.max_health)
+		byte.health.changed.emit(byte.health.current, byte.health.max_health)
 	return byte
 
 static func hud(parent: Node, level_exit_x: float = 0.0) -> void:
@@ -56,3 +59,19 @@ static func show_boss_phase(card: Label, phase_number: int, phase_name: String, 
 	card.text = "FASE %02d\n%s" % [phase_number, phase_name.to_upper()]
 	card.modulate = color
 	card.show()
+
+static func show_victory_stats(card: Label) -> void:
+	if GameState.boss_rush_active:
+		return
+	var panel: Panel = Panel.new()
+	panel.position = Vector2(36, 151)
+	panel.size = Vector2(568, 47)
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	panel.add_theme_stylebox_override("panel", PQStyle.panel(PQStyle.NIGHT, PQStyle.CHIP))
+	card.get_parent().add_child(panel)
+	for boss: bool in [false, true]:
+		var record: bool = GameState.boss_record if boss else GameState.level_record
+		var line: Label = PQStyle.label_at(panel, StageStats.summary(GameState.data, GameState.current_world, boss, record),
+			Vector2(0, 7 if boss else 25), 12, PQStyle.GREEN if record else Color.WHITE)
+		line.size.x = panel.size.x
+		line.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

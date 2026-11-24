@@ -12,6 +12,7 @@ var hit_stop_frames: int = 0
 var death_shown: bool = false
 var _stopping: bool = false
 var _pause_key: String
+var _rush_clock: Label
 
 func _ready() -> void:
 	layer = 10
@@ -23,6 +24,11 @@ func _ready() -> void:
 	canvas.draw.connect(_draw_hud)
 	add_child(canvas)
 	info = PQStyle.label_at(canvas, "", Vector2(384, 12), 11, PQStyle.EDGE)
+	if GameState.boss_rush_active:
+		_rush_clock = PQStyle.label_at(canvas, "", Vector2(263, 3), 15, PQStyle.AMBER)
+		_rush_clock.name = "RushClock"
+		PQStyle.label_at(canvas, "BOSS RUSH  %d/%d" % [GameState.current_world, GameState.WORLDS.size()],
+			Vector2(263, 23), 9, PQStyle.BLUE.lightened(0.3))
 	notice = PQStyle.label_at(canvas, "", Vector2(128, 328), 12, PQStyle.GREEN)
 	Events.player_died.connect(_death)
 	Events.checkpoint_reached.connect(_checkpoint)
@@ -43,8 +49,12 @@ func _update_level_progress() -> void:
 func _process(delta: float) -> void:
 	canvas.queue_redraw()
 	var weapon_name: String = player.current_weapon().display_name.to_upper() if is_instance_valid(player) else "PAQUETE"
-	info.text = "%s   ·   NÚCLEOS %02d   ·   %s pausa" % [
-		weapon_name, int(GameState.data.get("data_cores", 0)), _pause_key]
+	if _rush_clock != null:
+		_rush_clock.text = StageStats.format_time(GameState.boss_rush_time)
+		info.text = "%s   ·   %s pausa" % [weapon_name, _pause_key]
+	else:
+		info.text = "%s   ·   NÚCLEOS %02d   ·   %s pausa" % [
+			weapon_name, int(GameState.data.get("data_cores", 0)), _pause_key]
 	notice_time = maxf(0, notice_time - delta)
 	notice.visible = notice_time > 0
 	if hit_stop_frames > 0:
@@ -80,7 +90,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		add_child(preload("res://scenes/ui/PauseMenu.tscn").instantiate())
 
 func _death() -> void:
-	if death_shown:
+	if death_shown or GameState.boss_rush_active:
 		return
 	death_shown = true
 	_update_level_progress()

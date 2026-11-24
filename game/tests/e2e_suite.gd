@@ -914,6 +914,19 @@ func _world5() -> bool:
 	print("Créditos: %s" % expected)
 	await _capture("12_creditos")
 	_checkpoint("Malwarex y créditos")
+	await pilot.confirm()
+	var menu_reached: bool = await pilot.wait_until(func() -> bool:
+		return tree.current_scene != null and tree.current_scene.scene_file_path == "res://scenes/main/Main.tscn", 240)
+	if menu_reached:
+		await pilot.confirm()
+	var map_reached: bool = await pilot.wait_until(func() -> bool: return tree.current_scene is NetworkMap, 240)
+	var rush_visible: bool = false
+	if map_reached:
+		for child: Node in tree.current_scene.get_children():
+			if child is Button and (child as Button).text == "Boss Rush" and (child as Button).is_visible_in_tree():
+				rush_visible = true
+				break
+	check(rush_visible, "el mapa no muestra Boss Rush al volver de los créditos")
 	return found and expected.ends_with("/12")
 
 func _jump_to_x(player: PacketPlayer, x: float) -> void:

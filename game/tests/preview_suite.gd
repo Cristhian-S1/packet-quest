@@ -12,6 +12,22 @@ func capture_m13(scene_tree: SceneTree, before: bool) -> void:
 	var gallery: RefCounted = load("res://tests/preview_m13.gd").new()
 	await gallery.call("capture", self, tree, before)
 
+func capture_m15(scene_tree: SceneTree) -> void:
+	tree = scene_tree
+	GameState.data = SaveManager.defaults()
+	GameState.data["unlocked_boss_rush"] = true
+	GameState.boss_rush_defeated = GameState.WORLDS.size()
+	GameState.boss_rush_time = 173.82
+	GameState.boss_rush_record = true
+	GameState.data["stats"]["boss_rush"] = {"best_bosses": GameState.boss_rush_defeated,
+		"best_time_s": GameState.boss_rush_time}
+	GameState.change_scene(GameState.BOSS_RUSH_RESULTS)
+	await tree.scene_changed
+	var result: Error = await snap("bossrush", "res://../docs/capturas")
+	if result != OK:
+		push_error("No se pudo guardar bossrush.png (%d)" % result)
+	tree.quit(0 if result == OK else 1)
+
 func capture_options(scene_tree: SceneTree) -> void:
 	tree = scene_tree
 	GameState.data = SaveManager.defaults()

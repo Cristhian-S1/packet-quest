@@ -50,6 +50,8 @@ var core_spawned: bool = false
 var card: Label
 
 func _ready() -> void:
+	GameState.current_world = 1
+	GameState.in_boss = true
 	AudioManager.play_music(&"boss_router")
 	StageBuilder.background(self)
 	pool = ProjectilePool.new()
@@ -91,7 +93,11 @@ func advance(delta: float) -> void:
 	if state == State.DEFEATED:
 		death_elapsed += delta
 		if death_elapsed >= 0.6 and not core_spawned:
-			_spawn_core()
+			if GameState.boss_rush_active:
+				set_physics_process(false)
+				GameState.continue_after_boss()
+			else:
+				_spawn_core()
 		return
 	if player != null and player.state == PacketPlayer.State.DEAD:
 		return
@@ -213,6 +219,7 @@ func _defeat() -> void:
 	body.collision_layer = 0
 	BossArt.show_restoration(card)
 	GameState.boss_progress = 1.0
+	GameState.record_boss_clear(player.health)
 	defeated.emit()
 	CelebrationBurst.spawn(self, body.global_position, true)
 	Events.boss_defeated.emit(&"router_boss")

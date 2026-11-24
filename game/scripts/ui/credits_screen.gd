@@ -18,7 +18,24 @@ static func format_time(seconds: float) -> String:
 	var minutes: int = whole / 60
 	return "%02d:%02d" % [minutes, whole % 60]
 
+static func best_run_line(stats: Dictionary) -> String:
+	var levels: Dictionary = stats.get("levels", {})
+	var total: float = 0.0
+	var timed: int = 0
+	var stages: int = GameState.WORLDS.size() * 2
+	for entry: Dictionary in levels.values():
+		var best: Variant = entry.get("best_time_s")
+		if best != null:
+			total += float(best)
+			timed += 1
+	var display_time: String = StageStats.format_time(total) if timed > 0 else "—"
+	var text: String = "Mejor partida: %s" % display_time
+	if timed < stages:
+		text += "  ·  %d/%d tramos con marca" % [timed, stages]
+	return text
+
 func _ready() -> void:
+	GameState.visit_credits()
 	AudioManager.play_music(&"credits")
 	StageBuilder.background(self)
 	super._ready()
@@ -37,12 +54,13 @@ func _ready() -> void:
 		60, 191, 188, 14, PQStyle.AMBER)
 	_centered("Muertes: %d" % total_deaths, 250, 191, 140, 14, Color.WHITE)
 	_centered("Tiempo: %s" % format_time(float(stats.get("play_time_s", 0.0))), 392, 191, 188, 14, Color.WHITE)
-	_divider(222)
-	_centered("CRÉDITOS", 0, 232, 640, 11, SECONDARY_TEXT)
-	_centered("Diseño, programación y arte procedural · Equipo de Packet Quest", 0, 250, 640, 12, Color.WHITE)
-	PQStyle.button(panel, "Menú principal", Vector2(128, 280), GameState.menu, 180).grab_focus()
-	PQStyle.button(panel, "Nueva partida", Vector2(332, 280), _new_game, 180)
-	_save_status = _centered("", 0, 319, 640, 11, PQStyle.AMBER)
+	_centered(best_run_line(stats), 0, 213, 640, 13, PQStyle.GREEN)
+	_divider(239)
+	_centered("CRÉDITOS", 0, 247, 640, 11, SECONDARY_TEXT)
+	_centered("Diseño, programación y arte procedural · Equipo de Packet Quest", 0, 265, 640, 12, Color.WHITE)
+	PQStyle.button(panel, "Menú principal", Vector2(128, 295), GameState.menu, 180).grab_focus()
+	PQStyle.button(panel, "Nueva partida", Vector2(332, 295), _new_game, 180)
+	_save_status = _centered("", 0, 334, 640, 11, PQStyle.AMBER)
 
 func _centered(text: String, x: float, y: float, width: float, font_size: int, color: Color) -> Label:
 	var label: Label = PQStyle.label_at(panel, text, Vector2(x, y), font_size, color)
