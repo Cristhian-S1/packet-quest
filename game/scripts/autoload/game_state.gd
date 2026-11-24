@@ -133,7 +133,9 @@ func start_run(world: int = 1) -> void:
 func retry() -> void:
 	if boss_rush_active:
 		return
-	_reset_attempt()
+	# Los niveles se reanudan a mitad de recorrido. Las arenas sí empiezan de cero.
+	if in_boss:
+		_reset_attempt()
 	playing = true
 	boss_progress = 0.0
 	level_progress = 0.0

@@ -32,6 +32,11 @@ func _test_attempts(tree: SceneTree) -> void:
 	GameState.collect_core(&"w1_hidden_a")
 	check(_stats(SaveManager.load_game(), "w1_l1").get("cores_collected") == 1, "recoger el núcleo actualiza las estadísticas persistidas")
 	await _frames(tree, 12)
+	var level_player: PacketPlayer = tree.get_first_node_in_group(&"player") as PacketPlayer
+	level_player.health.damage(level_player.health.max_health)
+	GameState.retry()
+	await tree.scene_changed
+	await _frames(tree, 5)
 	var before_pause: float = float(GameState.data["stats"]["play_time_s"])
 	tree.paused = true
 	await _frames(tree, 90)
@@ -40,7 +45,8 @@ func _test_attempts(tree: SceneTree) -> void:
 	GameState.enter_boss()
 	await tree.scene_changed
 	var best: Variant = _stats(GameState.data, "w1_l1").get("best_time_s")
-	check(best != null and absf(float(best) - before_pause) < 0.04, "el récord de nivel excluye la pausa")
+	check(best != null and absf(float(best) - before_pause) < 0.04, "el récord incluye el tramo anterior al checkpoint y excluye la pausa")
+	check(_stats(GameState.data, "w1_l1").get("deaths") == 1, "la muerte antes del checkpoint corresponde al nivel")
 	await _frames(tree, 12)
 	var router: RouterBoss = tree.current_scene as RouterBoss
 	router.health.damage(router.health.max_health)

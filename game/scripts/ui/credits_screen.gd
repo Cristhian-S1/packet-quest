@@ -28,7 +28,8 @@ static func best_run_line(stats: Dictionary) -> String:
 		if best != null:
 			total += float(best)
 			timed += 1
-	var text: String = "Mejor partida: %s" % StageStats.format_time(total if timed > 0 else null)
+	var display_time: String = StageStats.format_time(total) if timed > 0 else "—"
+	var text: String = "Mejor partida: %s" % display_time
 	if timed < stages:
 		text += "  ·  %d/%d tramos con marca" % [timed, stages]
 	return text

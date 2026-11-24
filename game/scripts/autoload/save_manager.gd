@@ -87,10 +87,9 @@ func load_game(path: String = "") -> Dictionary:
 	var rush: Variant = stats.get("boss_rush")
 	if rush is Dictionary:
 		var bosses: Variant = rush.get("best_bosses")
-		var time: Variant = rush.get("best_time_s")
 		var count: int = int(bosses) if _is_count(bosses) and float(bosses) <= WORLD_COUNT else 0
-		stats["boss_rush"] = {"best_bosses": count,
-			"best_time_s": float(time) if count == WORLD_COUNT and _is_number(time) and float(time) > 0.0 else null}
+		var best_time: Variant = _validated_time(rush.get("best_time_s")) if count == WORLD_COUNT else null
+		stats["boss_rush"] = {"best_bosses": count, "best_time_s": best_time}
 	else:
 		stats["boss_rush"] = base["stats"]["boss_rush"]
 	data["settings"]["bindings"] = InputBindings.validated(data["settings"].get("bindings", {}))
@@ -114,9 +113,8 @@ func _migrate_levels(data: Dictionary) -> void:
 			for cause: String in causes:
 				deaths += int(legacy_deaths.get(cause, 0))
 			var completions: int = 1 if boss_completed or id in completed else 0
-			var time: Variant = entry.get("best_time_s")
 			var row: Dictionary = {
-				"best_time_s": float(time) if _is_number(time) and float(time) > 0.0 else null,
+				"best_time_s": _validated_time(entry.get("best_time_s")),
 				"deaths": int(entry["deaths"]) if _is_count(entry.get("deaths")) else deaths,
 				"completions": int(entry["completions"]) if _is_count(entry.get("completions")) else completions,
 			}
@@ -125,6 +123,11 @@ func _migrate_levels(data: Dictionary) -> void:
 				row["cores_available"] = StageStats.LEVEL_CORES[world - 1].size()
 			normalized[id] = row
 	stats["levels"] = normalized
+
+func _validated_time(value: Variant) -> Variant:
+	if _is_number(value) and float(value) > 0.0:
+		return float(value)
+	return null
 
 func _is_number(value: Variant) -> bool:
 	return (value is int or value is float) and is_finite(float(value))
