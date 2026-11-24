@@ -151,7 +151,7 @@ func _advance(delta: float) -> void:
 			state = State.WAIT
 		State.DEFEATED:
 			set_physics_process(false)
-			GameState.open_map()
+			GameState.continue_after_boss()
 
 func _begin_next() -> void:
 	var pattern: Array[Attack] = SIGNAL_PATTERN if phase == 1 else ROAMING_PATTERN
@@ -271,8 +271,7 @@ func _defeat() -> void:
 	body.remove_from_group(&"homing_target")
 	pool.clear_enemy()
 	BossArt.show_restoration(card)
-	GameState.record_boss_clear()
-	GameState.win()
+	GameState.record_boss_clear(player.health)
 	StageBuilder.show_victory_stats(card)
 	defeated.emit()
 	CelebrationBurst.spawn(self, body.global_position, true)

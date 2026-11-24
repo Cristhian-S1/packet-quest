@@ -141,7 +141,7 @@ func _physics_process(delta: float) -> void:
 			_timer -= delta
 			if _timer <= 0.0:
 				set_physics_process(false)
-				GameState.open_map()
+				GameState.continue_after_boss()
 		_:
 			if player.state != PacketPlayer.State.DEAD:
 				_phase_age += delta
@@ -300,9 +300,7 @@ func _defeat() -> void:
 	_wall.hide()
 	CelebrationBurst.spawn(self, origin, true)
 	BossArt.show_restoration(card)
-	GameState.record_boss_clear()
-	GameState.collect_core(&"w3_firewall_boss")
-	GameState.win()
+	GameState.record_boss_clear(player.health, &"w3_firewall_boss")
 	StageBuilder.show_victory_stats(card)
 	defeated.emit()
 	Events.boss_defeated.emit(&"firewall_corrupto")

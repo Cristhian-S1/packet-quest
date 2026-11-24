@@ -33,6 +33,9 @@ static func player(parent: Node, pos: Vector2, width: int = 2720) -> PacketPlaye
 	byte.position = pos
 	byte.camera_width = width
 	parent.add_child(byte)
+	if GameState.boss_rush_active and GameState.boss_rush_hp > 0.0:
+		byte.health.current = minf(GameState.boss_rush_hp, byte.health.max_health)
+		byte.health.changed.emit(byte.health.current, byte.health.max_health)
 	return byte
 
 static func hud(parent: Node, level_exit_x: float = 0.0) -> void:
@@ -58,6 +61,8 @@ static func show_boss_phase(card: Label, phase_number: int, phase_name: String, 
 	card.show()
 
 static func show_victory_stats(card: Label) -> void:
+	if GameState.boss_rush_active:
+		return
 	var panel: Panel = Panel.new()
 	panel.position = Vector2(36, 151)
 	panel.size = Vector2(568, 47)

@@ -7,11 +7,12 @@ const WORLD_COUNT: int = 5
 func defaults() -> Dictionary:
 	var data: Dictionary = {
 		"version": 1, "unlocked_worlds": [1], "completed_levels": [], "finished": false,
+		"unlocked_boss_rush": false,
 		"data_cores": 0, "collected_cores": [], "owned_upgrades": [],
 		"equipped": {"weapons": ["packet"], "passive": ""},
 		"settings": {"screen_shake": true, "reduce_flashes": false,
 			"assist_mode": false, "music_volume": 0.8, "sfx_volume": 0.9, "bindings": {}},
-		"stats": {"deaths": {}, "play_time_s": 0.0}
+		"stats": {"deaths": {}, "play_time_s": 0.0, "boss_rush": {"best_bosses": 0, "best_time_s": null}}
 	}
 	_migrate_levels(data)
 	return data
@@ -81,6 +82,17 @@ func load_game(path: String = "") -> Dictionary:
 		return base
 	var finished: Variant = data.get("finished", false)
 	data["finished"] = finished if finished is bool else false
+	var rush_unlocked: Variant = data.get("unlocked_boss_rush", false)
+	data["unlocked_boss_rush"] = rush_unlocked is bool and rush_unlocked == true
+	var rush: Variant = stats.get("boss_rush")
+	if rush is Dictionary:
+		var bosses: Variant = rush.get("best_bosses")
+		var time: Variant = rush.get("best_time_s")
+		var count: int = int(bosses) if _is_count(bosses) and float(bosses) <= WORLD_COUNT else 0
+		stats["boss_rush"] = {"best_bosses": count,
+			"best_time_s": float(time) if count == WORLD_COUNT and _is_number(time) and float(time) > 0.0 else null}
+	else:
+		stats["boss_rush"] = base["stats"]["boss_rush"]
 	data["settings"]["bindings"] = InputBindings.validated(data["settings"].get("bindings", {}))
 	_migrate_levels(data)
 	return data

@@ -8,9 +8,11 @@ const SCENES: Array[String] = [
 	"res://scenes/levels/World5Level1.tscn", "res://scenes/bosses/MalwarexBoss.tscn", "res://scenes/ui/CreditsScreen.tscn",
 	"res://scenes/main/NetworkMap.tscn", "res://scenes/ui/Workshop.tscn", "res://scenes/main/Main.tscn",
 	"res://scenes/ui/OptionsMenu.tscn", "res://scenes/ui/ControlsMenu.tscn",
+	"res://scenes/ui/BossRushResults.tscn",
 ]
 const ACTIONS: Array[StringName] = [&"move_left", &"move_right", &"jump", &"dash", &"shoot", &"shield", &"aim_up", &"aim_down", &"lock_aim", &"swap_weapon", &"interact", &"pause"]
 const OPTIONS_ACTIONS: Array[StringName] = [&"ui_up", &"ui_down", &"ui_left", &"ui_right", &"ui_accept"]
+const RESULTS_ACTIONS: Array[StringName] = [&"ui_up", &"ui_down", &"ui_left", &"ui_right"]
 var errors: PackedStringArray = []
 var finished: bool = false
 
@@ -59,7 +61,11 @@ func _exercise(tree: SceneTree, path: String, index: int, frames: int) -> void:
 			break
 		var actions: Array[StringName] = OPTIONS_ACTIONS if settings_menu else ACTIONS
 		var action: StringName = actions[rng.randi_range(0, actions.size() - 1)]
-		if settings_menu:
+		if scene is BossRushResults:
+			var direction: StringName = RESULTS_ACTIONS[rng.randi_range(0, RESULTS_ACTIONS.size() - 1)]
+			_send_action(direction, true)
+			_send_action(direction, false)
+		elif settings_menu:
 			_send_action(action, true)
 			_send_action(action, false)
 			if rng.randi_range(0, 7) == 0:

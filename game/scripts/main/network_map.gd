@@ -41,14 +41,25 @@ func _ready() -> void:
 		var status_label: Label = PQStyle.label_at(self, status, Vector2(x - 44, NODE_Y + 56), 8, status_color)
 		status_label.size.x = 88
 		status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	enter_button = PQStyle.button(self, "", Vector2(36, 250), _enter_world, 240)
-	var workshop: Button = PQStyle.button(self, "Taller", Vector2(292, 250), GameState.open_workshop, 120)
-	var menu: Button = PQStyle.button(self, "Menú", Vector2(428, 250), GameState.menu, 120)
+	var rush_unlocked: bool = GameState.boss_rush_unlocked
+	enter_button = PQStyle.button(self, "", Vector2(36, 250), _enter_world, 200 if rush_unlocked else 240)
+	var workshop: Button = PQStyle.button(self, "Taller", Vector2(252 if rush_unlocked else 292, 250),
+		GameState.open_workshop, 100 if rush_unlocked else 120)
+	var actions: Array[Button] = [workshop]
+	if rush_unlocked:
+		actions.append(PQStyle.button(self, "Boss Rush", Vector2(368, 250), GameState.start_boss_rush, 120))
+	actions.append(PQStyle.button(self, "Menú", Vector2(504 if rush_unlocked else 428, 250), GameState.menu,
+		100 if rush_unlocked else 120))
 	enter_button.focus_neighbor_bottom = enter_button.get_path_to(workshop)
 	enter_button.focus_next = enter_button.get_path_to(workshop)
-	for button: Button in [workshop, menu]:
+	for index: int in range(actions.size()):
+		var button: Button = actions[index]
 		button.focus_neighbor_top = button.get_path_to(enter_button)
-	PQStyle.label_at(self, "← →  Seleccionar mundo   ·   ↓  Taller y menú", Vector2(36, 299), 11, PQStyle.EDGE)
+		if index > 0:
+			button.focus_neighbor_left = button.get_path_to(actions[index - 1])
+		if index < actions.size() - 1:
+			button.focus_neighbor_right = button.get_path_to(actions[index + 1])
+	PQStyle.label_at(self, "← →  Seleccionar mundo   ·   ↓  Acciones del mapa", Vector2(36, 299), 11, PQStyle.EDGE)
 	enter_button.disabled = _playable.is_empty()
 	if enter_button.disabled:
 		enter_button.text = "Entrar"

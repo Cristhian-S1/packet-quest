@@ -141,7 +141,7 @@ func _physics_process(delta: float) -> void:
 				_begin_cycle()
 			State.DEFEATED:
 				set_physics_process(false)
-				GameState.open_map()
+				GameState.continue_after_boss()
 	queue_redraw()
 
 func _begin_cycle() -> void:
@@ -235,9 +235,7 @@ func _defeat() -> void:
 	pool.clear_enemy()
 	_clear_minions()
 	BossArt.show_restoration(card)
-	GameState.record_boss_clear()
-	GameState.collect_core(&"w4_trojan_boss")
-	GameState.win()
+	GameState.record_boss_clear(player.health, &"w4_trojan_boss")
 	StageBuilder.show_victory_stats(card)
 	defeated.emit()
 	CelebrationBurst.spawn(self, body.global_position, true)

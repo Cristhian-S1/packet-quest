@@ -2,6 +2,8 @@ extends Node
 
 signal settings_changed(key: String)
 
+enum Mode { CAMPAIGN, BOSS_RUSH }
+
 const WORLDS: Array[Dictionary] = [
 	{"level": "res://scenes/levels/World1Level1.tscn", "boss": "res://scenes/bosses/RouterBoss.tscn"},
 	{"level": "res://scenes/levels/World2Level1.tscn", "boss": "res://scenes/bosses/WifiQueenBoss.tscn"},
@@ -12,6 +14,7 @@ const WORLDS: Array[Dictionary] = [
 const MAP: String = "res://scenes/main/NetworkMap.tscn"
 const WORKSHOP: String = "res://scenes/ui/Workshop.tscn"
 const CREDITS: String = "res://scenes/ui/CreditsScreen.tscn"
+const BOSS_RUSH_RESULTS: String = "res://scenes/ui/BossRushResults.tscn"
 # Todos los núcleos de datos del juego (2 por nivel salvo el 1-1, más los que sueltan los jefes).
 # Los créditos cuentan cuántos se recogieron; `data_cores` es solo el saldo gastable del Taller.
 const ALL_CORE_IDS: Array[String] = ["w1_hidden_a", "w1_router", "w2_core_a", "w2_core_b",
@@ -34,6 +37,18 @@ var level_record: bool = false
 var boss_record: bool = false
 var _stage_time: float = 0.0
 var _boss_cleared: bool = false
+var mode: Mode = Mode.CAMPAIGN
+var boss_rush_active: bool:
+	get:
+		return mode == Mode.BOSS_RUSH
+var boss_rush_unlocked: bool:
+	get:
+		return bool(data.get("unlocked_boss_rush", false))
+var boss_rush_time: float = 0.0
+var boss_rush_defeated: int = 0
+var boss_rush_hp: float = -1.0
+var boss_rush_record: bool = false
+var _campaign_world: int = 1
 var settings: Dictionary:
 	get:
 		return data.get("settings", {})
@@ -78,6 +93,10 @@ func _process(delta: float) -> void:
 	var scene: Node = get_tree().current_scene
 	if not playing or scene == null or scene.scene_file_path != current_level:
 		return
+	if boss_rush_active:
+		if not _boss_cleared:
+			boss_rush_time += delta
+		return
 	data["stats"]["play_time_s"] = float(data["stats"]["play_time_s"]) + delta
 	if not _boss_cleared:
 		_stage_time += delta
@@ -99,6 +118,7 @@ static func has_world_scenes(world: int) -> bool:
 func start_run(world: int = 1) -> void:
 	if not is_world_playable(data, world):
 		return
+	mode = Mode.CAMPAIGN
 	current_world = world
 	in_boss = false
 	checkpoint = Vector2(48, 296)
@@ -111,6 +131,8 @@ func start_run(world: int = 1) -> void:
 	change_scene(current_level)
 
 func retry() -> void:
+	if boss_rush_active:
+		return
 	_reset_attempt()
 	playing = true
 	boss_progress = 0.0
@@ -135,6 +157,8 @@ func change_scene(path: String) -> void:
 	get_tree().change_scene_to_file.call_deferred(path)
 
 func collect_core(id: StringName) -> bool:
+	if boss_rush_active:
+		return false
 	var cores: Array = data["collected_cores"]
 	if String(id) in cores:
 		return false
@@ -147,6 +171,9 @@ func collect_core(id: StringName) -> bool:
 	return true
 
 func record_death() -> void:
+	if boss_rush_active:
+		end_boss_rush()
+		return
 	playing = false
 	var deaths: Dictionary = data["stats"]["deaths"]
 	deaths[death_cause] = int(deaths.get(death_cause, 0)) + 1
@@ -168,14 +195,78 @@ func _record_clear(boss: bool) -> bool:
 	stats["best_time_s"] = _stage_time
 	return true
 
-func record_boss_clear() -> void:
+func record_boss_clear(health: HealthComponent, reward: StringName = &"") -> void:
+	if boss_rush_active:
+		if playing and not _boss_cleared:
+			_boss_cleared = true
+			boss_rush_defeated += 1
+			health.heal(1.0)
+			boss_rush_hp = health.current
+		return
 	if playing and not _boss_cleared:
 		boss_record = _record_clear(true)
 		_boss_cleared = true
 		if current_world == 1:
 			save()
+	# El Router conserva el núcleo físico y registra la progresión al recogerlo.
+	if current_world != 1:
+		if reward != &"":
+			collect_core(reward)
+		win()
+
+func continue_after_boss() -> void:
+	if boss_rush_active:
+		if not playing or not _boss_cleared:
+			return
+		if boss_rush_defeated == WORLDS.size():
+			end_boss_rush()
+		else:
+			_enter_rush_boss(boss_rush_defeated + 1)
+	elif current_world == WORLDS.size():
+		show_credits()
+	else:
+		open_map()
+
+func start_boss_rush() -> void:
+	if not boss_rush_unlocked or (boss_rush_active and playing):
+		return
+	if not boss_rush_active:
+		_campaign_world = current_world
+	mode = Mode.BOSS_RUSH
+	boss_rush_time = 0.0
+	boss_rush_defeated = 0
+	boss_rush_hp = -1.0
+	boss_rush_record = false
+	_enter_rush_boss(1)
+
+func _enter_rush_boss(world: int) -> void:
+	current_world = world
+	in_boss = true
+	checkpoint = Vector2(64, 296)
+	boss_progress = 0.0
+	_reset_attempt()
+	playing = true
+	change_scene(current_level)
+
+func end_boss_rush() -> void:
+	if not boss_rush_active or not playing:
+		return
+	playing = false
+	var stats: Dictionary = data["stats"]["boss_rush"]
+	var best: Variant = stats["best_time_s"]
+	if boss_rush_defeated > int(stats["best_bosses"]):
+		stats["best_bosses"] = boss_rush_defeated
+		boss_rush_record = true
+	if boss_rush_defeated == WORLDS.size() and boss_rush_time > 0.0 and (best == null or boss_rush_time < float(best)):
+		stats["best_time_s"] = boss_rush_time
+		boss_rush_record = true
+	if boss_rush_record:
+		save()
+	change_scene(BOSS_RUSH_RESULTS)
 
 func win() -> void:
+	if boss_rush_active:
+		return
 	playing = false
 	var completed: Array = data["completed_levels"]
 	# Conserva el identificador que ya registraba la victoria del Router.
@@ -197,6 +288,10 @@ func save() -> Error:
 
 func open_map() -> void:
 	playing = false
+	if boss_rush_active:
+		current_world = _campaign_world
+		in_boss = false
+		mode = Mode.CAMPAIGN
 	change_scene(MAP)
 
 func open_workshop() -> void:
@@ -206,6 +301,11 @@ func open_workshop() -> void:
 func show_credits() -> void:
 	playing = false
 	change_scene(CREDITS)
+
+func visit_credits() -> void:
+	if bool(data.get("finished", false)) and not boss_rush_unlocked:
+		data["unlocked_boss_rush"] = true
+		save()
 
 func new_game() -> Error:
 	var fresh: Dictionary = SaveManager.defaults()

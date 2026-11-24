@@ -34,6 +34,7 @@ static func best_run_line(stats: Dictionary) -> String:
 	return text
 
 func _ready() -> void:
+	GameState.visit_credits()
 	AudioManager.play_music(&"credits")
 	StageBuilder.background(self)
 	super._ready()

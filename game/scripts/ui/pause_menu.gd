@@ -10,8 +10,11 @@ func _ready() -> void:
 	subtitle("La red puede esperar.")
 	PQStyle.button(panel, "Continuar", Vector2(208, 156), _resume).grab_focus()
 	_options_button = PQStyle.button(panel, "Opciones", Vector2(208, 196), _open_options)
-	PQStyle.button(panel, "Reiniciar checkpoint", Vector2(208, 236), GameState.retry)
-	PQStyle.button(panel, "Menú principal", Vector2(208, 276), GameState.menu)
+	if GameState.boss_rush_active:
+		PQStyle.button(panel, "Terminar ronda", Vector2(208, 236), GameState.end_boss_rush)
+	else:
+		PQStyle.button(panel, "Reiniciar checkpoint", Vector2(208, 236), GameState.retry)
+		PQStyle.button(panel, "Menú principal", Vector2(208, 276), GameState.menu)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if visible and event.is_action_pressed("pause"):
