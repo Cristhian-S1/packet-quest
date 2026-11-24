@@ -15,3 +15,6 @@ graphify-out/cache/
 .beads/proxieddb/
 *.gate.lock*
 .superpowers/
+
+# Ejecutables exportados
+build/
